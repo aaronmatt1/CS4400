@@ -1,6 +1,7 @@
 ##GTMS UI
 
 from tkinter import *
+from tkinter import messagebox as mbox
 import base64
 import pymysql
 
