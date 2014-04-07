@@ -64,7 +64,7 @@ class GTMS:
         self.annualIncome = StringVar()
         self.annualIncome.set(NONE)
 
-        #its working, but label names are not coming out in any specific order. Any ideas?
+        #going to change the dict to a list. dicts arent ordered, so labels come out in random order
         rows = 0
         for x in attributes.keys():
 
