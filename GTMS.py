@@ -46,16 +46,16 @@ class GTMS:
         imageLabel.configure(background='#cfb53b')
 
         #creating labels and entry boxes to be added to window in loop
-        attributes = {
-            'nameLabel': ['Patient Name: ', 'self.nameEntry'],
-            'dobLabel': ['Date of Birth: ', 'self.dobEntry'],
-            'addressLabel': ['Address: ', 'self.addressEntry'],
-            'homePhoneLabel': ['Home Phone: ', 'self.homePhoneEntry'],
-            'workPhoneLabel': ['Work Phone: ', 'self.workPhoneEntry'],
-            'weightLabel': ['Weight: ', 'self.weightEntry'],
-            'heightLabel': ['Height: ', 'self.heightEntry'],
-            'allergiesLabel': ['Allergies: ', 'self.allergiesEntry']
-        }
+        attributes = [
+            ['nameLabel', 'Patient Name: ', 'self.nameEntry'],
+            ['dobLabel', 'Date of Birth: ', 'self.dobEntry'],
+            ['addressLabel', 'Address: ', 'self.addressEntry'],
+            ['homePhoneLabel', 'Home Phone: ', 'self.homePhoneEntry'],
+            ['workPhoneLabel', 'Work Phone: ', 'self.workPhoneEntry'],
+            ['weightLabel', 'Weight: ', 'self.weightEntry'],
+            ['heightLabel', 'Height: ', 'self.heightEntry'],
+            ['allergiesLabel', 'Allergies: ', 'self.allergiesEntry']
+        ]
 
         #setting up pulldowns for gender and income
         self.gender = StringVar()
@@ -64,13 +64,13 @@ class GTMS:
         self.annualIncome = StringVar()
         self.annualIncome.set(NONE)
 
-        #going to change the dict to a list. dicts arent ordered, so labels come out in random order
+        #changed from dict to list, hopefullythis still works
         rows = 0
-        for x in attributes.keys():
+        for x in range(len(attributes)):
 
-            labelname = x
-            entryname = attributes[x][1]
-            labelname = Label(bottomFrame, text=attributes[x][0])
+            labelname = attributes[x][0]
+            entryname = attributes[x][2]
+            labelname = Label(bottomFrame, text=attributes[x][1])
             labelname.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
             labelname.configure(background='#cfb53b')
             entryname = Entry(bottomFrame, width=30)
