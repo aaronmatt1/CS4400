@@ -12,13 +12,20 @@ class GTMS:
 
         self.connect()
 
-        self.LoginPage(LogWin)
+        url = 'http://comparch.gatech.edu/buzz.gif'
+        request = urllib.request.Request(url)
+        response = urllib.request.urlopen(request)
+        pic = response.read()
+        b64_data = base64.encodebytes(pic)
+        self.photo = PhotoImage(data=b64_data)
 
-        self.Register()
-        self.reg.withdraw()
+        self.LoginPage(LogWin)
 
         self.patientProfile()
         self.patientWin.withdraw()
+
+        self.Register()
+        self.reg.withdraw()
 
     def patientProfile(self):
         #very rough, dont have the top dow quite yet. It looks pretty poopish, but the rest is pretty good
@@ -35,8 +42,11 @@ class GTMS:
         bottomFrame.grid(row=2, column=0)
         bottomFrame.configure(background='#cfb53b')
 
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
         pageName = Label(topFrame, text="Patient Profile", font=("Arial", 25))
-        pageName.grid(row=1, column=0, sticky='EW')
+        pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
         #creating labels and entry boxes to be added to window in loop
@@ -122,13 +132,6 @@ class GTMS:
         submit.grid(row=11, column=3, pady=10, padx=20)
 
     def LoginPage(self, LogWin):
-        #Yellow Jacket Logo
-        url = 'http://comparch.gatech.edu/buzz.gif'
-        request = urllib.request.Request(url)
-        response = urllib.request.urlopen(request)
-        pic = response.read()
-        b64_data = base64.encodebytes(pic)
-        self.photo = PhotoImage(data=b64_data)
 
         #Top Banner
         banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
@@ -197,7 +200,7 @@ class GTMS:
         userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
 
         #Register Button
-        register = ttk.Button(self.reg, text='Register')#, command=self.RegisterNew, cursor='hand2')
+        register = ttk.Button(self.reg, text='Register', command=self.patientWin.deiconify)#, command=self.RegisterNew, cursor='hand2')
         register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
         #Cancel Button: Return To Login
         cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
@@ -238,7 +241,6 @@ class GTMS:
 
             mbox.showerror(title='Connection Error', message='Check your internet connection')
             return NONE
-
 
 LogWin = Tk() #This will be where the login page goes.
 LogWin.title('GTMS Login')
