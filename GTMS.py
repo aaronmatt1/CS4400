@@ -242,7 +242,7 @@ class GTMS:
             '     First Name: ',
             '     Date of Birth: ',
             '     Work Phone: ',
-            '     Room Nuber: ',
+            '     Room Number: ',
             '     Home Address: ',
         ]
 
@@ -510,6 +510,7 @@ class GTMS:
 
     def submitForm(self):
 
+        #todo: error checking
         PName = self.nameEntry.get()
         DOB = self.dobEntry.get()
         Gender = self.gender.get()
