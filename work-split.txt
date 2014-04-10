@@ -1,6 +1,8 @@
 Aaron
 -Patient Profile **Complete(Except for logo on top)**
 -Doctor Profile **Complete**
+-Home Page **Complete**
+-Appointments 
 
 Juan
 -Login Page **Complete**

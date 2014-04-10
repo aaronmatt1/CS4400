@@ -23,18 +23,17 @@ class GTMS:
         self.LoginPage(LogWin)
 
         self.patientProfile()
-        self.patientWin.withdraw()
+
 
         self.Register()
-        self.reg.withdraw()
+
 
         self.doctorProfile()
-        self.doctorWin.withdraw()
+
 
         self.appoinmentPage()
 
         self.homePage()
-        self.hpWin.withdraw()
 
     def LoginPage(self, LogWin):
 
@@ -320,7 +319,7 @@ class GTMS:
 
         #Creating Availability Pulldown Row
         availableFrame = Frame(bottomFrame)
-        availableFrame.grid(row=rows, column=0, pady=10, columnspan=2)
+        availableFrame.grid(row=rows, column=0, pady=10, columnspan=5)
         availableFrame.configure(background='#cfb53b')
 
         availableLabel = Label(availableFrame, text='     Availability: ')
@@ -352,7 +351,7 @@ class GTMS:
 
         #Putting Buttons at the Bottom
         buttonFrame = Frame(bottomFrame)
-        buttonFrame.grid(row=9, column=0, columnspan=2)
+        buttonFrame.grid(row=9, column=0, columnspan=5)
         buttonFrame.configure(background='#cfb53b')
 
         createButton = ttk.Button(buttonFrame, text='Create Profile')
@@ -370,7 +369,7 @@ class GTMS:
         topFrame = Frame(self.hpWin)
         topFrame.grid(row=0, column=0)
         topFrame.configure(background='#cfb53b')
-        midFrame = Frame(self.doctorWin, bd=1, background='black')
+        midFrame = Frame(self.hpWin, bd=1, background='black')
         midFrame.grid(row=1, column=0, sticky='EW')
         bottomFrame = Frame(self.hpWin)
         bottomFrame.grid(row=2, column=0)
@@ -382,6 +381,55 @@ class GTMS:
         pageName = Label(topFrame, text="Home Page", font=("Arial", 25))
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
+
+        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT)
+        makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
+        makeAppointButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        viewPrescripButton = Button(bottomFrame, text='View Prescriptions', relief=FLAT)
+        viewPrescripButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
+        viewPrescripButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        orderMedButton = Button(bottomFrame, text='Order Medication', relief=FLAT)
+        orderMedButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
+        orderMedButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT)
+        communicateButton.grid(row=3, column=0, padx=20, pady=10, sticky='W')
+        communicateButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        rateDocButton = Button(bottomFrame, text='Rate a Doctor', relief=FLAT)
+        rateDocButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
+        rateDocButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT)
+        editProfile.grid(row=5, column=0, padx=20, pady=10, sticky='W')
+        editProfile.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        hardCodedSpaceLabel = Label(bottomFrame, text='                                          ')
+        hardCodedSpaceLabel.grid(row=0, column=1)
+        hardCodedSpaceLabel.configure(background='#cfb53b')
+
+        messageText = 'You have {info from DB} unread messages'
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT)
+        unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
+        unreadMsgButton.configure(font=('Arial', 8),
+                                  foreground='blue',
+                                  background='#cfb53b')
+
+
 
     def appoinmentPage(self):
 
