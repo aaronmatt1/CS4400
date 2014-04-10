@@ -1,10 +1,10 @@
 Aaron
--New User Registation
 -Patient Profile **Complete(Except for logo on top)**
--Doctor Profile
+-Doctor Profile **Complete**
 
 Juan
 -Login Page **Complete**
+-New User Registation **Complete**
 -Order Med
 -Payment Info
 -Registration **Complete(except for logo)**

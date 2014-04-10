@@ -11,6 +11,7 @@ class GTMS:
     def __init__(self, win):
 
         self.connect()
+        self.db.close() #get rid of this before trying to write to/read from DB
 
         url = 'http://comparch.gatech.edu/buzz.gif'
         request = urllib.request.Request(url)
@@ -28,6 +29,12 @@ class GTMS:
         self.reg.withdraw()
 
         self.doctorProfile()
+        self.doctorWin.withdraw()
+
+        self.appoinmentPage()
+
+        self.homePage()
+        self.hpWin.withdraw()
 
     def LoginPage(self, LogWin):
 
@@ -52,7 +59,7 @@ class GTMS:
         login = ttk.Button(LogWin, text='Login', width=5, cursor='hand2')
         login.grid(row=3, column=3, sticky=EW, padx=5, pady=5)
 
-        register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2', command=self.Register)
+        register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2')
         register.grid(row=4, column=3, sticky=EW, padx=5, pady=5)
 
     def Register(self):
@@ -244,7 +251,7 @@ class GTMS:
 
         self.specialty = StringVar()
         self.specialty.set('--Select Your Specialty--')
-        specialties = ['General Physician',
+        self.specialties = ['General Physician',
                        'Heart Specialist',
                        'Eye Physician',
                        'Orthopedics',
@@ -278,7 +285,7 @@ class GTMS:
                 specialtyLabel.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
                 specialtyLabel.configure(background='#cfb53b')
 
-                self.specialtyPulldown = ttk.Combobox(bottomFrame, textvariable=self.specialty, values=specialties)
+                self.specialtyPulldown = ttk.Combobox(bottomFrame, textvariable=self.specialty, values=self.specialties)
                 self.specialtyPulldown.config(width=20)
                 self.specialtyPulldown.grid(row=rows, column=1, padx=10, pady=10, sticky="NSEW")
                 self.specialtyPulldown.configure(background='#999')
@@ -354,6 +361,76 @@ class GTMS:
         editProfButton = ttk.Button(buttonFrame, text='Edit Profile')
         editProfButton.pack(side=RIGHT, padx=5, pady=10)
 
+    def homePage(self):
+
+        self.hpWin = Toplevel(LogWin)
+        self.hpWin.title('Home Page')
+        self.hpWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.hpWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.doctorWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.hpWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Home Page", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+    def appoinmentPage(self):
+
+        self.apptWin = Toplevel(LogWin)
+        self.apptWin.title('Appointments')
+        self.apptWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.apptWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.apptWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.apptWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Appointments", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        self.specialtySearch = StringVar()
+        self.specialtySearch.set('--Select a Specialty--')
+        specialtyFrame = Frame(bottomFrame, bd=1, background='#cfb53b')
+
+        specialtyFrame.grid(row=0, column=0)
+        specialtyLabel = Label(specialtyFrame, text='     Specialty: ', background='#cfb53b')
+        specialtyLabel.grid(row=0, column=0, pady=15)
+
+        self.specialtyPulldown = ttk.Combobox(specialtyFrame, textvariable=self.specialty, values=self.specialties)
+        self.specialtyPulldown.grid(row=0, column=1, padx=5, pady=15)
+        self.specialtyPulldown.config(state='readonly')
+
+        searchButton = ttk.Button(specialtyFrame, text='Search')
+        searchButton.grid(row=0, column=2, padx=50, pady=15)
+
+        apptFrame = Frame(bottomFrame, background='#cfb53b')
+        apptFrame.grid(row=1, column=0)
+
+        colNames = ['     Doctor Name     ', '     Phone Number     ', '     Room Number     ', '     Availability     ',
+                    '     Ratings     ']
+
+        for x in range(len(colNames)):
+            tableFrame = Frame(apptFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x)
+            label = Label(tableFrame, text=colNames[x], background='#cfb53b')
+            label.pack()
 
 
     def submitForm(self):
