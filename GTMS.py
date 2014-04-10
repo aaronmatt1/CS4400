@@ -417,21 +417,48 @@ class GTMS:
         self.specialtyPulldown.grid(row=0, column=1, padx=5, pady=15)
         self.specialtyPulldown.config(state='readonly')
 
-        searchButton = ttk.Button(specialtyFrame, text='Search')
+        searchButton = ttk.Button(specialtyFrame, text='Search', command=self.updateAppts)
         searchButton.grid(row=0, column=2, padx=50, pady=15)
 
-        apptFrame = Frame(bottomFrame, background='#cfb53b')
-        apptFrame.grid(row=1, column=0)
+        self.apptFrame = Frame(bottomFrame, background='#cfb53b')
+        self.apptFrame.grid(row=1, column=0)
 
         colNames = ['     Doctor Name     ', '     Phone Number     ', '     Room Number     ', '     Availability     ',
                     '     Ratings     ']
 
         for x in range(len(colNames)):
-            tableFrame = Frame(apptFrame, borderwidth=1, background='black')
-            tableFrame.grid(row=0, column=x)
+            tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW')
             label = Label(tableFrame, text=colNames[x], background='#cfb53b')
-            label.pack()
+            label.pack(fill=BOTH)
 
+    def updateAppts(self):
+        doctorsInfo = {
+            'A': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
+            'B': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
+            'C': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
+            'D': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
+        }
+        rows = 1
+        for x in doctorsInfo.keys():
+            tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=rows, column=0, sticky='EW')
+            label = Label(tableFrame, text=x, background='#cfb53b')
+            label.pack(fill=BOTH)
+            for y in range(len(doctorsInfo[x])):
+                if isinstance(doctorsInfo[x][y], list):
+                    for z in range(len(doctorsInfo[x][y])):
+                        tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+                        tableFrame.grid(row=rows, column=y+1, sticky='EW')
+                        label = Label(tableFrame, text=doctorsInfo[x][y][z], background='#cfb53b')
+                        label.pack(fill=BOTH)
+                        rows += 1
+                tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=rows, column=y+1, sticky='EW')
+                label = Label(tableFrame, text=doctorsInfo[x][y], background='#cfb53b')
+                label.pack(fill=BOTH)
+
+            rows += 1
 
     def submitForm(self):
 
