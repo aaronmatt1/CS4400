@@ -27,8 +27,85 @@ class GTMS:
         self.Register()
         self.reg.withdraw()
 
+        self.doctorProfile()
+
+    def LoginPage(self, LogWin):
+
+        #Top Banner
+        banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
+                   image=self.photo, compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=4)
+
+        #Main Body
+        username_label = Label(LogWin, text='Username:      ',  bg='#cfb53b')
+        username_label.grid(row=1, column=1, sticky=E, pady=20)
+
+        self.username_entry = ttk.Entry(LogWin, width=35)
+        self.username_entry.grid(row=1, column=2, sticky=W)
+
+        password_label = Label(LogWin, text='Password:      ',  bg='#cfb53b')
+        password_label.grid(row=2, column=1, sticky=E, pady=10)
+
+        self.password_entry = ttk.Entry(LogWin, show='*', width=35)
+        self.password_entry.grid(row=2, column=2, sticky=W)
+
+        login = ttk.Button(LogWin, text='Login', width=5, cursor='hand2')
+        login.grid(row=3, column=3, sticky=EW, padx=5, pady=5)
+
+        register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2', command=self.Register)
+        register.grid(row=4, column=3, sticky=EW, padx=5, pady=5)
+
+    def Register(self):
+
+        self.reg = Toplevel(LogWin)
+        self.reg = self.reg
+        self.reg.title('GTMRS New User Registration')
+        self.reg.config(bg='#cfb53b')
+
+        #Top Banner
+        banner = Label(self.reg, bg='#cfb53b', width=450, height=50, text='New User Registration', padx=10,
+                   font=('Berlin Sans FB', 18), image=self.photo, compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=6)
+
+        #Main Body
+        username_label = Label(self.reg, text='Username: ', bg='#cfb53b', padx=10, pady=10)
+        username_label.grid(row=1, column=1, sticky=W)
+
+        self.username_entry = Entry(self.reg, width=30)
+        self.username_entry.grid(row=1, column=2, columnspan=3, sticky=EW)
+
+        password_label = Label(self.reg, text='Password: ', bg='#cfb53b', padx=10)
+        password_label.grid(row=2, column=1, sticky=W)
+
+        self.password_entry = Entry(self.reg, width=30, show='*')
+        self.password_entry.grid(row=2, column=2, columnspan=3, sticky=EW)
+
+        confirm_label = Label(self.reg, text='Confirm Password: ', bg='#cfb53b', padx=10, pady=10)
+        confirm_label.grid(row=3, column=1, sticky=W)
+
+        self.confirm_entry = Entry(self.reg, width=30, show='*')
+        self.confirm_entry.grid(row=3, column=2, columnspan=3, sticky=EW)
+
+        user_type_label = Label(self.reg, text='Type of User: ', bg='#cfb53b', padx=10)
+        user_type_label.grid(row=4,column=1, sticky=W)
+
+        self.usertype = StringVar()
+        #User Type Pulldown Menu
+        self.userType = StringVar()
+        self.userType.set('Select User Type')
+        types = ['Doctor', 'Patient', 'Administrative Personnel']
+        userTypeMenu = ttk.Combobox(self.reg, textvariable=self.userType, values=types)
+        userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
+
+        #Register Button
+        register = ttk.Button(self.reg, text='Register')#, command=self.RegisterNew, cursor='hand2')
+        register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
+        #Cancel Button: Return To Login
+        cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
+        cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
+
     def patientProfile(self):
-        #very rough, dont have the top dow quite yet. It looks pretty poopish, but the rest is pretty good
+
         self.patientWin = Toplevel(LogWin)
         self.patientWin.title('Patient Profile')
         self.patientWin.configure(background='#cfb53b')
@@ -131,80 +208,153 @@ class GTMS:
         submit = ttk.Button(bottomFrame, text='Submit', command=self.submitForm)
         submit.grid(row=11, column=3, pady=10, padx=20)
 
-    def LoginPage(self, LogWin):
+    def doctorProfile(self):
 
-        #Top Banner
-        banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
-                   image=self.photo, compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=4)
+        self.doctorWin = Toplevel(LogWin)
+        self.doctorWin.title('Doctor Profile')
+        self.doctorWin.configure(background='#cfb53b')
 
-        #Main Body
-        username_label = Label(LogWin, text='Username:      ',  bg='#cfb53b')
-        username_label.grid(row=1, column=1, sticky=E, pady=20)
+        topFrame = Frame(self.doctorWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.doctorWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.doctorWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
 
-        self.username_entry = ttk.Entry(LogWin, width=35)
-        self.username_entry.grid(row=1, column=2, sticky=W)
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Doctor Profile", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
-        password_label = Label(LogWin, text='Password:      ',  bg='#cfb53b')
-        password_label.grid(row=2, column=1, sticky=E, pady=10)
+        #creating labels and entry boxes to be added to window in loop
+        attributes = [
+            '     License Number: ',
+            '     First Name: ',
+            '     Date of Birth: ',
+            '     Work Phone: ',
+            '     Room Nuber: ',
+            '     Home Address: ',
+        ]
 
-        self.password_entry = ttk.Entry(LogWin, show='*', width=35)
-        self.password_entry.grid(row=2, column=2, sticky=W)
+        rows = 0
 
-        login = ttk.Button(LogWin, text='Login', width=5, cursor='hand2')
-        login.grid(row=3, column=3, sticky=EW, padx=5, pady=5)
+        self.specialty = StringVar()
+        self.specialty.set('--Select Your Specialty--')
+        specialties = ['General Physician',
+                       'Heart Specialist',
+                       'Eye Physician',
+                       'Orthopedics',
+                       'Psychiatry',
+                       'Gynecologist']
 
-        register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2', command=self.Register)
-        register.grid(row=4, column=3, sticky=EW, padx=5, pady=5)
+        self.days = StringVar()
+        self.days.set('Monday')
+        days = ['Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday']
 
-    def Register(self):
+        self.fromTime = StringVar()
+        self.fromTime.set('----')
+        fromTimes = ['8:00am', '8:30am', '9:00am', '9:30am', '10:00am', '10:30am', '11:00am', '11:30am',
+                     '12:00pm', '12:30pm', '1:00pm', '1:30pm', '2:00pm', '2:30pm', '3:00pm', '3:30pm',
+                     '4:00pm', '4:30pm', '5:00pm', '5:30pm']
 
-        self.reg = Toplevel(LogWin)
-        self.reg = self.reg
-        self.reg.title('GTMRS New User Registration')
-        self.reg.config(bg='#cfb53b')
+        self.toTime = StringVar()
+        self.toTime.set('----')
+        toTimes = ['8:30am', '9:00am', '9:30am', '10:00am', '10:30am', '11:00am', '11:30am',
+                   '12:00pm', '12:30pm', '1:00pm', '1:30pm', '2:00pm', '2:30pm', '3:00pm', '3:30pm',
+                   '4:00pm', '4:30pm', '5:00pm', '5:30pm', '6:00pm']
 
-        #Top Banner
-        banner = Label(self.reg, bg='#cfb53b', width=450, height=50, text='New User Registration', padx=10,
-                   font=('Berlin Sans FB', 18), image=self.photo, compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=6)
+        for x in range(len(attributes)):
 
-        #Main Body
-        username_label = Label(self.reg, text='Username: ', bg='#cfb53b', padx=10, pady=10)
-        username_label.grid(row=1, column=1, sticky=W)
+            if rows == 5:
+                specialtyLabel = Label(bottomFrame, text="     Specialty: ")
+                specialtyLabel.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
+                specialtyLabel.configure(background='#cfb53b')
 
-        self.username_entry = Entry(self.reg, width=30)
-        self.username_entry.grid(row=1, column=2, columnspan=3, sticky=EW)
+                self.specialtyPulldown = ttk.Combobox(bottomFrame, textvariable=self.specialty, values=specialties)
+                self.specialtyPulldown.config(width=20)
+                self.specialtyPulldown.grid(row=rows, column=1, padx=10, pady=10, sticky="NSEW")
+                self.specialtyPulldown.configure(background='#999')
+                self.specialtyPulldown.config(state='readonly')
+                rows += 1
 
-        password_label = Label(self.reg, text='Password: ', bg='#cfb53b', padx=10)
-        password_label.grid(row=2, column=1, sticky=W)
+            labelname = Label(bottomFrame, text=attributes[x])
+            labelname.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
+            labelname.configure(background='#cfb53b')
+            rows += 1
 
-        self.password_entry = Entry(self.reg, width=30, show='*')
-        self.password_entry.grid(row=2, column=2, columnspan=3, sticky=EW)
+        self.licenseEntry = ttk.Entry(bottomFrame, width=30)
+        self.licenseEntry.grid(row=0, column=1, padx=10, pady=10, sticky="NSEW")
 
-        confirm_label = Label(self.reg, text='Confirm Password: ', bg='#cfb53b', padx=10, pady=10)
-        confirm_label.grid(row=3, column=1, sticky=W)
+        self.fNameEntry = ttk.Entry(bottomFrame, width=30)
+        self.fNameEntry.grid(row=1, column=1, padx=10, pady=10, sticky="NSEW")
 
-        self.confirm_entry = Entry(self.reg, width=30, show='*')
-        self.confirm_entry.grid(row=3, column=2, columnspan=3, sticky=EW)
+        self.lNameEntry = ttk.Entry(bottomFrame, width=30)
+        self.lNameEntry.grid(row=2, column=1, padx=10, pady=10, sticky="NSEW")
 
-        user_type_label = Label(self.reg, text='Type of User: ', bg='#cfb53b', padx=10)
-        user_type_label.grid(row=4,column=1, sticky=W)
+        self.DdobEntry = ttk.Entry(bottomFrame, width=30)
+        self.DdobEntry.grid(row=3, column=1, padx=10, pady=10, sticky="NSEW")
 
-        self.usertype = StringVar()
-        #User Type Pulldown Menu
-        self.userType = StringVar()
-        self.userType.set('Select User Type')
-        types = ['Doctor', 'Patient', 'Administrative Personnel']
-        userTypeMenu = ttk.Combobox(self.reg, textvariable=self.userType, values=types)
-        userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
+        self.DworkPhoneEntry = ttk.Entry(bottomFrame, width=30)
+        self.DworkPhoneEntry.grid(row=4, column=1, padx=10, pady=10, sticky="NSEW")
 
-        #Register Button
-        register = ttk.Button(self.reg, text='Register', command=self.patientWin.deiconify)#, command=self.RegisterNew, cursor='hand2')
-        register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
-        #Cancel Button: Return To Login
-        cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
-        cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
+        self.roomEntry = ttk.Entry(bottomFrame, width=30)
+        self.roomEntry.grid(row=6, column=1, padx=10, pady=10, sticky="NSEW")
+
+        self.DaddressEntry = ttk.Entry(bottomFrame, width=30)
+        self.DaddressEntry.grid(row=7, column=1, padx=10, pady=10, sticky="NSEW")
+
+        #Creating Availability Pulldown Row
+        availableFrame = Frame(bottomFrame)
+        availableFrame.grid(row=rows, column=0, pady=10, columnspan=2)
+        availableFrame.configure(background='#cfb53b')
+
+        availableLabel = Label(availableFrame, text='     Availability: ')
+        availableLabel.grid(row=0, column=0, padx=10, pady=10, sticky='W')
+        availableLabel.configure(background='#cfb53b')
+
+        self.availableEntry = ttk.Combobox(availableFrame, textvariable=self.days, values=days, width=11)
+        self.availableEntry.grid(row=0, column=1, padx=10, sticky="W")
+        self.availableEntry.config(state='readonly')
+
+        fromLabel = Label(availableFrame, text='From: ')
+        fromLabel.grid(row=0, column=2)
+        fromLabel.configure(background='#cfb53b')
+
+        self.fromEntry = ttk.Combobox(availableFrame, textvariable=self.fromTime, values=fromTimes, width=8)
+        self.fromEntry.grid(row=0, column=3, padx=5, sticky="W")
+        self.fromEntry.config(state='readonly')
+
+        toLabel = Label(availableFrame, text='To: ')
+        toLabel.grid(row=0, column=4)
+        toLabel.configure(background='#cfb53b')
+
+        self.toEntry = ttk.Combobox(availableFrame, textvariable=self.toTime, values=toTimes, width=8)
+        self.toEntry.grid(row=0, column=5, padx=5, sticky="W")
+        self.toEntry.config(state='readonly')
+
+        plusButton = ttk.Button(availableFrame, text='+', width=2.5)
+        plusButton.grid(row=0, column=6, padx=5)
+
+        #Putting Buttons at the Bottom
+        buttonFrame = Frame(bottomFrame)
+        buttonFrame.grid(row=9, column=0, columnspan=2)
+        buttonFrame.configure(background='#cfb53b')
+
+        createButton = ttk.Button(buttonFrame, text='Create Profile')
+        createButton.pack(side=RIGHT, padx=5, pady=10)
+
+        editProfButton = ttk.Button(buttonFrame, text='Edit Profile')
+        editProfButton.pack(side=RIGHT, padx=5, pady=10)
+
+
 
     def submitForm(self):
 

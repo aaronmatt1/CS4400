@@ -28,14 +28,11 @@
       <file leaf-file-name="GTMS.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/GTMS.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="243" column="0" selection-start="10183" selection-end="10183" vertical-scroll-proportion="0.3655914" vertical-offset="0" max-vertical-offset="744">
+            <state line="348" column="19" selection-start="14797" selection-end="14797" vertical-scroll-proportion="0.45628998" vertical-offset="4410" max-vertical-offset="5406">
               <folding>
-                <element signature="e#198#633#0" expanded="false" />
-                <element signature="e#673#5500#0" expanded="false" />
-                <element signature="e#5544#6645#0" expanded="false" />
-                <element signature="e#6680#8920#0" expanded="false" />
-                <element signature="e#8957#9735#0" expanded="false" />
-                <element signature="e#9769#10182#0" expanded="false" />
+                <element signature="e#707#1808#0" expanded="false" />
+                <element signature="e#1843#4048#0" expanded="false" />
+                <element signature="e#15934#16347#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -59,10 +56,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1616" />
-    <option name="height" value="876" />
+    <option name="x" value="800" />
+    <option name="width" value="800" />
+    <option name="height" value="860" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -90,6 +86,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -100,13 +97,17 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="C:/Python33/Python" />
     <property name="recentsLimit" value="5" />
     <property name="FullScreen" value="false" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings />
+    </option>
   </component>
   <component name="RunManager" selected="Python.GTMS">
     <configuration default="false" name="GTMS" type="PythonConfigurationType" factoryName="Python" temporary="true">
@@ -123,7 +124,9 @@
       <module name="CS4400" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/GTMS.py" />
       <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PyDebugRunner" />
       <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PyDebugRunner" />
       <ConfigurationWrapper RunnerId="PythonRunner" />
       <method />
     </configuration>
@@ -267,18 +270,18 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1616" height="876" extended-state="6" />
-    <editor active="false" />
+    <frame x="800" y="0" width="800" height="860" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1225" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39920425" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32987013" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32625994" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -308,28 +311,33 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/GTMS.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="243" column="0" selection-start="10183" selection-end="10183" vertical-scroll-proportion="0.0" vertical-offset="272" max-vertical-offset="510">
+        <state line="243" column="0" selection-start="10183" selection-end="10183" vertical-scroll-proportion="0.0" vertical-offset="510" max-vertical-offset="510">
           <folding>
-            <element signature="e#198#633#0" expanded="false" />
-            <element signature="e#673#5500#0" expanded="false" />
-            <element signature="e#5544#6645#0" expanded="false" />
-            <element signature="e#6680#8920#0" expanded="false" />
-            <element signature="e#8957#9735#0" expanded="false" />
-            <element signature="e#9769#10182#0" expanded="false" />
+            <element signature="e#707#1808#0" expanded="false" />
+            <element signature="e#1843#4048#0" expanded="false" />
+            <element signature="e#15934#16347#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/GTMS.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="243" column="0" selection-start="10183" selection-end="10183" vertical-scroll-proportion="0.3655914" vertical-offset="0" max-vertical-offset="744">
+        <state line="243" column="0" selection-start="10183" selection-end="10183" vertical-scroll-proportion="0.0" vertical-offset="272" max-vertical-offset="510">
           <folding>
-            <element signature="e#198#633#0" expanded="false" />
-            <element signature="e#673#5500#0" expanded="false" />
-            <element signature="e#5544#6645#0" expanded="false" />
-            <element signature="e#6680#8920#0" expanded="false" />
-            <element signature="e#8957#9735#0" expanded="false" />
-            <element signature="e#9769#10182#0" expanded="false" />
+            <element signature="e#707#1808#0" expanded="false" />
+            <element signature="e#1843#4048#0" expanded="false" />
+            <element signature="e#15934#16347#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/GTMS.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="348" column="19" selection-start="14797" selection-end="14797" vertical-scroll-proportion="0.45628998" vertical-offset="4410" max-vertical-offset="5406">
+          <folding>
+            <element signature="e#707#1808#0" expanded="false" />
+            <element signature="e#1843#4048#0" expanded="false" />
+            <element signature="e#15934#16347#0" expanded="false" />
           </folding>
         </state>
       </provider>
