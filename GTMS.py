@@ -429,8 +429,6 @@ class GTMS:
                                   foreground='blue',
                                   background='#cfb53b')
 
-
-
     def appoinmentPage(self):
 
         self.apptWin = Toplevel(LogWin)
@@ -481,32 +479,57 @@ class GTMS:
             label.pack(fill=BOTH)
 
     def updateAppts(self):
+
         doctorsInfo = {
-            'A': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
-            'B': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
-            'C': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
-            'D': ['Phone', 'Room', ['Available1','Available2','Available3'], '******'],
+            'A': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '******'],
+            'B': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '***'],
+            'C': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '****'],
+            'D': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '**'],
+            'E': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '**'],
+            'F': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '**']
         }
+        checked = IntVar()
+
         rows = 1
         for x in doctorsInfo.keys():
-            tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-            tableFrame.grid(row=rows, column=0, sticky='EW')
-            label = Label(tableFrame, text=x, background='#cfb53b')
-            label.pack(fill=BOTH)
             for y in range(len(doctorsInfo[x])):
+                if rows <= (len(doctorsInfo.keys())*3):
+                    tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=rows, column=0, sticky='EW')
+                    label = Label(tableFrame, text=x, background='#cfb53b')
+                    label.pack(fill=BOTH)
                 if isinstance(doctorsInfo[x][y], list):
+                    zrow = rows
                     for z in range(len(doctorsInfo[x][y])):
                         tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-                        tableFrame.grid(row=rows, column=y+1, sticky='EW')
+                        tableFrame.grid(row=zrow, column=y+1, sticky='EW')
                         label = Label(tableFrame, text=doctorsInfo[x][y][z], background='#cfb53b')
                         label.pack(fill=BOTH)
-                        rows += 1
-                tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-                tableFrame.grid(row=rows, column=y+1, sticky='EW')
-                label = Label(tableFrame, text=doctorsInfo[x][y], background='#cfb53b')
-                label.pack(fill=BOTH)
+                        zrow += 1
+                        if zrow <= (len(doctorsInfo.keys())*3):
+                            for a in range(len(doctorsInfo[x])+1):
+                                tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+                                tableFrame.grid(row=zrow, column=a, sticky='EW')
+                                label = Label(tableFrame, text='  ', background='#cfb53b')
+                                label.pack(fill=BOTH)
 
-            rows += 1
+                    y += 1
+
+                if rows <= (len(doctorsInfo.keys())*3):
+                    tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=rows, column=y+1, sticky='EW')
+                    label = Label(tableFrame, text=doctorsInfo[x][y], background='#cfb53b')
+                    label.pack(fill=BOTH)
+
+                try:
+                    rows = zrow
+                except:
+                    pass
+
+        buttonFrame = Frame(self.apptWin, background='#cfb53b')
+        buttonFrame.grid(row=3, column=0, pady=10)
+        requestButton = ttk.Button(buttonFrame, text='Request Appointment')
+        requestButton.pack()
 
     def submitForm(self):
 
