@@ -7,6 +7,6 @@ Aaron
 Juan
 -Login Page **Complete**
 -New User Registation **Complete**
--Order Med
--Payment Info
+-Order Med **Complete**
+-Payment Info **Complete**
 -Registration **Complete(except for logo)**
