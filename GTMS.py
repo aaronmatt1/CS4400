@@ -428,6 +428,159 @@ class GTMS:
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+                                  
+    def OrderMeds(self):
+        self.medsWin = Toplevel()
+        medsWin = self.medsWin
+        medsWin.title('Order Medication Form')
+        medsWin.config(bg=color)
+
+        #Top Banner
+        banner = Label(medsWin, bg=color, width=450, height=50, text='Order Medication',
+                       padx=10, font=('Berlin Sans FB', 18), image=self.photo,
+                       compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=4)
+
+        #Main Body
+        attributes = ["Medicine Name: ", 'Dosage: ',
+                      'Duration: ', 'Consulting Doctor: ', 'Date of Prescription: ']
+        count = 1
+        for attribute in attributes:
+            attribute_label = Label(medsWin, text=attribute, bg=color)
+            attribute_label.grid(row=count, column=0, padx=10, pady=10, sticky=W)
+            count += 1
+
+        self.meds_name = Entry(medsWin, width=30)
+        self.meds_name.grid(row=1, column=1, columnspan=3, sticky=W)
+
+        dosage_frame = Frame(medsWin)
+        dosage_frame.grid(row=2, column=1, sticky=W)
+        
+        self.dosage_amount = Entry(dosage_frame, width=5)
+        self.dosage_amount.grid(row=0, column=0, sticky=W)
+
+        per = Label(dosage_frame, text='every day', bg=color)
+        per.grid(row=0, column=1, sticky=W)
+
+        duration_frame = Frame(medsWin)
+        duration_frame.grid(row=3, column=1, sticky=W)
+
+        self.duration_months = Entry(duration_frame, width=5)
+        self.duration_months.grid(row=0, column=0, sticky=W)
+
+        months = Label(duration_frame, text='months', bg=color)
+        months.grid(row=0, column=1, sticky=W)
+
+        self.duration_days = Entry(duration_frame, width=5)
+        self.duration_days.grid(row=0, column=2, sticky=W)
+
+        days = Label(duration_frame, text='days', bg=color)
+        days.grid(row=0, column=3, sticky=W)
+
+        self.consulting_doctor = Entry(medsWin, width=20)
+        self.consulting_doctor.grid(row=4, column=1, columnspan=4, sticky=W)
+
+        date_prescription_frame = Frame(medsWin)
+        date_prescription_frame.grid(row=5, column=1, sticky=W)
+
+        years = list(range(1910, 2014))
+        months = list(range(1, 13))
+        days = list(range(1, 32))
+        
+        self.prescrip_year = StringVar()
+        self.prescrip_year.set('Year')
+
+        prescrip_year = ttk.Combobox(date_prescription_frame, textvariable=self.prescrip_year, values=years)
+        prescrip_year.config(width=5)
+        prescrip_year.grid(row=0, column=0, sticky=W)
+
+        self.prescrip_month = StringVar()
+        self.prescrip_month.set('Month')
+
+        prescrip_month = ttk.Combobox(date_prescription_frame, textvariable=self.prescrip_month, values=months)
+        prescrip_month.config(width=7)
+        prescrip_month.grid(row=0, column=1, sticky=W)
+
+        self.prescrip_day = StringVar()
+        self.prescrip_day.set('Day')
+
+        prescrip_day = ttk.Combobox(date_prescription_frame, textvariable=self.prescrip_day, values=days)
+        prescrip_day.config(width=5)
+        prescrip_day.grid(row=0, column=2, sticky=W)
+        
+        checkout = ttk.Button(medsWin, text='Checkout', cursor='hand2', command=self.PaymentInfo)
+        checkout.grid(row=6, column=2, padx=10, pady=10)
+
+    def PaymentInfo(self):
+        self.medsWin.iconify()
+        self.paymentInfoWin = Toplevel()
+        paymentWin = self.paymentInfoWin
+        paymentWin.title('Payment Information')
+        paymentWin.config(bg=color)
+        
+        #Top Banner
+        banner = Label(paymentWin, bg=color, width=450, height=50, text='Payment Information',
+                       padx=10, font=('Berlin Sans FB', 18), image=self.photo,
+                       compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=4)
+
+        #Main Body
+        attributes = ["Cardholder's Name: ", 'Card Number: ',
+                      'Type of Card: ', 'CVV: ', 'Date of Expiry: ']
+        count = 1
+        for attribute in attributes:
+            attribute_label = Label(paymentWin, text=attribute, bg=color)
+            attribute_label.grid(row=count, column=0, padx=10, pady=10, sticky=W)
+            count += 1
+
+        self.cardholder_name = Entry(paymentWin, width=30)
+        self.cardholder_name.grid(row=1, column=1, sticky=W)
+
+        self.card_number = Entry(paymentWin, width=30)
+        self.card_number.grid(row=2, column=1, sticky=W)
+
+        self.card_type = StringVar()
+        self.card_type.set('Select Card Type')
+
+        types = ['Visa', 'Mastercard', 'Discover', 'American Express']
+
+        paymentPulldown = ttk.Combobox(paymentWin, textvariable=self.card_type, values=types)
+        paymentPulldown.config(width=25)
+        paymentPulldown.grid(row=3, column=1, sticky=W)
+
+        self.cvv = Entry(paymentWin, width=30)
+        self.cvv.grid(row=4, column=1, sticky=W)
+
+        date_expiry_frame = Frame(paymentWin)
+        date_expiry_frame.grid(row=5, column=1, sticky=W)
+
+        years = list(range(1910, 2014))
+        months = list(range(1, 13))
+        days = list(range(1, 32))
+        
+        self.expiry_year = StringVar()
+        self.expiry_year.set('Year')
+
+        expiry_year = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_year, values=years)
+        expiry_year.config(width=5)
+        expiry_year.grid(row=0, column=0, sticky=W)
+
+        self.expiry_month = StringVar()
+        self.expiry_month.set('Month')
+
+        expiry_month = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_month, values=months)
+        expiry_month.config(width=7)
+        expiry_month.grid(row=0, column=1, sticky=W)
+
+        self.expiry_day = StringVar()
+        self.expiry_day.set('Day')
+
+        expiry_day = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_day, values=days)
+        expiry_day.config(width=5)
+        expiry_day.grid(row=0, column=2, sticky=W)
+
+        order = ttk.Button(paymentWin, text='Order', cursor='hand2', command=self.PayMeds)
+        order.grid(row=6, column=2, padx=5, pady=5)
 
     def appoinmentPage(self):
 
