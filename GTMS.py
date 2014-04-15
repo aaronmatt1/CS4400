@@ -481,19 +481,19 @@ class GTMS:
     def updateAppts(self):
 
         doctorsInfo = {
-            'A': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '******'],
-            'B': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '***'],
-            'C': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '****'],
-            'D': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '**'],
-            'E': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '**'],
-            'F': ['Phone', 'Room', ['Available1', 'Available2', 'Available3'], '**']
+            'A': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '******'],
+            'B': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '***'],
+            'C': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '****'],
+            'D': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**'],
+            'E': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**'],
+            'F': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**']
         }
         checked = IntVar()
 
         rows = 1
         for x in doctorsInfo.keys():
             for y in range(len(doctorsInfo[x])):
-                if rows <= (len(doctorsInfo.keys())*3):
+                if rows <= (len(doctorsInfo.keys())*len(doctorsInfo['A'][2])):
                     tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                     tableFrame.grid(row=rows, column=0, sticky='EW')
                     label = Label(tableFrame, text=x, background='#cfb53b')
@@ -506,7 +506,7 @@ class GTMS:
                         label = Label(tableFrame, text=doctorsInfo[x][y][z], background='#cfb53b')
                         label.pack(fill=BOTH)
                         zrow += 1
-                        if zrow <= (len(doctorsInfo.keys())*3):
+                        if zrow <= (len(doctorsInfo.keys())*len(doctorsInfo['A'][2])):
                             for a in range(len(doctorsInfo[x])+1):
                                 tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                                 tableFrame.grid(row=zrow, column=a, sticky='EW')
@@ -515,7 +515,7 @@ class GTMS:
 
                     y += 1
 
-                if rows <= (len(doctorsInfo.keys())*3):
+                if rows <= (len(doctorsInfo.keys())*len(doctorsInfo['A'][2])):
                     tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                     tableFrame.grid(row=rows, column=y+1, sticky='EW')
                     label = Label(tableFrame, text=doctorsInfo[x][y], background='#cfb53b')
