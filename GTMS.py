@@ -628,50 +628,53 @@ class GTMS:
         for x in range(len(colNames)):
             tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
             tableFrame.grid(row=0, column=x, sticky='EW')
-            label = Label(tableFrame, text=colNames[x], background='#cfb53b')
+            label = Label(tableFrame, text=colNames[x], background='white')
             label.pack(fill=BOTH)
 
     def updateAppts(self):
 
-        doctorsInfo = {
-            'A': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '******'],
-            'B': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '***'],
-            'C': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '****'],
+        self.doctorsInfo = {
+            'A': ['Phone', 'Room', ['Available4'], '******'],
+            'B': ['Phone', 'Room', ['Available1',  'Available3', 'Available4'], '***'],
+            'C': ['Phone', 'Room', ['Available3', 'Available4'], '****'],
             'D': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**'],
             'E': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**'],
-            'F': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**']
+            'F': ['Phone', 'Room', ['Available1', 'Available2',  'Available4'], '**']
         }
-        checked = IntVar()
+
+        doctorsList = []
+        for doctor in self.doctorsInfo.keys():
+            doctorsList.append(doctor)
 
         rows = 1
-        for x in doctorsInfo.keys():
-            for y in range(len(doctorsInfo[x])):
-                if rows <= (len(doctorsInfo.keys())*len(doctorsInfo['A'][2])):
+        for x in self.doctorsInfo.keys():
+            for y in range(len(self.doctorsInfo[x])):
+                if rows <= (len(doctorsList)*len(self.doctorsInfo[x][2])):
                     tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                     tableFrame.grid(row=rows, column=0, sticky='EW')
-                    label = Label(tableFrame, text=x, background='#cfb53b')
+                    label = Label(tableFrame, text=x, background='white')
                     label.pack(fill=BOTH)
-                if isinstance(doctorsInfo[x][y], list):
+                if isinstance(self.doctorsInfo[x][y], list):
                     zrow = rows
-                    for z in range(len(doctorsInfo[x][y])):
+                    for z in range(len(self.doctorsInfo[x][y])):
                         tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                         tableFrame.grid(row=zrow, column=y+1, sticky='EW')
-                        label = Label(tableFrame, text=doctorsInfo[x][y][z], background='#cfb53b')
+                        label = Label(tableFrame, text=self.doctorsInfo[x][y][z], background='white')
                         label.pack(fill=BOTH)
                         zrow += 1
-                        if zrow <= (len(doctorsInfo.keys())*len(doctorsInfo['A'][2])):
-                            for a in range(len(doctorsInfo[x])+1):
+                        if zrow <= (len(doctorsList)*len(self.doctorsInfo[x][2])):
+                            for a in range(len(self.doctorsInfo[x])+1):
                                 tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                                 tableFrame.grid(row=zrow, column=a, sticky='EW')
-                                label = Label(tableFrame, text='  ', background='#cfb53b')
+                                label = Label(tableFrame, text='  ', background='white')
                                 label.pack(fill=BOTH)
 
                     y += 1
 
-                if rows <= (len(doctorsInfo.keys())*len(doctorsInfo['A'][2])):
+                if rows <= (len(doctorsList)*len(self.doctorsInfo[x][2])):
                     tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
                     tableFrame.grid(row=rows, column=y+1, sticky='EW')
-                    label = Label(tableFrame, text=doctorsInfo[x][y], background='#cfb53b')
+                    label = Label(tableFrame, text=self.doctorsInfo[x][y], background='white')
                     label.pack(fill=BOTH)
 
                 try:
@@ -679,10 +682,40 @@ class GTMS:
                 except:
                     pass
 
-        buttonFrame = Frame(self.apptWin, background='#cfb53b')
-        buttonFrame.grid(row=3, column=0, pady=10)
-        requestButton = ttk.Button(buttonFrame, text='Request Appointment')
-        requestButton.pack()
+        self.docSelected = StringVar()
+
+        self.docSelected.set('--Select A Specialist--')
+
+        self.selectionFrame = Frame(self.apptWin, background='#cfb53b')
+        self.selectionFrame.grid(row=3, column=0, pady=10)
+        self.specialistPulldown = ttk.Combobox(self.selectionFrame, textvariable=self.docSelected, values=doctorsList)
+        self.specialistPulldown.config(state='readonly')
+
+        self.specialistPulldown.pack()
+
+        self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
+        self.requestButton.pack(pady=5)
+        self.specialistPulldown.bind("<<ComboboxSelected>>", self.specialistSelected)
+
+    def specialistSelected(self, event=NONE):
+
+
+        try:
+            self.timePulldown.destroy()
+        except:
+            pass
+
+        self.timeSelected = StringVar()
+        self.timeSelected.set('--Select A Time--')
+
+        self.requestButton.destroy()
+        self.timePulldown = ttk.Combobox(self.selectionFrame, textvariable=self.timeSelected,
+                                             values=self.doctorsInfo[self.docSelected.get()][2])
+        self.timePulldown.config(state='readonly')
+        self.timePulldown.pack(pady=5)
+        self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
+        self.requestButton.pack(pady=5)
+
 
     def submitForm(self):
 
