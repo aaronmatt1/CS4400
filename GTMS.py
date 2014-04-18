@@ -70,20 +70,23 @@ class GTMS:
             show = mbox.showinfo("Login Complete", "Login successful.")
             cursor.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (username))
             result = cursor.fetchall()
+            #If user is patient
             if result[0][0] == 1:
                 rootWin.iconify()
                 self.PatientFunctionality()
             else:
                 cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
                 result = cursor.fetchall()
+                #If user is doctor
                 if result[0][0]  == 1:
                     rootWin.iconify()
                     self.DoctorFunctionality()
+                #User must be Admin
                 else:
                     rootWin.iconify()
                     self.AdminFunctionality()
         else:
-            error = messagebox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
+            error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
         db.commit()
 
@@ -172,21 +175,21 @@ class GTMS:
                                     self.reg.iconify()
                                     self.DoctorProfile()
                             else:
-                                error = messagebox.showerror("Registration Error", "Username is already in use.")
+                                error = mbox.showerror("Registration Error", "Username is already in use.")
                                 return
                         else:
-                            error = messagebox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
+                            error = mbox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
                             return
                     else:
-                        error = messagebox.showerror("Registration Error", "Please enter shorter password and/or username.")
+                        error = mbox.showerror("Registration Error", "Please enter shorter password and/or username.")
                 else:
-                    error = messagebox.showerror("Registration Error", "Please check that password is entered correctly.")
+                    error = mbox.showerror("Registration Error", "Please check that password is entered correctly.")
                     return
             else:
-                error = messagebox.showerror("Registration Error", "Please enter valid username and/or password.")
+                error = mbox.showerror("Registration Error", "Please enter valid username and/or password.")
                 return                
         except:
-            error = messagebox.showerror("Registration Error", "Please try again.")
+            error = mbox.showerror("Registration Error", "Please try again.")
             return
 
     def patientProfile(self):
