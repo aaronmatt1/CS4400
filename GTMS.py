@@ -88,8 +88,6 @@ class GTMS:
 
                 self.patientHomePage()
 
-                self.patientHomepage()
-
             else:
                 cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (self.username))
                 result = cursor.fetchall()
@@ -100,16 +98,12 @@ class GTMS:
 
                     self.doctorHomePage()
 
-                    self.doctorHomepage()
-
                 #User must be Admin
                 else:
                     self.userType = 'admin'
                     LogWin.iconify()
 
                     self.adminHomePage()
-
-                    self.adminHomepage()
 
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
@@ -328,6 +322,31 @@ class GTMS:
 
         addAllergies = ttk.Button(bottomFrame, text='+', width=5)
         addAllergies.grid(row=9, column=2)
+        
+        #This block of code is intended for when the patient edits his profile.
+        #In this case, the patient's current information will be pulled from
+        #the database and inserted into the appropriate entry. The patient
+        #can then edit the necessary info.
+        username = self.username_entry.get()
+        self.c.execute("SELECT COUNT(*) FROM PATIENT WHERE Username = %s" , (username))
+        result = self.c.fetchall()
+        #PATIENT(Name, HomePhone, Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+        result = result[0]
+        #If the patient info is in the PATIENT table, insert the current info
+        #into the corresponding entries
+        if result[0] != 0:
+            self.c.execute("SELECT * FROM PATIENT WHERE Username = %s" , (username))
+            result = self.c.fetchall()
+            result = result[0]
+            self.nameEntry.insert(END, result[0])
+            self.dobEntry.insert(END, result[3])
+            self.gender.set(result[4])
+            self.addressEntry.insert(END, result[5])
+            self.homePhoneEntry.insert(END, result[1])
+            self.workPhoneEntry.insert(END, result[6])
+            self.weightEntry.insert(END, result[8])
+            self.heightEntry.insert(END, result[7])
+            self.annualIncome.set(result[9])
 
         submit = ttk.Button(bottomFrame, text='Submit', command=self.PsubmitForm)
         submit.grid(row=11, column=3, pady=10, padx=20)
@@ -531,7 +550,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT) #command=self.EditProfile)
+        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT, command=self.EditProfile)
         editProfile.grid(row=5, column=0, padx=20, pady=10, sticky='W')
         editProfile.configure(font='Arial',
                                     foreground='blue',
@@ -611,8 +630,8 @@ class GTMS:
                                   foreground='blue',
                                   background='#cfb53b')
 
-    #def adminHomePage(self):
-
+    def adminHomePage(self):
+        pass
 
                                   
     def VisitHistory(self):
@@ -1267,6 +1286,20 @@ class GTMS:
 
     def PayMeds(self):
         pass
+    
+    def EditProfile(self):
+        username = self.username_entry.get()
+        self.c.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (username))
+        result = self.c.fetchall()
+        if result[0][0] == 1:
+            #rootWin.iconify()
+            self.patientProfile()
+        else:
+            self.c.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
+            result = self.c.fetchall()
+            if result[0][0]  == 1:
+                #rootWin.iconify()
+                self.doctorProfile()
 
     def connect(self):
 
