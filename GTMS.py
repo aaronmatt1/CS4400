@@ -85,11 +85,11 @@ class GTMS:
             if result[0][0] == 1:
                 self.userType = 'patient'
                 LogWin.iconify()
-<<<<<<< HEAD
+
                 self.patientHomePage()
-=======
+
                 self.patientHomepage()
->>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
+
             else:
                 cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (self.username))
                 result = cursor.fetchall()
@@ -97,20 +97,20 @@ class GTMS:
                 if result[0][0] == 1:
                     self.userType = 'doctor'
                     LogWin.iconify()
-<<<<<<< HEAD
+
                     self.doctorHomePage()
-=======
+
                     self.doctorHomepage()
->>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
+
                 #User must be Admin
                 else:
                     self.userType = 'admin'
                     LogWin.iconify()
-<<<<<<< HEAD
+
                     self.adminHomePage()
-=======
+
                     self.adminHomepage()
->>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
+
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
@@ -501,7 +501,7 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.MakeAppt)
+        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.appoinmentPage)
         makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
         makeAppointButton.configure(font='Arial',
                                     foreground='blue',
@@ -519,7 +519,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT, command=self.Communicator)
+        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT, command=self.sendMessage)
         communicateButton.grid(row=3, column=0, padx=20, pady=10, sticky='W')
         communicateButton.configure(font='Arial',
                                     foreground='blue',
@@ -531,7 +531,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT, command=self.EditProfile)
+        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT) #command=self.EditProfile)
         editProfile.grid(row=5, column=0, padx=20, pady=10, sticky='W')
         editProfile.configure(font='Arial',
                                     foreground='blue',
@@ -1102,7 +1102,7 @@ class GTMS:
         order.grid(row=6, column=2, padx=5, pady=5)
 
     def appoinmentPage(self):
-        self.patHPWin.iconify()
+
         self.apptWin = Toplevel(LogWin)
         self.apptWin.title('Appointments')
         self.apptWin.configure(background='#cfb53b')
@@ -1225,7 +1225,7 @@ class GTMS:
         Height = self.heightEntry.get()
         AnnualIncome = self.annualIncome.get()
         Allergies = self.allergiesEntry.get()
-<<<<<<< HEAD
+
 
         self.connect()
 
@@ -1234,7 +1234,7 @@ class GTMS:
                 .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
 
         self.c.execute(query)
-=======
+
         if PName != []:
             if HomePhone != []:
                 if DOB != []:
@@ -1263,7 +1263,7 @@ class GTMS:
         else:
             error = mbox.showerror("Patient Form", "Please enter a valid name.")
             return
->>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
+
 
     def PayMeds(self):
         pass
