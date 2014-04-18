@@ -24,16 +24,13 @@ class GTMS:
 
         self.patientProfile()
 
-
         self.Register()
-
 
         self.doctorProfile()
 
-
         self.appoinmentPage()
 
-        self.homePage()
+        self.patientHomePage()
 
     def LoginPage(self, LogWin):
 
@@ -60,6 +57,35 @@ class GTMS:
 
         register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2')
         register.grid(row=4, column=3, sticky=EW, padx=5, pady=5)
+        
+    def LoginCheck(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        db = self.Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM USER WHERE Username= %s AND Password= %s", (username, password))
+        result = cursor.fetchall()
+        #If user account exists
+        if result != ():
+            show = mbox.showinfo("Login Complete", "Login successful.")
+            cursor.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (username))
+            result = cursor.fetchall()
+            if result[0][0] == 1:
+                rootWin.iconify()
+                self.PatientFunctionality()
+            else:
+                cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
+                result = cursor.fetchall()
+                if result[0][0]  == 1:
+                    rootWin.iconify()
+                    self.DoctorFunctionality()
+                else:
+                    rootWin.iconify()
+                    self.AdminFunctionality()
+        else:
+            error = messagebox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
+            return
+        db.commit()
 
     def Register(self):
 
@@ -109,6 +135,59 @@ class GTMS:
         #Cancel Button: Return To Login
         cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
+        
+        
+    def RegisterNew(self):
+        try:
+            username = self.username_entry.get()
+            password = self.password_entry.get()
+            confirm = self.confirm_entry.get()
+            #If username and password entries are not empty
+            if username != '' and password != '':
+                #If password and confirm match
+                if password.split() == confirm.split():
+                    #If username and password are less than 15 chars
+                    if len(password) < 15 or len(username) < 15:
+                        num = findall("\d+", password)
+                        letters = findall("[a-zA-Z]", password)
+                        #If password contains both letters and numbers
+                        if num != [] and letters != []:
+                            db = self.Connect()
+                            cursor = db.cursor()
+                            cursor.execute("SELECT * FROM USER WHERE Username= %s", (username))
+                            data = []
+                            for i in cursor:
+                                data.append(i)
+                            #If username is not taken
+                            if data == []:
+                                cursor.execute("INSERT INTO USER (Username, Password) VALUES (%s, %s)", (username, password))
+                                notice = messagebox.showinfo("Registration Complete", "User is now registered into GTMRS database")
+                                db.commit()
+                                #If user is patient
+                                if self.user_type.get() == 'Patient':
+                                    self.reg.iconify()
+                                    self.PatientProfile()
+                                #If user is doctor
+                                elif self.user_type.get() == 'Doctor':
+                                    self.reg.iconify()
+                                    self.DoctorProfile()
+                            else:
+                                error = messagebox.showerror("Registration Error", "Username is already in use.")
+                                return
+                        else:
+                            error = messagebox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
+                            return
+                    else:
+                        error = messagebox.showerror("Registration Error", "Please enter shorter password and/or username.")
+                else:
+                    error = messagebox.showerror("Registration Error", "Please check that password is entered correctly.")
+                    return
+            else:
+                error = messagebox.showerror("Registration Error", "Please enter valid username and/or password.")
+                return                
+        except:
+            error = messagebox.showerror("Registration Error", "Please try again.")
+            return
 
     def patientProfile(self):
 
@@ -360,7 +439,7 @@ class GTMS:
         editProfButton = ttk.Button(buttonFrame, text='Edit Profile')
         editProfButton.pack(side=RIGHT, padx=5, pady=10)
 
-    def homePage(self):
+    def patientHomePage(self):
 
         self.hpWin = Toplevel(LogWin)
         self.hpWin.title('Home Page')
@@ -428,6 +507,122 @@ class GTMS:
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+                                  
+    def VisitHistory(self):
+        self.visitHistWin = Toplevel()
+        visitHistWin = self.visitHistWin
+        visitHistWin.title('Visit History Window')
+        visitHistWin.config(bg=color)
+        
+        #Top Banner
+        banner = Label(visitHistWin, bg=color, width=450, height=50, text='Patient Visit History', padx=10,
+                       font=('Berlin Sans FB', 18), image=self.photo,
+                       compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=4)
+
+        #Main Body
+        date_visits_frame = Frame(visitHistWin, bg=color)
+        date_visits_frame.grid(row=1, column=0, rowspan=5)
+        
+        dateVisitsLabel = Label(date_visits_frame, text='Dates of Visits', bg=color)
+        dateVisitsLabel.grid(row=0, column=0, sticky=N)
+
+        #Date Visits Listbox
+        username = self.username.get()
+        db = self.Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT DateVisit FROM VISIT WHERE PUsername='%s'" % (username))
+        result = cursor.fetchall()
+        date_visits=()
+        for date in result:
+            date_visits += (date[0],)
+        
+        self.dateVisits = StringVar(value=date_visits)
+
+        date_visits_lbox = Listbox(date_visits_frame, listvariable=self.dateVisits, width=12, height=5)
+        date_visits_lbox.grid(row=1, column=0, padx=3, sticky=N)
+
+        #Vertical Separator
+        separator = ttk.Separator(visitHistWin, orient=VERTICAL)
+        separator.grid(row=1, column=1, sticky=N+S+W, rowspan=4)
+
+        #Visit History Frame
+        attributes = ['Consulting Doctor: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
+        count = 1
+        for attribute in attributes:
+            attribute_label = Label(visitHistWin, text=attribute, bg=color)
+            attribute_label.grid(row=count, column=1, padx=10, pady=10, sticky=W)
+            count += 1
+
+        consul_doc = Entry(visitHistWin, width=20)
+        consul_doc.grid(row=1, column=2, sticky=W)
+
+        bloodFrame = Frame(visitHistWin)
+        bloodFrame.grid(row=2, column=2, sticky=W)
+
+        systolic_lbl = Label(bloodFrame, text='Systolic: ', bg=color)
+        systolic_lbl.grid(row=0, column=0)
+
+        systolic_entry = Entry(bloodFrame, width=5)
+        systolic_entry.grid(row=0, column=1)
+
+        diastolic_lbl = Label(bloodFrame, text='Diastolic: ', bg=color)
+        diastolic_lbl.grid(row=0, column=2, sticky=N)
+
+        diastolic_entry = Entry(bloodFrame, width=5)
+        diastolic_entry.grid(row=0, column=3)
+
+        diagnosis = Canvas(visitHistWin, bg='white', width=100, height=50)
+        diagnosis.grid(row=3, column=2, sticky=W)
+
+    def RateDoctor(self):
+        self.rateDocWin = Toplevel()
+        rateDocWin = self.rateDocWin
+        rateDocWin.title('Rate a Doctor')
+        rateDocWin.config(bg=color)
+        
+        #Top Banner
+        banner = Label(rateDocWin, bg=color, width=450, height=50, text='Doctor Homepage', padx=10,
+                       font=('Berlin Sans FB', 18), image=self.photo,
+                       compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=4)
+
+        #Main Body
+        select_doc = Label(rateDocWin, text='Select Doctors: ', bg=color)
+        select_doc.grid(row=1, column=0, padx=20, sticky=W)
+
+        db = self.Connect()
+        cursor = db.cursor()
+        cursor.execute("SELECT FName, LName FROM DOCTOR")
+        result = cursor.fetchall()
+        doctors = []
+        for doctor in result:
+            doctors.append('Dr. ' + doctor[0] + ' ' + doctor[1])
+        self.doctor = StringVar()
+        self.doctor.set('Select Doctor')
+        doctors_pulldown = ttk.Combobox(rateDocWin, textvariable=self.doctor, values=doctors)
+        doctors_pulldown.grid(row=1, column=1, sticky=W)
+
+        rating_label = Label(rateDocWin, text='Rating: ', bg=color)
+        rating_label.grid(row=2, column=0, padx=20, sticky=W)
+
+        ratings = list(range(1, 6))
+        self.rating = StringVar()
+        self.rating.set('1')
+
+        rating_pulldown = ttk.Combobox(rateDocWin, textvariable=self.rating, values=ratings)
+        rating_pulldown.config(width=5)
+        rating_pulldown.grid(row=2, column=1, sticky=W)
+
+        def SubmitRating():
+            if self.doctor.get() != 'Select Doctor':
+                
+                db = self.Connect()
+                cursor = db.cursor()
+                #cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(
+
+        submit = ttk.Button(rateDocWin, text='Submit Rating', command=SubmitRating)
+        submit.grid(row=3, column=2, padx=10, pady=10, sticky=W)
                                   
     def OrderMeds(self):
         self.medsWin = Toplevel()
@@ -738,6 +933,9 @@ class GTMS:
                 .format(PName, HomePhone, self.Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
 
         self.c.execute(query)
+        
+    def AdminFunctionality(self):
+        pass
 
     def connect(self):
 
