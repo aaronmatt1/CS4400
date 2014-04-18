@@ -11,7 +11,7 @@ class GTMS:
     def __init__(self, win):
 
         self.connect()
-        self.db.close() #get rid of this before trying to write to/read from DB
+        #self.db.close() #get rid of this before trying to write to/read from DB
 
         url = 'http://comparch.gatech.edu/buzz.gif'
         request = urllib.request.Request(url)
@@ -288,7 +288,7 @@ class GTMS:
         addAllergies = ttk.Button(bottomFrame, text='+', width=5)
         addAllergies.grid(row=9, column=2)
 
-        submit = ttk.Button(bottomFrame, text='Submit', command=self.submitForm)
+        submit = ttk.Button(bottomFrame, text='Submit', command=self.PsubmitForm)
         submit.grid(row=11, column=3, pady=10, padx=20)
 
     def doctorProfile(self):
@@ -332,7 +332,8 @@ class GTMS:
                        'Eye Physician',
                        'Orthopedics',
                        'Psychiatry',
-                       'Gynecologist']
+                       'Gynecologist',
+                       'Cardiologist']
 
         self.days = StringVar()
         self.days.set('Monday')
@@ -812,68 +813,17 @@ class GTMS:
         searchButton = ttk.Button(specialtyFrame, text='Search', command=self.updateAppts)
         searchButton.grid(row=0, column=2, padx=50, pady=15)
 
-        self.apptFrame = Frame(bottomFrame, background='#cfb53b')
-        self.apptFrame.grid(row=1, column=0)
-
-        colNames = ['     Doctor Name     ', '     Phone Number     ', '     Room Number     ', '     Availability     ',
-                    '     Ratings     ']
-
-        for x in range(len(colNames)):
-            tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-            tableFrame.grid(row=0, column=x, sticky='EW')
-            label = Label(tableFrame, text=colNames[x], background='white')
-            label.pack(fill=BOTH)
-
     def updateAppts(self):
 
-        self.doctorsInfo = {
-            'A': ['Phone', 'Room', ['Available4'], '******'],
-            'B': ['Phone', 'Room', ['Available1',  'Available3', 'Available4'], '***'],
-            'C': ['Phone', 'Room', ['Available3', 'Available4'], '****'],
-            'D': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**'],
-            'E': ['Phone', 'Room', ['Available1', 'Available2', 'Available3', 'Available4'], '**'],
-            'F': ['Phone', 'Room', ['Available1', 'Available2',  'Available4'], '**']
-        }
+        query = "SELECT Username,FName,LName,AvgRating FROM `DOCTOR` WHERE Specialty = '{}'".format(self.specialty.get())
+        self.c.execute(query)
+        specialists = list(self.c.fetchall())
 
         doctorsList = []
-        for doctor in self.doctorsInfo.keys():
-            doctorsList.append(doctor)
-
-        rows = 1
-        for x in self.doctorsInfo.keys():
-            for y in range(len(self.doctorsInfo[x])):
-                if rows <= (len(doctorsList)*len(self.doctorsInfo[x][2])):
-                    tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-                    tableFrame.grid(row=rows, column=0, sticky='EW')
-                    label = Label(tableFrame, text=x, background='white')
-                    label.pack(fill=BOTH)
-                if isinstance(self.doctorsInfo[x][y], list):
-                    zrow = rows
-                    for z in range(len(self.doctorsInfo[x][y])):
-                        tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-                        tableFrame.grid(row=zrow, column=y+1, sticky='EW')
-                        label = Label(tableFrame, text=self.doctorsInfo[x][y][z], background='white')
-                        label.pack(fill=BOTH)
-                        zrow += 1
-                        if zrow <= (len(doctorsList)*len(self.doctorsInfo[x][2])):
-                            for a in range(len(self.doctorsInfo[x])+1):
-                                tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-                                tableFrame.grid(row=zrow, column=a, sticky='EW')
-                                label = Label(tableFrame, text='  ', background='white')
-                                label.pack(fill=BOTH)
-
-                    y += 1
-
-                if rows <= (len(doctorsList)*len(self.doctorsInfo[x][2])):
-                    tableFrame = Frame(self.apptFrame, borderwidth=1, background='black')
-                    tableFrame.grid(row=rows, column=y+1, sticky='EW')
-                    label = Label(tableFrame, text=self.doctorsInfo[x][y], background='white')
-                    label.pack(fill=BOTH)
-
-                try:
-                    rows = zrow
-                except:
-                    pass
+        self.docRatingDict = {}
+        for specialist in specialists:
+            doctorsList.append(specialist[1]+' '+specialist[2])
+            self.docRatingDict[specialist[0]] = specialist[3]
 
         self.docSelected = StringVar()
 
@@ -883,8 +833,12 @@ class GTMS:
         self.selectionFrame.grid(row=3, column=0, pady=10)
         self.specialistPulldown = ttk.Combobox(self.selectionFrame, textvariable=self.docSelected, values=doctorsList)
         self.specialistPulldown.config(state='readonly')
+        self.specialistPulldown.config(width=30)
 
         self.specialistPulldown.pack()
+        self.rateLabel = Label(self.selectionFrame, text='Avg Rating: ')
+        self.rateLabel.pack(side=RIGHT, padx=5)
+        self.rateLabel.configure(background='#cfb53b')
 
         self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
         self.requestButton.pack(pady=5)
@@ -892,6 +846,26 @@ class GTMS:
 
     def specialistSelected(self, event=NONE):
 
+        docName = self.docSelected.get().split()
+
+        userNameQuery = 'SELECT Username FROM DOCTOR WHERE FName = "{}" AND LName = "{}"'.format(docName[0], docName[1])
+        self.c.execute(userNameQuery)
+        username = self.c.fetchone()[0]
+
+        self.rateLabel.config(text='Avg Rating: {}'.format(self.docRatingDict[username]))
+
+        timeQuery = '''SELECT Day_Date,From_Time,To_Time
+                        FROM AVAILABILITY
+                        NATURAL JOIN DOCTOR
+                        WHERE DOCTOR.Username = AVAILABILITY.Username
+                        AND DOCTOR.Username = "{}"'''.format(username)
+        self.c.execute(timeQuery)
+        times = list(self.c.fetchall())
+        timesList = []
+        for timeSlot in times:
+            timesList.append(str(timeSlot[0])[0:3]+':  '+str(timeSlot[1])+' - '+str(timeSlot[2]))
+
+        self.db.close()
 
         try:
             self.timePulldown.destroy()
@@ -903,14 +877,14 @@ class GTMS:
 
         self.requestButton.destroy()
         self.timePulldown = ttk.Combobox(self.selectionFrame, textvariable=self.timeSelected,
-                                             values=self.doctorsInfo[self.docSelected.get()][2])
+                                             values=timesList)
         self.timePulldown.config(state='readonly')
+        self.timePulldown.config(width=30)
         self.timePulldown.pack(pady=5)
         self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
         self.requestButton.pack(pady=5)
 
-
-    def submitForm(self):
+    def PsubmitForm(self):
 
         #todo: error checking
         PName = self.nameEntry.get()
@@ -955,5 +929,6 @@ LogWin.title('GTMS Login')
 LogWin.configure(background='#cfb53b')
 obj = GTMS(LogWin)
 LogWin.mainloop()
+
 
 
