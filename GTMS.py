@@ -3,6 +3,7 @@
 from tkinter import *
 from tkinter import messagebox as mbox
 from tkinter import ttk
+from re import *
 import urllib.request
 import base64
 import pymysql
@@ -32,6 +33,16 @@ class GTMS:
 
         self.patientHomePage()
 
+        self.doctorHomePage()
+
+        self.VisitHistory()
+
+        self.OrderMeds()
+
+        self.PaymentInfo()
+
+        self.RateDoctor()
+
     def LoginPage(self, LogWin):
         #Top Banner
         banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
@@ -60,7 +71,7 @@ class GTMS:
     def LoginCheck(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
-        db = self.Connect()
+        db = self.connect()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM USER WHERE Username= %s AND Password= %s", (username, password))
         result = cursor.fetchall()
@@ -71,18 +82,18 @@ class GTMS:
             result = cursor.fetchall()
             #If user is patient
             if result[0][0] == 1:
-                rootWin.iconify()
+                LogWin.iconify()
                 self.PatientFunctionality()
             else:
                 cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
                 result = cursor.fetchall()
                 #If user is doctor
                 if result[0][0]  == 1:
-                    rootWin.iconify()
+                    LogWin.iconify()
                     self.DoctorFunctionality()
                 #User must be Admin
                 else:
-                    rootWin.iconify()
+                    LogWin.iconify()
                     self.AdminFunctionality()
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
@@ -132,7 +143,7 @@ class GTMS:
         register = ttk.Button(self.reg, text='Register', command=self.RegisterNew, cursor='hand2')
         register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
         #Cancel Button: Return To Login
-        cancel = ttk.Button(self.reg, text='Cancel', command=self.BackToLogin(reg), cursor='hand2')
+        cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
         
     def RegisterNew(self):
@@ -150,7 +161,7 @@ class GTMS:
                         letters = findall("[a-zA-Z]", password)
                         #If password contains both letters and numbers
                         if num != [] and letters != []:
-                            db = self.Connect()
+                            db = self.connect()
                             cursor = db.cursor()
                             cursor.execute("SELECT * FROM USER WHERE Username= %s", (username))
                             data = []
@@ -159,7 +170,7 @@ class GTMS:
                             #If username is not taken
                             if data == []:
                                 cursor.execute("INSERT INTO USER (Username, Password) VALUES (%s, %s)", (username, password))
-                                notice = messagebox.showinfo("Registration Complete", "User is now registered into GTMRS database")
+                                mbox.showinfo("Registration Complete", "User is now registered into GTMRS database")
                                 db.commit()
                                 #If user is patient
                                 if self.user_type.get() == 'Patient':
@@ -440,16 +451,16 @@ class GTMS:
 
     def patientHomePage(self):
 
-        self.hpWin = Toplevel(LogWin)
-        self.hpWin.title('Home Page')
-        self.hpWin.configure(background='#cfb53b')
+        self.patHPWin = Toplevel(LogWin)
+        self.patHPWin.title('Home Page')
+        self.patHPWin.configure(background='#cfb53b')
 
-        topFrame = Frame(self.hpWin)
+        topFrame = Frame(self.patHPWin)
         topFrame.grid(row=0, column=0)
         topFrame.configure(background='#cfb53b')
-        midFrame = Frame(self.hpWin, bd=1, background='black')
+        midFrame = Frame(self.patHPWin, bd=1, background='black')
         midFrame.grid(row=1, column=0, sticky='EW')
-        bottomFrame = Frame(self.hpWin)
+        bottomFrame = Frame(self.patHPWin)
         bottomFrame.grid(row=2, column=0)
         bottomFrame.configure(background='#cfb53b')
 
@@ -506,9 +517,75 @@ class GTMS:
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+
+    def doctorHomePage(self):
+
+        self.docHPWin = Toplevel(LogWin)
+        self.docHPWin.title('Doctor Home Page')
+        self.docHPWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.docHPWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.docHPWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.docHPWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Home Page", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        makeAppointButton = Button(bottomFrame, text='View Appointments \n Calendar', relief=FLAT)
+        makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
+        makeAppointButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        viewPrescripButton = Button(bottomFrame, text='Prescriptions', relief=FLAT)
+        viewPrescripButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
+        viewPrescripButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        orderMedButton = Button(bottomFrame, text='Create Surgery \n Records', relief=FLAT)
+        orderMedButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
+        orderMedButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT)
+        communicateButton.grid(row=3, column=0, padx=20, pady=10, sticky='W')
+        communicateButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        rateDocButton = Button(bottomFrame, text='Edit Profile', relief=FLAT)
+        rateDocButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
+        rateDocButton.configure(font='Arial',
+                                    foreground='blue',
+                                    background='#cfb53b')
+
+        hardCodedSpaceLabel = Label(bottomFrame, text='                                          ')
+        hardCodedSpaceLabel.grid(row=0, column=1)
+        hardCodedSpaceLabel.configure(background='#cfb53b')
+
+        messageText = 'You have {info from DB} unread messages'
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT)
+        unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
+        unreadMsgButton.configure(font=('Arial', 8),
+                                  foreground='blue',
+                                  background='#cfb53b')
                                   
     def VisitHistory(self):
-        self.visitHistWin = Toplevel()
+
+        color = '#cfb53b'
+
+        self.visitHistWin = Toplevel(LogWin)
         visitHistWin = self.visitHistWin
         visitHistWin.title('Visit History Window')
         visitHistWin.config(bg=color)
@@ -527,12 +604,12 @@ class GTMS:
         dateVisitsLabel.grid(row=0, column=0, sticky=N)
 
         #Date Visits Listbox
-        username = self.username.get()
-        db = self.Connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT DateVisit FROM VISIT WHERE PUsername='%s'" % (username))
-        result = cursor.fetchall()
-        date_visits=()
+        username = self.username_entry.get()
+        self.connect()
+
+        self.c.execute("SELECT DateVisit FROM VISIT WHERE PUsername='%s'" % (username))
+        result = self.c.fetchall()
+        date_visits = ()
         for date in result:
             date_visits += (date[0],)
         
@@ -543,7 +620,7 @@ class GTMS:
 
         #Vertical Separator
         separator = ttk.Separator(visitHistWin, orient=VERTICAL)
-        separator.grid(row=1, column=1, sticky=N+S+W, rowspan=4)
+        separator.grid(row=1, column=1, sticky='NSW', rowspan=4)
 
         #Visit History Frame
         attributes = ['Consulting Doctor: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
@@ -575,13 +652,16 @@ class GTMS:
         diagnosis.grid(row=3, column=2, sticky=W)
 
     def RateDoctor(self):
-        self.rateDocWin = Toplevel()
+
+        color = '#cfb53b'
+
+        self.rateDocWin = Toplevel(LogWin)
         rateDocWin = self.rateDocWin
         rateDocWin.title('Rate a Doctor')
         rateDocWin.config(bg=color)
         
         #Top Banner
-        banner = Label(rateDocWin, bg=color, width=450, height=50, text='Doctor Homepage', padx=10,
+        banner = Label(rateDocWin, bg=color, width=450, height=50, text='Rate A Doctor', padx=10,
                        font=('Berlin Sans FB', 18), image=self.photo,
                        compound=RIGHT, anchor=N)
         banner.grid(row=0, columnspan=4)
@@ -590,10 +670,10 @@ class GTMS:
         select_doc = Label(rateDocWin, text='Select Doctors: ', bg=color)
         select_doc.grid(row=1, column=0, padx=20, sticky=W)
 
-        db = self.Connect()
-        cursor = db.cursor()
+        cursor = self.connect()
+
         cursor.execute("SELECT FName, LName FROM DOCTOR")
-        result = cursor.fetchall()
+        result = self.c.fetchall()
         doctors = []
         for doctor in result:
             doctors.append('Dr. ' + doctor[0] + ' ' + doctor[1])
@@ -607,24 +687,32 @@ class GTMS:
 
         ratings = list(range(1, 6))
         self.rating = StringVar()
-        self.rating.set('1')
+        self.rating.set('Select A Rating')
 
         rating_pulldown = ttk.Combobox(rateDocWin, textvariable=self.rating, values=ratings)
-        rating_pulldown.config(width=5)
+        rating_pulldown.config(width=10)
         rating_pulldown.grid(row=2, column=1, sticky=W)
 
-        def SubmitRating():
-            if self.doctor.get() != 'Select Doctor':
-                
-                db = self.Connect()
-                cursor = db.cursor()
-                #cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(
-
-        submit = ttk.Button(rateDocWin, text='Submit Rating', command=SubmitRating)
+        submit = ttk.Button(rateDocWin, text='Submit Rating', command=self.SubmitRating)
         submit.grid(row=3, column=2, padx=10, pady=10, sticky=W)
-                                  
+
+    def SubmitRating(self):
+
+        try:
+            rating = int(self.rating.get())
+
+            #cursor = self.connect()
+            #self.db.close()
+            #cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(
+
+        except:
+            mbox.showerror(title='ERROR', message='Please Select a Rating')
+
     def OrderMeds(self):
-        self.medsWin = Toplevel()
+
+        color = '#cfb53b'
+
+        self.medsWin = Toplevel(LogWin)
         medsWin = self.medsWin
         medsWin.title('Order Medication Form')
         medsWin.config(bg=color)
@@ -706,8 +794,11 @@ class GTMS:
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
     def PaymentInfo(self):
+
+        color = '#cfb53b'
+
         self.medsWin.iconify()
-        self.paymentInfoWin = Toplevel()
+        self.paymentInfoWin = Toplevel(LogWin)
         paymentWin = self.paymentInfoWin
         paymentWin.title('Payment Information')
         paymentWin.config(bg=color)
@@ -815,8 +906,10 @@ class GTMS:
 
     def updateAppts(self):
 
+        self.cursor = self.connect()
+
         query = "SELECT Username,FName,LName,AvgRating FROM `DOCTOR` WHERE Specialty = '{}'".format(self.specialty.get())
-        self.c.execute(query)
+        self.cursor.execute(query)
         specialists = list(self.c.fetchall())
 
         doctorsList = []
@@ -835,13 +928,13 @@ class GTMS:
         self.specialistPulldown.config(state='readonly')
         self.specialistPulldown.config(width=30)
 
-        self.specialistPulldown.pack()
+        Label(self.selectionFrame, text='Specialist:   ', background='#cfb53b').grid(row=0, column=0, padx=5, pady=10)
+
+        self.specialistPulldown.grid(row=0, column=1, padx=5, pady=10)
         self.rateLabel = Label(self.selectionFrame, text='Avg Rating: ')
-        self.rateLabel.pack(side=RIGHT, padx=5)
+        self.rateLabel.grid(row=0, column=2, padx=5, pady=10, sticky='W')
         self.rateLabel.configure(background='#cfb53b')
 
-        self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
-        self.requestButton.pack(pady=5)
         self.specialistPulldown.bind("<<ComboboxSelected>>", self.specialistSelected)
 
     def specialistSelected(self, event=NONE):
@@ -849,8 +942,8 @@ class GTMS:
         docName = self.docSelected.get().split()
 
         userNameQuery = 'SELECT Username FROM DOCTOR WHERE FName = "{}" AND LName = "{}"'.format(docName[0], docName[1])
-        self.c.execute(userNameQuery)
-        username = self.c.fetchone()[0]
+        self.cursor.execute(userNameQuery)
+        username = self.cursor.fetchone()[0]
 
         self.rateLabel.config(text='Avg Rating: {}'.format(self.docRatingDict[username]))
 
@@ -859,7 +952,7 @@ class GTMS:
                         NATURAL JOIN DOCTOR
                         WHERE DOCTOR.Username = AVAILABILITY.Username
                         AND DOCTOR.Username = "{}"'''.format(username)
-        self.c.execute(timeQuery)
+        self.cursor.execute(timeQuery)
         times = list(self.c.fetchall())
         timesList = []
         for timeSlot in times:
@@ -875,14 +968,15 @@ class GTMS:
         self.timeSelected = StringVar()
         self.timeSelected.set('--Select A Time--')
 
-        self.requestButton.destroy()
+        Label(self.selectionFrame, text='Time Slot:   ', background='#cfb53b').grid(row=1, column=0, padx=5, pady=5)
+
         self.timePulldown = ttk.Combobox(self.selectionFrame, textvariable=self.timeSelected,
                                              values=timesList)
         self.timePulldown.config(state='readonly')
         self.timePulldown.config(width=30)
-        self.timePulldown.pack(pady=5)
+        self.timePulldown.grid(row=1, column=1, padx=5, pady=5)
         self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
-        self.requestButton.pack(pady=5)
+        self.requestButton.grid(row=2, column=0, columnspan=3, pady=5, sticky='EW')
 
     def PsubmitForm(self):
 
@@ -909,6 +1003,15 @@ class GTMS:
     def AdminFunctionality(self):
         pass
 
+    def PatientFunctionality(self):
+        pass
+
+    def DoctorFunctionality(self):
+        pass
+
+    def PayMeds(self):
+        pass
+
     def connect(self):
 
         try:
@@ -916,11 +1019,9 @@ class GTMS:
                                 passwd='KDKR2YQY', user='cs4400_Group_65',
                                 db='cs4400_Group_65')
             self.c = self.db.cursor()
-
-
+            return self.c
 
         except:
-
             mbox.showerror(title='Connection Error', message='Check your internet connection')
             return NONE
 
