@@ -43,6 +43,8 @@ class GTMS:
 
         self.RateDoctor()
 
+        self.sendMessage()
+
     def LoginPage(self, LogWin):
         #Top Banner
         banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
@@ -793,6 +795,64 @@ class GTMS:
         checkout = ttk.Button(medsWin, text='Checkout', cursor='hand2', command=self.PaymentInfo)
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
+    def sendMessage(self):
+
+        self.messageWin= Toplevel(LogWin)
+        self.messageWin.title('Communicator')
+        self.messageWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.messageWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.messageWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.messageWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Communicator", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        sendTo = StringVar()
+        sendTo.set('------')
+        contacts = ['A', 'B', 'C']
+
+        toFrame = Frame(bottomFrame, background='#cfb53b')
+        toFrame.pack(pady=15)
+        Label(toFrame, text='Select Name:   ', background='#cfb53b').grid(row=0, column=0)
+        contactPulldown = ttk.Combobox(toFrame, textvariable=sendTo, values=contacts)
+        contactPulldown.grid(row=0, column=1, sticky='w')
+
+        messageFrame = Frame(bottomFrame, background='#cfb53b')
+        messageFrame.pack(padx=10, pady=20)
+
+        text = """""".strip()
+
+        scroll = Scrollbar(messageFrame)
+        scroll.grid(row=0, column=1, sticky='NS')
+
+        self.box = Text(messageFrame, wrap='word', font='Arial 12 italic', relief=GROOVE)
+
+        scroll.config()
+
+        self.box.config(height=10, width=40)
+        self.box.config()
+        self.box.insert(1.0, text)
+        self.box.grid(row=0, column=0, sticky='EW')
+
+        scroll.config(command=self.box.yview)
+        self.box.config(yscrollcommand=scroll.set)
+
+        Button(bottomFrame, text='Send Message', command=self.getMessage).pack(pady=5, anchor=CENTER)
+
+    def getMessage(self):
+
+        message = self.box.get("1.0", 'end')
+
     def PaymentInfo(self):
 
         color = '#cfb53b'
@@ -996,7 +1056,7 @@ class GTMS:
 
         query = '''INSERT INTO PATIENT(Name,HomePhone,Username,DOB,Gender,Address,WorkPhone,Height,Weight,AnnualIncome)
                 VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
-                .format(PName, HomePhone, self.Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+                .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
 
         self.c.execute(query)
         
@@ -1024,6 +1084,8 @@ class GTMS:
         except:
             mbox.showerror(title='Connection Error', message='Check your internet connection')
             return NONE
+
+        self.db.close()
 
 LogWin = Tk() #This will be where the login page goes.
 LogWin.title('GTMS Login')
