@@ -33,7 +33,6 @@ class GTMS:
         self.patientHomePage()
 
     def LoginPage(self, LogWin):
-
         #Top Banner
         banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
                    image=self.photo, compound=RIGHT, anchor=N)
@@ -88,10 +87,8 @@ class GTMS:
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
-        db.commit()
 
     def Register(self):
-
         self.reg = Toplevel(LogWin)
         self.reg = self.reg
         self.reg.title('GTMRS New User Registration')
@@ -124,7 +121,6 @@ class GTMS:
         user_type_label = Label(self.reg, text='Type of User: ', bg='#cfb53b', padx=10)
         user_type_label.grid(row=4,column=1, sticky=W)
 
-        self.usertype = StringVar()
         #User Type Pulldown Menu
         self.userType = StringVar()
         self.userType.set('Select User Type')
@@ -133,12 +129,11 @@ class GTMS:
         userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
 
         #Register Button
-        register = ttk.Button(self.reg, text='Register')#, command=self.RegisterNew, cursor='hand2')
+        register = ttk.Button(self.reg, text='Register', command=self.RegisterNew, cursor='hand2')
         register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
         #Cancel Button: Return To Login
-        cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
+        cancel = ttk.Button(self.reg, text='Cancel', command=self.BackToLogin(reg), cursor='hand2')
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
-        
         
     def RegisterNew(self):
         try:
