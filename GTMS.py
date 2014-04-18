@@ -171,56 +171,56 @@ class GTMS:
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
         
     def RegisterNew(self):
-        try:
-            username = self.username_entry.get()
-            password = self.password_entry.get()
-            confirm = self.confirm_entry.get()
-            #If username and password entries are not empty
-            if username != '' and password != '':
-                #If password and confirm match
-                if password.split() == confirm.split():
-                    #If username and password are less than 15 chars
-                    if len(password) < 15 or len(username) < 15:
-                        num = findall("\d+", password)
-                        letters = findall("[a-zA-Z]", password)
-                        #If password contains both letters and numbers
-                        if num != [] and letters != []:
-                            db = self.connect()
-                            cursor = db.cursor()
-                            cursor.execute("SELECT * FROM USER WHERE Username= %s", (username))
-                            data = []
-                            for i in cursor:
-                                data.append(i)
-                            #If username is not taken
-                            if data == []:
-                                cursor.execute("INSERT INTO USER (Username, Password) VALUES (%s, %s)", (username, password))
-                                mbox.showinfo("Registration Complete", "User is now registered into GTMRS database")
-                                db.commit()
-                                #If user is patient
-                                if self.user_type.get() == 'Patient':
-                                    self.reg.iconify()
-                                    self.patientProfile()
-                                #If user is doctor
-                                elif self.user_type.get() == 'Doctor':
-                                    self.reg.iconify()
-                                    self.doctorProfile()
-                            else:
-                                error = mbox.showerror("Registration Error", "Username is already in use.")
-                                return
+        #try:
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        confirm = self.confirm_entry.get()
+        #If username and password entries are not empty
+        if username != '' and password != '':
+            #If password and confirm match
+            if password.split() == confirm.split():
+                #If username and password are less than 15 chars
+                if len(password) < 15 or len(username) < 15:
+                    num = findall("\d+", password)
+                    letters = findall("[a-zA-Z]", password)
+                    #If password contains both letters and numbers
+                    if num != [] and letters != []:
+                        cursor = self.connect()
+                        
+                        cursor.execute("SELECT * FROM USER WHERE Username= %s", (username))
+                        data = []
+                        for i in cursor:
+                            data.append(i)
+                        #If username is not taken
+                        if data == []:
+                            cursor.execute("INSERT INTO USER (Username, Password) VALUES (%s, %s)", (username, password))
+                            mbox.showinfo("Registration Complete", "User is now registered into GTMRS database")
+                            self.db.commit()
+                            #If user is patient
+                            if self.userType.get() == 'Patient':
+                                self.newRegWin.iconify()
+                                self.patientProfile()
+                            #If user is doctor
+                            elif self.userType.get() == 'Doctor':
+                                self.newRegWin.iconify()
+                                self.doctorProfile()
                         else:
-                            error = mbox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
+                            error = mbox.showerror("Registration Error", "Username is already in use.")
                             return
                     else:
-                        error = mbox.showerror("Registration Error", "Please enter shorter password and/or username.")
+                        error = mbox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
+                        return
                 else:
-                    error = mbox.showerror("Registration Error", "Please check that password is entered correctly.")
-                    return
+                    error = mbox.showerror("Registration Error", "Please enter shorter password and/or username.")
             else:
-                error = mbox.showerror("Registration Error", "Please enter valid username and/or password.")
-                return                
-        except:
-            error = mbox.showerror("Registration Error", "Please try again.")
-            return
+                error = mbox.showerror("Registration Error", "Please check that password is entered correctly.")
+                return
+        else:
+            error = mbox.showerror("Registration Error", "Please enter valid username and/or password.")
+            return                
+##        except:
+##            error = mbox.showerror("Registration Error", "Please try again.")
+##            return
 
     def patientProfile(self):
 
@@ -1245,15 +1245,6 @@ class GTMS:
         AnnualIncome = self.annualIncome.get()
         Allergies = self.allergiesEntry.get()
 
-
-        self.connect()
-
-        query = '''INSERT INTO PATIENT(Name,HomePhone,Username,DOB,Gender,Address,WorkPhone,Height,Weight,AnnualIncome)
-                VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
-                .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
-
-        self.c.execute(query)
-
         if PName != []:
             if HomePhone != []:
                 if DOB != []:
@@ -1264,9 +1255,11 @@ class GTMS:
                     
                             query = '''INSERT INTO PATIENT(Name,HomePhone,Username,DOB,Gender,Address,WorkPhone,Height,Weight,AnnualIncome)
                                     VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
-                                    .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+                                    .format(PName, HomePhone, self.username_entry.get(), DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
                             
                             self.c.execute(query)
+                            
+                            self.patientHomePage()
                         else:
                             error = mbox.showerror("Patient Form", "Please enter a valid annual income.")
                             return
@@ -1322,6 +1315,3 @@ LogWin.title('GTMS Login')
 LogWin.configure(background='#cfb53b')
 obj = GTMS(LogWin)
 LogWin.mainloop()
-
-
-
