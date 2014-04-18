@@ -71,32 +71,34 @@ class GTMS:
         register.grid(row=4, column=3, sticky=EW, padx=5, pady=5)
         
     def LoginCheck(self):
-        username = self.username_entry.get()
+        self.username = self.username_entry.get()
         password = self.password_entry.get()
-        db = self.connect()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM USER WHERE Username= %s AND Password= %s", (username, password))
+        cursor = self.connect()
+        cursor.execute("SELECT * FROM USER WHERE Username= %s AND Password= %s", (self.username, password))
         result = cursor.fetchall()
         #If user account exists
         if result != ():
             show = mbox.showinfo("Login Complete", "Login successful.")
-            cursor.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (username))
+            cursor.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (self.username))
             result = cursor.fetchall()
             #If user is patient
             if result[0][0] == 1:
+                self.userType = 'patient'
                 LogWin.iconify()
-                self.PatientFunctionality()
+                self.patientHomePage()
             else:
-                cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
+                cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (self.username))
                 result = cursor.fetchall()
                 #If user is doctor
-                if result[0][0]  == 1:
+                if result[0][0] == 1:
+                    self.userType = 'doctor'
                     LogWin.iconify()
-                    self.DoctorFunctionality()
+                    self.doctorHomePage()
                 #User must be Admin
                 else:
+                    self.userType = 'admin'
                     LogWin.iconify()
-                    self.AdminFunctionality()
+                    self.adminHomePage()
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
@@ -528,7 +530,7 @@ class GTMS:
         hardCodedSpaceLabel.configure(background='#cfb53b')
 
         messageText = 'You have {info from DB} unread messages'
-        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT)
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
         unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
@@ -596,6 +598,10 @@ class GTMS:
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+
+    #def adminHomePage(self):
+
+
                                   
     def VisitHistory(self):
 
@@ -917,6 +923,88 @@ class GTMS:
 
         message = self.box.get("1.0", 'end')
 
+    def messagesPage(self):
+
+        cursor = self.connect()
+
+        self.userType = 'patient'
+        self.username = 'AMM1'
+
+        self.readMessageWin= Toplevel(LogWin)
+        self.readMessageWin.title('Messages')
+        self.readMessageWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.readMessageWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.readMessageWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.readMessageWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Messages", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        messageFrame = Frame(bottomFrame, bg=color)
+        messageFrame.grid(row=0, column=0, sticky='NSEW', padx=15, pady=15)
+
+        headers = ['       Sender       ',
+                   '       Status       ',
+                   '        Content       ',
+                   '       Time       ']
+
+        for x in range(len(headers)):
+            tableFrame = Frame(messageFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+            label = Label(tableFrame, text=headers[x], background=color)
+            label.pack(fill=BOTH)
+
+        if self.userType == 'patient':
+            tableName = 'DOCTOR_TO_PATIENT'
+            query = '''SELECT Sender, Content, Status, DateTime
+                    FROM '''+tableName+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
+        elif self.userType == 'doctor':
+            tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
+            query = '''SELECT Sender, Content, Status, DateTime
+                    FROM '''+tableName[0]+'''NATURAL JOIN '''+tableName[1]+''' WHERE Status = "Unread" AND Recipient = "{}"'''\
+                    .format(self.username)
+
+        cursor.execute(query)
+        unreadMessages = list(cursor.fetchall())
+
+        unreadMessagesList = []
+        for mssg in unreadMessages:
+            unreadMessagesList.append([mssg[0], mssg[2], mssg[1], mssg[3]])
+
+        for x in range(len(unreadMessagesList)):
+            for y in range(len(unreadMessagesList[x])):
+                tableFrame = Frame(messageFrame, borderwidth=1, background=color)
+                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1)
+                label = Label(tableFrame, text=unreadMessagesList[x][y], background='white')
+                label.pack(fill=BOTH)
+
+        if self.userType == 'patient':
+            tableName = 'DOCTOR_TO_PATIENT'
+            query = 'UPDATE '+tableName+' SET Status = "Read" WHERE Status = "Unread" AND Recipient = "{}"'.format(self.username)
+            cursor.execute(query)
+            self.db.commit()
+
+        elif self.userType == 'doctor':
+            tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
+            query = '''UPDATE '''+tableName[0]+'''SET Status="Read" WHERE Username = "{}"'''.format(self.username)
+            cursor.execute(query)
+            query = '''UPDATE '''+tableName[1]+'''SET Status="Read" WHERE Username = "{}"'''.format(self.username)
+            cursor.execute(query)
+            self.db.commit()
+
+        self.db.close()
+
+
     def PaymentInfo(self):
 
         color = '#cfb53b'
@@ -1132,15 +1220,6 @@ class GTMS:
                 .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
 
         self.c.execute(query)
-        
-    def AdminFunctionality(self):
-        pass
-
-    def PatientFunctionality(self):
-        pass
-
-    def DoctorFunctionality(self):
-        pass
 
     def PayMeds(self):
         pass
@@ -1160,6 +1239,7 @@ class GTMS:
 
         self.db.close()
 
+color = '#cfb53b'
 LogWin = Tk() #This will be where the login page goes.
 LogWin.title('GTMS Login')
 LogWin.configure(background='#cfb53b')
