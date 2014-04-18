@@ -102,50 +102,64 @@ class GTMS:
             return
 
     def Register(self):
-        self.reg = Toplevel(LogWin)
-        self.reg = self.reg
-        self.reg.title('GTMRS New User Registration')
-        self.reg.config(bg='#cfb53b')
 
-        #Top Banner
-        banner = Label(self.reg, bg='#cfb53b', width=450, height=50, text='New User Registration', padx=10,
-                   font=('Berlin Sans FB', 18), image=self.photo, compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=6)
+        color = '#cfb53b'
+
+        self.newRegWin = Toplevel(LogWin)
+        self.newRegWin.title('New User Register')
+        self.newRegWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.newRegWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.newRegWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.newRegWin)
+        bottomFrame.grid(row=2, column=0, padx=10)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Register", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
         #Main Body
-        username_label = Label(self.reg, text='Username: ', bg='#cfb53b', padx=10, pady=10)
+        username_label = Label(bottomFrame, text='Username: ', bg='#cfb53b', padx=10, pady=10)
         username_label.grid(row=1, column=1, sticky=W)
 
-        self.username_entry = Entry(self.reg, width=30)
-        self.username_entry.grid(row=1, column=2, columnspan=3, sticky=EW)
+        self.username_entry = Entry(bottomFrame, width=30)
+        self.username_entry.grid(row=1, column=2, columnspan=3, sticky=EW, padx=5)
 
-        password_label = Label(self.reg, text='Password: ', bg='#cfb53b', padx=10)
+        password_label = Label(bottomFrame, text='Password: ', bg='#cfb53b', padx=10)
         password_label.grid(row=2, column=1, sticky=W)
 
-        self.password_entry = Entry(self.reg, width=30, show='*')
-        self.password_entry.grid(row=2, column=2, columnspan=3, sticky=EW)
+        self.password_entry = Entry(bottomFrame, width=30, show='*')
+        self.password_entry.grid(row=2, column=2, columnspan=3, sticky=EW, padx=5)
 
-        confirm_label = Label(self.reg, text='Confirm Password: ', bg='#cfb53b', padx=10, pady=10)
+        confirm_label = Label(bottomFrame, text='Confirm Password: ', bg='#cfb53b', padx=10, pady=10)
         confirm_label.grid(row=3, column=1, sticky=W)
 
-        self.confirm_entry = Entry(self.reg, width=30, show='*')
-        self.confirm_entry.grid(row=3, column=2, columnspan=3, sticky=EW)
+        self.confirm_entry = Entry(bottomFrame, width=30, show='*')
+        self.confirm_entry.grid(row=3, column=2, columnspan=3, sticky=EW, padx=5)
 
-        user_type_label = Label(self.reg, text='Type of User: ', bg='#cfb53b', padx=10)
-        user_type_label.grid(row=4,column=1, sticky=W)
+        user_type_label = Label(bottomFrame, text='Type of User: ', bg='#cfb53b', padx=10)
+        user_type_label.grid(row=4, column=1, sticky=W, padx=5)
 
         #User Type Pulldown Menu
         self.userType = StringVar()
         self.userType.set('Select User Type')
         types = ['Doctor', 'Patient', 'Administrative Personnel']
-        userTypeMenu = ttk.Combobox(self.reg, textvariable=self.userType, values=types)
+        userTypeMenu = ttk.Combobox(bottomFrame, textvariable=self.userType, values=types)
+        userTypeMenu.config(state='readonly')
         userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
 
         #Register Button
-        register = ttk.Button(self.reg, text='Register', command=self.RegisterNew, cursor='hand2')
+        register = ttk.Button(bottomFrame, text='Register', command=self.RegisterNew, cursor='hand2')
         register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
         #Cancel Button: Return To Login
-        cancel = ttk.Button(self.reg, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
+        cancel = ttk.Button(bottomFrame, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
         
     def RegisterNew(self):
@@ -469,7 +483,7 @@ class GTMS:
         logo = Label(topFrame, image=self.photo)
         logo.grid(row=0, column=1)
         logo.configure(background='#cfb53b')
-        pageName = Label(topFrame, text="Home Page", font=("Arial", 25))
+        pageName = Label(topFrame, text="Patient Home Page", font=("Arial", 25))
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
@@ -479,7 +493,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        viewPrescripButton = Button(bottomFrame, text='View Prescriptions', relief=FLAT)
+        viewPrescripButton = Button(bottomFrame, text='View Visit History', relief=FLAT)
         viewPrescripButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
         viewPrescripButton.configure(font='Arial',
                                     foreground='blue',
@@ -587,19 +601,28 @@ class GTMS:
 
         color = '#cfb53b'
 
-        self.visitHistWin = Toplevel(LogWin)
-        visitHistWin = self.visitHistWin
-        visitHistWin.title('Visit History Window')
-        visitHistWin.config(bg=color)
-        
-        #Top Banner
-        banner = Label(visitHistWin, bg=color, width=450, height=50, text='Patient Visit History', padx=10,
-                       font=('Berlin Sans FB', 18), image=self.photo,
-                       compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=4)
+        self.docHPWin = Toplevel(LogWin)
+        self.docHPWin.title('Visit History')
+        self.docHPWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.docHPWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.docHPWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.docHPWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Visit History", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
         #Main Body
-        date_visits_frame = Frame(visitHistWin, bg=color)
+        date_visits_frame = Frame(bottomFrame, bg=color)
         date_visits_frame.grid(row=1, column=0, rowspan=5)
         
         dateVisitsLabel = Label(date_visits_frame, text='Dates of Visits', bg=color)
@@ -621,56 +644,87 @@ class GTMS:
         date_visits_lbox.grid(row=1, column=0, padx=3, sticky=N)
 
         #Vertical Separator
-        separator = ttk.Separator(visitHistWin, orient=VERTICAL)
+        separator = ttk.Separator(bottomFrame, orient=VERTICAL)
         separator.grid(row=1, column=1, sticky='NSW', rowspan=4)
 
         #Visit History Frame
         attributes = ['Consulting Doctor: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
         count = 1
         for attribute in attributes:
-            attribute_label = Label(visitHistWin, text=attribute, bg=color)
+            attribute_label = Label(bottomFrame, text=attribute, bg=color)
             attribute_label.grid(row=count, column=1, padx=10, pady=10, sticky=W)
             count += 1
 
-        consul_doc = Entry(visitHistWin, width=20)
+        consul_doc = Entry(bottomFrame, width=20)
         consul_doc.grid(row=1, column=2, sticky=W)
 
-        bloodFrame = Frame(visitHistWin)
+        bloodFrame = Frame(bottomFrame, background=color)
         bloodFrame.grid(row=2, column=2, sticky=W)
 
         systolic_lbl = Label(bloodFrame, text='Systolic: ', bg=color)
         systolic_lbl.grid(row=0, column=0)
 
         systolic_entry = Entry(bloodFrame, width=5)
-        systolic_entry.grid(row=0, column=1)
+        systolic_entry.grid(row=0, column=1, padx=5)
 
         diastolic_lbl = Label(bloodFrame, text='Diastolic: ', bg=color)
         diastolic_lbl.grid(row=0, column=2, sticky=N)
 
         diastolic_entry = Entry(bloodFrame, width=5)
-        diastolic_entry.grid(row=0, column=3)
+        diastolic_entry.grid(row=0, column=3, padx=5)
 
-        diagnosis = Canvas(visitHistWin, bg='white', width=100, height=50)
+        diagnosis = Canvas(bottomFrame, bg='white', width=100, height=50)
         diagnosis.grid(row=3, column=2, sticky=W)
+
+    def visitReport(self):
+
+        self.docHPWin = Toplevel(LogWin)
+        self.docHPWin.title('Doctor Home Page')
+        self.docHPWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.docHPWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.docHPWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.docHPWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Home Page", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
     def RateDoctor(self):
 
         color = '#cfb53b'
 
-        self.rateDocWin = Toplevel(LogWin)
-        rateDocWin = self.rateDocWin
-        rateDocWin.title('Rate a Doctor')
-        rateDocWin.config(bg=color)
-        
-        #Top Banner
-        banner = Label(rateDocWin, bg=color, width=450, height=50, text='Rate A Doctor', padx=10,
-                       font=('Berlin Sans FB', 18), image=self.photo,
-                       compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=4)
+        self.rateWin = Toplevel(LogWin)
+        self.rateWin.title('Rate a Doctor')
+        self.rateWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.rateWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.rateWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.rateWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Rate a Doctor", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
         #Main Body
-        select_doc = Label(rateDocWin, text='Select Doctors: ', bg=color)
-        select_doc.grid(row=1, column=0, padx=20, sticky=W)
+        select_doc = Label(bottomFrame, text='Select Doctors: ', bg=color)
+        select_doc.grid(row=1, column=0, padx=20, sticky=W, pady=10)
 
         cursor = self.connect()
 
@@ -681,21 +735,22 @@ class GTMS:
             doctors.append('Dr. ' + doctor[0] + ' ' + doctor[1])
         self.doctor = StringVar()
         self.doctor.set('Select Doctor')
-        doctors_pulldown = ttk.Combobox(rateDocWin, textvariable=self.doctor, values=doctors)
-        doctors_pulldown.grid(row=1, column=1, sticky=W)
+        doctors_pulldown = ttk.Combobox(bottomFrame, textvariable=self.doctor, values=doctors)
+        doctors_pulldown.grid(row=1, column=1, sticky=W, pady=10)
+        doctors_pulldown.config(state='readonly')
 
-        rating_label = Label(rateDocWin, text='Rating: ', bg=color)
-        rating_label.grid(row=2, column=0, padx=20, sticky=W)
+        rating_label = Label(bottomFrame, text='Rating: ', bg=color)
+        rating_label.grid(row=2, column=0, padx=20, sticky=W, pady=5)
 
         ratings = list(range(1, 6))
         self.rating = StringVar()
-        self.rating.set('Select A Rating')
+        self.rating.set('----')
 
-        rating_pulldown = ttk.Combobox(rateDocWin, textvariable=self.rating, values=ratings)
-        rating_pulldown.config(width=10)
-        rating_pulldown.grid(row=2, column=1, sticky=W)
+        rating_pulldown = ttk.Combobox(bottomFrame, textvariable=self.rating, values=ratings)
+        rating_pulldown.config(width=10, state='readonly')
+        rating_pulldown.grid(row=2, column=1, sticky=W, pady=5)
 
-        submit = ttk.Button(rateDocWin, text='Submit Rating', command=self.SubmitRating)
+        submit = ttk.Button(bottomFrame, text='Submit Rating', command=self.SubmitRating)
         submit.grid(row=3, column=2, padx=10, pady=10, sticky=W)
 
     def SubmitRating(self):
@@ -714,30 +769,39 @@ class GTMS:
 
         color = '#cfb53b'
 
-        self.medsWin = Toplevel(LogWin)
-        medsWin = self.medsWin
-        medsWin.title('Order Medication Form')
-        medsWin.config(bg=color)
+        self.orderWin = Toplevel(LogWin)
+        self.orderWin.title('Order Medication')
+        self.orderWin.configure(background='#cfb53b')
 
-        #Top Banner
-        banner = Label(medsWin, bg=color, width=450, height=50, text='Order Medication',
-                       padx=10, font=('Berlin Sans FB', 18), image=self.photo,
-                       compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=4)
+        topFrame = Frame(self.orderWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.orderWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.orderWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Order Medication", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
         #Main Body
         attributes = ["Medicine Name: ", 'Dosage: ',
                       'Duration: ', 'Consulting Doctor: ', 'Date of Prescription: ']
         count = 1
         for attribute in attributes:
-            attribute_label = Label(medsWin, text=attribute, bg=color)
+            attribute_label = Label(bottomFrame, text=attribute, bg=color)
             attribute_label.grid(row=count, column=0, padx=10, pady=10, sticky=W)
             count += 1
 
-        self.meds_name = Entry(medsWin, width=30)
+        self.meds_name = Entry(bottomFrame, width=30)
         self.meds_name.grid(row=1, column=1, columnspan=3, sticky=W)
 
-        dosage_frame = Frame(medsWin)
+        dosage_frame = Frame(bottomFrame)
         dosage_frame.grid(row=2, column=1, sticky=W)
         
         self.dosage_amount = Entry(dosage_frame, width=5)
@@ -746,7 +810,7 @@ class GTMS:
         per = Label(dosage_frame, text='every day', bg=color)
         per.grid(row=0, column=1, sticky=W)
 
-        duration_frame = Frame(medsWin)
+        duration_frame = Frame(bottomFrame)
         duration_frame.grid(row=3, column=1, sticky=W)
 
         self.duration_months = Entry(duration_frame, width=5)
@@ -761,10 +825,10 @@ class GTMS:
         days = Label(duration_frame, text='days', bg=color)
         days.grid(row=0, column=3, sticky=W)
 
-        self.consulting_doctor = Entry(medsWin, width=20)
+        self.consulting_doctor = Entry(bottomFrame, width=20)
         self.consulting_doctor.grid(row=4, column=1, columnspan=4, sticky=W)
 
-        date_prescription_frame = Frame(medsWin)
+        date_prescription_frame = Frame(bottomFrame)
         date_prescription_frame.grid(row=5, column=1, sticky=W)
 
         years = list(range(1910, 2014))
@@ -775,24 +839,24 @@ class GTMS:
         self.prescrip_year.set('Year')
 
         prescrip_year = ttk.Combobox(date_prescription_frame, textvariable=self.prescrip_year, values=years)
-        prescrip_year.config(width=5)
+        prescrip_year.config(width=5, state='readonly')
         prescrip_year.grid(row=0, column=0, sticky=W)
 
         self.prescrip_month = StringVar()
         self.prescrip_month.set('Month')
 
         prescrip_month = ttk.Combobox(date_prescription_frame, textvariable=self.prescrip_month, values=months)
-        prescrip_month.config(width=7)
+        prescrip_month.config(width=7, state='readonly')
         prescrip_month.grid(row=0, column=1, sticky=W)
 
         self.prescrip_day = StringVar()
         self.prescrip_day.set('Day')
 
         prescrip_day = ttk.Combobox(date_prescription_frame, textvariable=self.prescrip_day, values=days)
-        prescrip_day.config(width=5)
+        prescrip_day.config(width=5, state='readonly')
         prescrip_day.grid(row=0, column=2, sticky=W)
         
-        checkout = ttk.Button(medsWin, text='Checkout', cursor='hand2', command=self.PaymentInfo)
+        checkout = ttk.Button(bottomFrame, text='Checkout', cursor='hand2', command=self.PaymentInfo)
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
     def sendMessage(self):
@@ -857,31 +921,39 @@ class GTMS:
 
         color = '#cfb53b'
 
-        self.medsWin.iconify()
-        self.paymentInfoWin = Toplevel(LogWin)
-        paymentWin = self.paymentInfoWin
-        paymentWin.title('Payment Information')
-        paymentWin.config(bg=color)
-        
-        #Top Banner
-        banner = Label(paymentWin, bg=color, width=450, height=50, text='Payment Information',
-                       padx=10, font=('Berlin Sans FB', 18), image=self.photo,
-                       compound=RIGHT, anchor=N)
-        banner.grid(row=0, columnspan=4)
+        self.payWin = Toplevel(LogWin)
+        self.payWin.title('Payment Information')
+        self.payWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.payWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.payWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.payWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Payment Information", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
         #Main Body
         attributes = ["Cardholder's Name: ", 'Card Number: ',
                       'Type of Card: ', 'CVV: ', 'Date of Expiry: ']
         count = 1
         for attribute in attributes:
-            attribute_label = Label(paymentWin, text=attribute, bg=color)
+            attribute_label = Label(bottomFrame, text=attribute, bg=color)
             attribute_label.grid(row=count, column=0, padx=10, pady=10, sticky=W)
             count += 1
 
-        self.cardholder_name = Entry(paymentWin, width=30)
+        self.cardholder_name = Entry(bottomFrame, width=30)
         self.cardholder_name.grid(row=1, column=1, sticky=W)
 
-        self.card_number = Entry(paymentWin, width=30)
+        self.card_number = Entry(bottomFrame, width=30)
         self.card_number.grid(row=2, column=1, sticky=W)
 
         self.card_type = StringVar()
@@ -889,14 +961,14 @@ class GTMS:
 
         types = ['Visa', 'Mastercard', 'Discover', 'American Express']
 
-        paymentPulldown = ttk.Combobox(paymentWin, textvariable=self.card_type, values=types)
-        paymentPulldown.config(width=25)
+        paymentPulldown = ttk.Combobox(bottomFrame, textvariable=self.card_type, values=types)
+        paymentPulldown.config(width=25, state='readonly')
         paymentPulldown.grid(row=3, column=1, sticky=W)
 
-        self.cvv = Entry(paymentWin, width=30)
+        self.cvv = Entry(bottomFrame, width=30)
         self.cvv.grid(row=4, column=1, sticky=W)
 
-        date_expiry_frame = Frame(paymentWin)
+        date_expiry_frame = Frame(bottomFrame, background=color)
         date_expiry_frame.grid(row=5, column=1, sticky=W)
 
         years = list(range(1910, 2014))
@@ -908,23 +980,24 @@ class GTMS:
 
         expiry_year = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_year, values=years)
         expiry_year.config(width=5)
-        expiry_year.grid(row=0, column=0, sticky=W)
+        expiry_year.config(state='readonly')
+        expiry_year.grid(row=0, column=0, sticky=W, padx=2)
 
         self.expiry_month = StringVar()
         self.expiry_month.set('Month')
 
         expiry_month = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_month, values=months)
-        expiry_month.config(width=7)
-        expiry_month.grid(row=0, column=1, sticky=W)
+        expiry_month.config(width=7, state='readonly')
+        expiry_month.grid(row=0, column=1, sticky=W, padx=2)
 
         self.expiry_day = StringVar()
         self.expiry_day.set('Day')
 
         expiry_day = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_day, values=days)
-        expiry_day.config(width=5)
-        expiry_day.grid(row=0, column=2, sticky=W)
+        expiry_day.config(width=5, state='readonly')
+        expiry_day.grid(row=0, column=2, sticky=W, padx=5)
 
-        order = ttk.Button(paymentWin, text='Order', cursor='hand2', command=self.PayMeds)
+        order = ttk.Button(bottomFrame, text='Order', cursor='hand2', command=self.PayMeds)
         order.grid(row=6, column=2, padx=5, pady=5)
 
     def appoinmentPage(self):
