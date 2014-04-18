@@ -10,3 +10,7 @@ Juan
 -Order Med **Complete**
 -Payment Info **Complete**
 -Registration **Complete(except for logo)**
+-LoginCheck **Complete**
+-RegisterNew **Complete**
+-VisitHistory(Patient) **Complete**
+-RateDoctor **Complete**
