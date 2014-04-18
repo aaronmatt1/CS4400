@@ -64,10 +64,10 @@ class GTMS:
         self.password_entry = ttk.Entry(LogWin, show='*', width=35)
         self.password_entry.grid(row=2, column=2, sticky=W)
 
-        login = ttk.Button(LogWin, text='Login', width=5, cursor='hand2')
+        login = ttk.Button(LogWin, text='Login', width=5, cursor='hand2', command=self.LoginCheck)
         login.grid(row=3, column=3, sticky=EW, padx=5, pady=5)
 
-        register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2')
+        register = ttk.Button(LogWin, text='Register', width=10, cursor='hand2', command=self.Register)
         register.grid(row=4, column=3, sticky=EW, padx=5, pady=5)
         
     def LoginCheck(self):
@@ -85,7 +85,11 @@ class GTMS:
             if result[0][0] == 1:
                 self.userType = 'patient'
                 LogWin.iconify()
+<<<<<<< HEAD
                 self.patientHomePage()
+=======
+                self.patientHomepage()
+>>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
             else:
                 cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (self.username))
                 result = cursor.fetchall()
@@ -93,20 +97,28 @@ class GTMS:
                 if result[0][0] == 1:
                     self.userType = 'doctor'
                     LogWin.iconify()
+<<<<<<< HEAD
                     self.doctorHomePage()
+=======
+                    self.doctorHomepage()
+>>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
                 #User must be Admin
                 else:
                     self.userType = 'admin'
                     LogWin.iconify()
+<<<<<<< HEAD
                     self.adminHomePage()
+=======
+                    self.adminHomepage()
+>>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
 
     def Register(self):
-
+        
         color = '#cfb53b'
-
+        LogWin.iconify()
         self.newRegWin = Toplevel(LogWin)
         self.newRegWin.title('New User Register')
         self.newRegWin.configure(background='#cfb53b')
@@ -193,11 +205,11 @@ class GTMS:
                                 #If user is patient
                                 if self.user_type.get() == 'Patient':
                                     self.reg.iconify()
-                                    self.PatientProfile()
+                                    self.patientProfile()
                                 #If user is doctor
                                 elif self.user_type.get() == 'Doctor':
                                     self.reg.iconify()
-                                    self.DoctorProfile()
+                                    self.doctorProfile()
                             else:
                                 error = mbox.showerror("Registration Error", "Username is already in use.")
                                 return
@@ -489,37 +501,37 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT)
+        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.MakeAppt)
         makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
         makeAppointButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        viewPrescripButton = Button(bottomFrame, text='View Visit History', relief=FLAT)
-        viewPrescripButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
-        viewPrescripButton.configure(font='Arial',
+        viewVisitButton = Button(bottomFrame, text='View Visit History', relief=FLAT, command=self.VisitHistory)
+        viewVisitButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
+        viewVisitButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        orderMedButton = Button(bottomFrame, text='Order Medication', relief=FLAT)
+        orderMedButton = Button(bottomFrame, text='Order Medication', relief=FLAT, command=self.OrderMeds)
         orderMedButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
         orderMedButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT)
+        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT, command=self.Communicator)
         communicateButton.grid(row=3, column=0, padx=20, pady=10, sticky='W')
         communicateButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        rateDocButton = Button(bottomFrame, text='Rate a Doctor', relief=FLAT)
+        rateDocButton = Button(bottomFrame, text='Rate a Doctor', relief=FLAT, command=self.RateDoctor)
         rateDocButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
         rateDocButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT)
+        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT, command=self.EditProfile)
         editProfile.grid(row=5, column=0, padx=20, pady=10, sticky='W')
         editProfile.configure(font='Arial',
                                     foreground='blue',
@@ -606,17 +618,18 @@ class GTMS:
     def VisitHistory(self):
 
         color = '#cfb53b'
+        self.patHPWin.iconify()
+        self.visitHistWin = Toplevel(LogWin)
+        visitHistWin = self.visitHistWin
+        visitHistWin.title('Visit History')
+        visitHistWin.configure(background='#cfb53b')
 
-        self.docHPWin = Toplevel(LogWin)
-        self.docHPWin.title('Visit History')
-        self.docHPWin.configure(background='#cfb53b')
-
-        topFrame = Frame(self.docHPWin)
+        topFrame = Frame(visitHistWin)
         topFrame.grid(row=0, column=0)
         topFrame.configure(background='#cfb53b')
-        midFrame = Frame(self.docHPWin, bd=1, background='black')
+        midFrame = Frame(visitHistWin, bd=1, background='black')
         midFrame.grid(row=1, column=0, sticky='EW')
-        bottomFrame = Frame(self.docHPWin)
+        bottomFrame = Frame(visitHistWin)
         bottomFrame.grid(row=2, column=0)
         bottomFrame.configure(background='#cfb53b')
 
@@ -683,7 +696,7 @@ class GTMS:
         diagnosis.grid(row=3, column=2, sticky=W)
 
     def visitReport(self):
-
+        
         self.docHPWin = Toplevel(LogWin)
         self.docHPWin.title('Doctor Home Page')
         self.docHPWin.configure(background='#cfb53b')
@@ -707,7 +720,7 @@ class GTMS:
     def RateDoctor(self):
 
         color = '#cfb53b'
-
+        self.patHPWin.iconify()
         self.rateWin = Toplevel(LogWin)
         self.rateWin.title('Rate a Doctor')
         self.rateWin.configure(background='#cfb53b')
@@ -774,7 +787,7 @@ class GTMS:
     def OrderMeds(self):
 
         color = '#cfb53b'
-
+        self.patHPWin.iconify()
         self.orderWin = Toplevel(LogWin)
         self.orderWin.title('Order Medication')
         self.orderWin.configure(background='#cfb53b')
@@ -837,7 +850,7 @@ class GTMS:
         date_prescription_frame = Frame(bottomFrame)
         date_prescription_frame.grid(row=5, column=1, sticky=W)
 
-        years = list(range(1910, 2014))
+        years = list(range(1910, 2015))
         months = list(range(1, 13))
         days = list(range(1, 32))
         
@@ -866,7 +879,7 @@ class GTMS:
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
     def sendMessage(self):
-
+        self.patHPWin.iconify()
         self.messageWin= Toplevel(LogWin)
         self.messageWin.title('Communicator')
         self.messageWin.configure(background='#cfb53b')
@@ -1008,7 +1021,7 @@ class GTMS:
     def PaymentInfo(self):
 
         color = '#cfb53b'
-
+        self.patHPWin.iconify()
         self.payWin = Toplevel(LogWin)
         self.payWin.title('Payment Information')
         self.payWin.configure(background='#cfb53b')
@@ -1089,7 +1102,7 @@ class GTMS:
         order.grid(row=6, column=2, padx=5, pady=5)
 
     def appoinmentPage(self):
-
+        self.patHPWin.iconify()
         self.apptWin = Toplevel(LogWin)
         self.apptWin.title('Appointments')
         self.apptWin.configure(background='#cfb53b')
@@ -1212,6 +1225,7 @@ class GTMS:
         Height = self.heightEntry.get()
         AnnualIncome = self.annualIncome.get()
         Allergies = self.allergiesEntry.get()
+<<<<<<< HEAD
 
         self.connect()
 
@@ -1220,6 +1234,36 @@ class GTMS:
                 .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
 
         self.c.execute(query)
+=======
+        if PName != []:
+            if HomePhone != []:
+                if DOB != []:
+                    if Address != []:
+                        if AnnualIncome != []:
+
+                            self.connect()
+                    
+                            query = '''INSERT INTO PATIENT(Name,HomePhone,Username,DOB,Gender,Address,WorkPhone,Height,Weight,AnnualIncome)
+                                    VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
+                                    .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+                            
+                            self.c.execute(query)
+                        else:
+                            error = mbox.showerror("Patient Form", "Please enter a valid annual income.")
+                            return
+                    else:
+                        error = mbox.showerror("Patient Form", "Please enter a valid address.")
+                        return
+                else:
+                    error = mbox.showerror("Patient Form", "Please enter a valid date of birth.")
+                    return
+            else:
+                error = mbox.showerror("Patient Form", "Please enter a valid home phone number.")
+                return
+        else:
+            error = mbox.showerror("Patient Form", "Please enter a valid name.")
+            return
+>>>>>>> 0f41d9038bfe30551e0a701ae23875513a3a1c8d
 
     def PayMeds(self):
         pass
