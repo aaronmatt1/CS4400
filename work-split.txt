@@ -12,5 +12,5 @@ Juan
   -PayMeds **Complete**
 -Registration **Complete(except for logo)**
   -RegisterNew **Complete**
--VisitHistory(Patient) **Complete**
--RateDoctor **Complete**
+-VisitHistory(Patient) (Needs to be finished)
+-RateDoctor (Needs to be finished)
