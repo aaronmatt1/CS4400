@@ -1,8 +1,12 @@
 Aaron
--Patient Profile **Complete(Except for logo on top)**
+-Patient Profile **Complete**
 -Doctor Profile **Complete**
 -Home Page **Complete**
--Appointments 
+-Appointments(SQL/transition)
+-Patient HomePage(SQL/transition)
+-Doctor HomePage(SQL/transition)
+-Messages
+
 
 Juan
 -Login Page **Complete**
@@ -12,5 +16,8 @@ Juan
   -PayMeds **Complete**
 -Registration **Complete(except for logo)**
   -RegisterNew **Complete**
--VisitHistory(Patient) (Needs to be finished)
--RateDoctor (Needs to be finished)
+-VisitHistory(Patient) (Only needs SQL and transitioning code)
+-RateDoctor (Only needs SQL and transitioning code)
+
+
+We need to work on User Functionality functions and whatever they are going to do
