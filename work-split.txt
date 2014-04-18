@@ -6,11 +6,11 @@ Aaron
 
 Juan
 -Login Page **Complete**
--New User Registation **Complete**
+  -LoginCheck **Complete**
 -Order Med **Complete**
 -Payment Info **Complete**
+  -PayMeds **Complete**
 -Registration **Complete(except for logo)**
--LoginCheck **Complete**
--RegisterNew **Complete**
+  -RegisterNew **Complete**
 -VisitHistory(Patient) **Complete**
 -RateDoctor **Complete**
