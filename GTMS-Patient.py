@@ -144,10 +144,10 @@ class GTMS:
         user_type_label.grid(row=4, column=1, sticky=W, padx=5)
 
         #User Type Pulldown Menu
-        self.userType = StringVar()
-        self.userType.set('Select User Type')
+        self.Type = StringVar()
+        self.Type.set('Select User Type')
         types = ['Doctor', 'Patient', 'Administrative Personnel']
-        userTypeMenu = ttk.Combobox(bottomFrame, textvariable=self.userType, values=types)
+        userTypeMenu = ttk.Combobox(bottomFrame, textvariable=self.Type, values=types)
         userTypeMenu.config(state='readonly')
         userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
 
@@ -185,11 +185,11 @@ class GTMS:
                             mbox.showinfo("Registration Complete", "User is now registered into GTMRS database")
                             self.db.commit()
                             #If user is patient
-                            if self.userType.get() == 'Patient':
+                            if self.Type.get() == 'Patient':
                                 self.newRegWin.iconify()
                                 self.patientProfile()
                             #If user is doctor
-                            elif self.userType.get() == 'Doctor':
+                            elif self.Type.get() == 'Doctor':
                                 self.newRegWin.iconify()
                                 self.doctorProfile()
                         else:
@@ -561,7 +561,7 @@ class GTMS:
         hardCodedSpaceLabel.configure(background='#cfb53b')
 
         messageText = 'You have {info from DB} unread messages'
-        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.patHPToMessages)
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
         unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
@@ -641,7 +641,7 @@ class GTMS:
         messageText = 'You have {} unread messages'.format(messages)
         if messages == 0:
             messageText = 'You have no unread messages'
-        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT)
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
         unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
@@ -677,10 +677,10 @@ class GTMS:
         bottomFrame.grid(row=2, column=0)
         bottomFrame.configure(background='#cfb53b')
 
-        logo = Label(topFrame, image=self.photo)
+        logo = ttk.Label(topFrame, image=self.photo)
         logo.grid(row=0, column=1)
         logo.configure(background='#cfb53b')
-        pageName = Label(topFrame, text="Visit History", font=("Arial", 25))
+        pageName = ttk.Label(topFrame, text="Visit History", font=("Arial", 25))
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
@@ -688,7 +688,7 @@ class GTMS:
         date_visits_frame = Frame(bottomFrame, bg=color)
         date_visits_frame.grid(row=1, column=0, rowspan=5, sticky=N)
         
-        dateVisitsLabel = Label(date_visits_frame, text='Dates of Visits', bg=color)
+        dateVisitsLabel = ttk.Label(date_visits_frame, text='Dates of Visits', bg=color)
         dateVisitsLabel.grid(row=0, column=0, sticky=N)
 
         #Date Visits Listbox
@@ -714,7 +714,7 @@ class GTMS:
         attributes = ['Consulting Doctor: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
         count = 1
         for attribute in attributes:
-            attribute_label = Label(bottomFrame, text=attribute, bg=color)
+            attribute_label = ttk.Label(bottomFrame, text=attribute, bg=color)
             attribute_label.grid(row=count, column=1, padx=10, pady=10, sticky=W)
             count += 1
 
@@ -724,13 +724,13 @@ class GTMS:
         bloodFrame = Frame(bottomFrame, background=color)
         bloodFrame.grid(row=2, column=2, sticky=W)
 
-        systolic_lbl = Label(bloodFrame, text='Systolic: ', bg=color)
+        systolic_lbl = ttk.Label(bloodFrame, text='Systolic: ', bg=color)
         systolic_lbl.grid(row=0, column=0)
 
         systolic_entry = Entry(bloodFrame, width=5)
         systolic_entry.grid(row=0, column=1, padx=5)
 
-        diastolic_lbl = Label(bloodFrame, text='Diastolic: ', bg=color)
+        diastolic_lbl = ttk.Label(bloodFrame, text='Diastolic: ', bg=color)
         diastolic_lbl.grid(row=0, column=2, sticky=N)
 
         diastolic_entry = Entry(bloodFrame, width=5)
@@ -738,6 +738,15 @@ class GTMS:
 
         diagnosis = Text(bottomFrame, width=22, height=4)
         diagnosis.grid(row=3, column=2, padx=10, sticky=W)
+        
+        meds_frame = Frame(bottomFrame, bg='black')
+        meds_frame.grid(row=4, column=2, sticky=W)
+
+        col_names = ['Medicine Name', 'Dosage', 'Duration', 'Notes']
+
+        for i in range(len(col_names)):
+            label = Label(meds_frame, text=col_names[i], bg='white')
+            label.grid(row=0, column=i, padx=1, pady=1, sticky=NSEW)
 
         self.visitHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
 
@@ -827,11 +836,28 @@ class GTMS:
 
         try:
             rating = int(self.rating.get())
+            patient_username = self.User.get()
+            doc_name = self.doctor.get()
+            doc_name = doc_name[4:]
+            doc_name = doc_name.split()
+            fname = doc_name[0]
+            lname = doc_name[1]
+            print(fname, lname)
+            query = "SELECT Username FROM DOCTOR WHERE FName='%s' AND LName='%s'" % (fname, lname)
+            
+            cursor = self.connect()
 
-            #cursor = self.connect()
-            #self.db.close()
-            #cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(
+            self.c.execute(query)
+            result = self.c.fetchall()
+            print(result)
+            doc_username = result[0][0]
+            
+            self.c.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
+
+            info = mbox.showinfo("Rating Doctor", "Rating submitted.")
+            
             self.patHPWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
+            
         except:
             mbox.showerror(title='ERROR', message='Please Select a Rating')
             return
@@ -927,10 +953,23 @@ class GTMS:
         prescrip_day.config(width=5, state='readonly')
         prescrip_day.grid(row=0, column=2, sticky=W)
         
+        add = Button(date_prescription_frame, text='Add medication to basket', relief=FLAT, fg='blue', bg=color, command=self.AddMeds)
+        add.grid(row=6, column=1, padx=10, pady=10)
+        
         checkout = ttk.Button(bottomFrame, text='Checkout', cursor='hand2', command=self.PaymentInfo)
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
         self.orderWin.protocol("WM_DELETE_WINDOW", self.orderToHP)
+        
+    def AddMeds(self):
+        meds_name = self.meds_name.get()
+        dosage = self.dosage_amount.get()
+        duration_month = self.duration_months.get()
+        duration_day = self.duration_days.get()
+        consulting_doc = self.consulting_doctor.get()
+        date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
+        db = self.Connect()
+        cursor = db.cursor()
 
     def sendMessage(self):
 
@@ -1018,9 +1057,8 @@ class GTMS:
 
     def getMessage(self):
 
-        recipient = self.sendTo.get()
         message = self.box.get("1.0", 'end')
-
+        recipient = self.sendTo.get()
         cursor = self.connect()
 
         name = recipient.split()
@@ -1080,14 +1118,12 @@ class GTMS:
         cursor = self.connect()
         query = 'SELECT Name,Date,ScheduledTime FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE DUsername = "{}"'\
                 .format(self.username)
-        print(query)
         cursor.execute(query)
         requests = list(cursor.fetchall())
 
         requestList = []
         for request in requests:
             requestList.append([request[0], request[1], request[2]])
-        print(requestList)
         headers = ['       Name      ',
                    '       Date       ',
                    '        Scheduled Time       ']
@@ -1154,7 +1190,7 @@ class GTMS:
         elif self.userType == 'doctor':
             tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
             query = '''SELECT Sender, Content, Status, DateTime
-                    FROM '''+tableName[0]+'''NATURAL JOIN '''+tableName[1]+''' WHERE Status = "Unread" AND Recipient = "{}"'''\
+                    FROM '''+tableName[0]+''' NATURAL JOIN '''+tableName[1]+''' WHERE Status = "Unread" AND Recipient = "{}"'''\
                     .format(self.username)
 
         cursor.execute(query)
@@ -1179,15 +1215,19 @@ class GTMS:
 
         elif self.userType == 'doctor':
             tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
-            query = '''UPDATE '''+tableName[0]+'''SET Status="Read" WHERE Username = "{}"'''.format(self.username)
+            query = '''UPDATE '''+tableName[0]+''' SET Status="Read" WHERE Recipient = "{}"'''.format(self.username)
             cursor.execute(query)
-            query = '''UPDATE '''+tableName[1]+'''SET Status="Read" WHERE Username = "{}"'''.format(self.username)
+            query = '''UPDATE '''+tableName[1]+''' SET Status="Read" WHERE Recipient = "{}"'''.format(self.username)
             cursor.execute(query)
             self.db.commit()
 
         self.db.close()
 
-        self.readMessageWin.protocol("WM_DELETE_WINDOW", self.MssgToHP)
+        if self.userType == 'patient':
+            self.readMessageWin.protocol("WM_DELETE_WINDOW", self.MssgToHP)
+        elif self.userType =='doctor':
+            self.readMessageWin.protocol("WM_DELETE_WINDOW", self.MssgToDocHP)
+
 
     def PaymentInfo(self):
 
@@ -1552,6 +1592,11 @@ class GTMS:
         self.requestWin.withdraw()
         self.docHPWin.deiconify()
 
+    def MssgToDocHP(self):
+
+        self.readMessageWin.withdraw()
+        self.docHPWin.deiconify()
+
     def patientScreens(self):
 
         self.patientHomePage()
@@ -1589,9 +1634,6 @@ class GTMS:
 
         self.Register()
         self.newRegWin.withdraw()
-
-        self.messagesPage()
-        self.readMessageWin.withdraw()
 
         self.doctorProfile()
         self.doctorWin.withdraw()
