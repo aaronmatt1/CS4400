@@ -9,6 +9,7 @@ import base64
 import pymysql
 
 class GTMS:
+
     def __init__(self, win):
 
         self.connect()
@@ -23,27 +24,14 @@ class GTMS:
 
         self.LoginPage(LogWin)
 
-        self.patientProfile()
-
         self.Register()
+        self.newRegWin.withdraw()
 
         self.doctorProfile()
-
-        self.appoinmentPage()
-
-        self.patientHomePage()
+        self.doctorWin.withdraw()
 
         self.doctorHomePage()
-
-        self.VisitHistory()
-
-        self.OrderMeds()
-
-        self.PaymentInfo()
-
-        self.RateDoctor()
-
-        self.sendMessage()
+        self.docHPWin.withdraw()
 
     def LoginPage(self, LogWin):
         #Top Banner
@@ -86,7 +74,7 @@ class GTMS:
                 self.userType = 'patient'
                 LogWin.iconify()
 
-                self.patientHomePage()
+                self.patientScreens()
 
             else:
                 cursor.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (self.username))
@@ -96,14 +84,14 @@ class GTMS:
                     self.userType = 'doctor'
                     LogWin.iconify()
 
-                    self.doctorHomePage()
+                    self.doctorScreens()
 
                 #User must be Admin
                 else:
                     self.userType = 'admin'
                     LogWin.iconify()
 
-                    self.adminHomePage()
+                    self.adminScreens()
 
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
@@ -112,7 +100,7 @@ class GTMS:
     def Register(self):
         
         color = '#cfb53b'
-        LogWin.iconify()
+
         self.newRegWin = Toplevel(LogWin)
         self.newRegWin.title('New User Register')
         self.newRegWin.configure(background='#cfb53b')
@@ -320,7 +308,7 @@ class GTMS:
         self.allergiesEntry = ttk.Entry(bottomFrame, width=30)
         self.allergiesEntry.grid(row=9, column=1, padx=10, pady=10, sticky="NSEW")
 
-        addAllergies = ttk.Button(bottomFrame, text='+', width=5)
+        addAllergies = ttk.Button(bottomFrame, text='+', width=5)#create code with SQL to put entry into DB under patient, then clear entry
         addAllergies.grid(row=9, column=2)
         
         #This block of code is intended for when the patient edits his profile.
@@ -350,6 +338,8 @@ class GTMS:
 
         submit = ttk.Button(bottomFrame, text='Submit', command=self.PsubmitForm)
         submit.grid(row=11, column=3, pady=10, padx=20)
+
+        self.patientWin.protocol("WM_DELETE_WINDOW", self.EditToHP)
 
     def doctorProfile(self):
 
@@ -520,37 +510,37 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.appoinmentPage)
+        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.patHPToAppts)
         makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
         makeAppointButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        viewVisitButton = Button(bottomFrame, text='View Visit History', relief=FLAT, command=self.VisitHistory)
+        viewVisitButton = Button(bottomFrame, text='View Visit History', relief=FLAT, command=self.patHPToVisitHist)
         viewVisitButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
         viewVisitButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        orderMedButton = Button(bottomFrame, text='Order Medication', relief=FLAT, command=self.OrderMeds)
+        orderMedButton = Button(bottomFrame, text='Order Medication', relief=FLAT, command=self.patHPToOrderMeds)
         orderMedButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
         orderMedButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT, command=self.sendMessage)
+        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT, command=self.patHPToComm)
         communicateButton.grid(row=3, column=0, padx=20, pady=10, sticky='W')
         communicateButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        rateDocButton = Button(bottomFrame, text='Rate a Doctor', relief=FLAT, command=self.RateDoctor)
+        rateDocButton = Button(bottomFrame, text='Rate a Doctor', relief=FLAT, command=self.patHpToRate)
         rateDocButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
         rateDocButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT, command=self.EditProfile)
+        editProfile = Button(bottomFrame, text='Edit Profile', relief=FLAT, command=self.patHPToEdit)
         editProfile.grid(row=5, column=0, padx=20, pady=10, sticky='W')
         editProfile.configure(font='Arial',
                                     foreground='blue',
@@ -561,11 +551,13 @@ class GTMS:
         hardCodedSpaceLabel.configure(background='#cfb53b')
 
         messageText = 'You have {info from DB} unread messages'
-        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.patHPToMessages)
         unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+
+        self.patHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
     def doctorHomePage(self):
 
@@ -630,14 +622,15 @@ class GTMS:
                                   foreground='blue',
                                   background='#cfb53b')
 
+        self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
+
     def adminHomePage(self):
         pass
-
                                   
     def VisitHistory(self):
 
         color = '#cfb53b'
-        self.patHPWin.iconify()
+
         self.visitHistWin = Toplevel(LogWin)
         visitHistWin = self.visitHistWin
         visitHistWin.title('Visit History')
@@ -714,10 +707,12 @@ class GTMS:
         diagnosis = Canvas(bottomFrame, bg='white', width=100, height=50)
         diagnosis.grid(row=3, column=2, sticky=W)
 
+        self.visitHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
+
     def visitReport(self):
         
         self.docHPWin = Toplevel(LogWin)
-        self.docHPWin.title('Doctor Home Page')
+        self.docHPWin.title('Visit Report')
         self.docHPWin.configure(background='#cfb53b')
 
         topFrame = Frame(self.docHPWin)
@@ -732,14 +727,17 @@ class GTMS:
         logo = Label(topFrame, image=self.photo)
         logo.grid(row=0, column=1)
         logo.configure(background='#cfb53b')
-        pageName = Label(topFrame, text="Home Page", font=("Arial", 25))
+        pageName = Label(topFrame, text="Patient Visit Report", font=("Arial", 25))
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
+
+    def recordVisit(self):
+        pass
 
     def RateDoctor(self):
 
         color = '#cfb53b'
-        self.patHPWin.iconify()
+
         self.rateWin = Toplevel(LogWin)
         self.rateWin.title('Rate a Doctor')
         self.rateWin.configure(background='#cfb53b')
@@ -791,6 +789,8 @@ class GTMS:
         submit = ttk.Button(bottomFrame, text='Submit Rating', command=self.SubmitRating)
         submit.grid(row=3, column=2, padx=10, pady=10, sticky=W)
 
+        self.rateWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
+
     def SubmitRating(self):
 
         try:
@@ -799,14 +799,15 @@ class GTMS:
             #cursor = self.connect()
             #self.db.close()
             #cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(
-
+            self.patHPWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
         except:
             mbox.showerror(title='ERROR', message='Please Select a Rating')
+            return
 
     def OrderMeds(self):
 
         color = '#cfb53b'
-        self.patHPWin.iconify()
+
         self.orderWin = Toplevel(LogWin)
         self.orderWin.title('Order Medication')
         self.orderWin.configure(background='#cfb53b')
@@ -897,9 +898,11 @@ class GTMS:
         checkout = ttk.Button(bottomFrame, text='Checkout', cursor='hand2', command=self.PaymentInfo)
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
+        self.orderWin.protocol("WM_DELETE_WINDOW", self.orderToHP)
+
     def sendMessage(self):
-        self.patHPWin.iconify()
-        self.messageWin= Toplevel(LogWin)
+
+        self.messageWin = Toplevel(LogWin)
         self.messageWin.title('Communicator')
         self.messageWin.configure(background='#cfb53b')
 
@@ -1036,11 +1039,10 @@ class GTMS:
 
         self.db.close()
 
-
     def PaymentInfo(self):
 
         color = '#cfb53b'
-        self.patHPWin.iconify()
+
         self.payWin = Toplevel(LogWin)
         self.payWin.title('Payment Information')
         self.payWin.configure(background='#cfb53b')
@@ -1276,7 +1278,6 @@ class GTMS:
             error = mbox.showerror("Patient Form", "Please enter a valid name.")
             return
 
-
     def PayMeds(self):
         pass
     
@@ -1294,6 +1295,97 @@ class GTMS:
                 #rootWin.iconify()
                 self.doctorProfile()
 
+    def patHPToAppts(self):
+
+        self.patHPWin.withdraw()
+        self.apptWin.deiconify()
+
+    def patHPToVisitHist(self):
+
+        self.patHPWin.withdraw()
+        self.visitHistWin.deiconify()
+
+    def patHPToOrderMeds(self):
+
+        self.patHPWin.withdraw()
+        self.orderWin.deiconify()
+
+    def patHPToComm(self):
+
+        self.patHPWin.withdraw()
+        self.messageWin.deiconify()
+
+    def patHpToRate(self):
+
+        self.patHPWin.withdraw()
+        self.rateWin.deiconify()
+
+    def patHPToEdit(self):
+
+        self.patHPWin.withdraw()
+        self.patientWin.deiconify()
+
+    def patHPToMessages(self):
+
+        self.patHPWin.withdraw()
+        self.readMessageWin.deiconify()
+
+    def EditToHP(self):
+
+        self.patientWin.withdraw()
+        self.patHPWin.deiconify()
+
+    def visitHistToHP(self):
+
+        self.visitHistWin.withdraw()
+        self.patHPWin.deiconify()
+
+    def orderToHP(self):
+
+        self.orderWin.withdraw()
+        self.patHPWin.deiconify()
+
+    def orderToPay(self):
+
+        self.orderWin.withdraw()
+        self.payWin.deiconify()
+
+    def rateToHP(self):
+
+        self.rateWin.withdraw()
+        self.patHPWin.deiconify()
+
+    def patientScreens(self):
+
+        self.patientHomePage()
+
+        self.patientProfile()
+        self.patientWin.withdraw()
+
+        self.appoinmentPage()
+        self.apptWin.withdraw()
+
+        self.VisitHistory()
+        self.visitHistWin.withdraw()
+
+        self.OrderMeds()
+        self.orderWin.withdraw()
+
+        self.PaymentInfo()
+        self.payWin.withdraw()
+
+        self.RateDoctor()
+        self.rateWin.withdraw()
+
+        self.sendMessage()
+        self.messageWin.withdraw()
+
+    def doctorScreens(self):
+        pass
+
+    def adminScreens(self):
+        pass
+
     def connect(self):
 
         try:
@@ -1307,7 +1399,15 @@ class GTMS:
             mbox.showerror(title='Connection Error', message='Check your internet connection')
             return NONE
 
-        self.db.close()
+    def endProgram(self, event=NONE):
+        #If DB is already closed, just destroy the main window to end the program
+        try:
+            self.db.close()
+            LogWin.destroy()
+        except:
+            LogWin.destroy()
+
+
 
 color = '#cfb53b'
 LogWin = Tk() #This will be where the login page goes.

@@ -943,14 +943,42 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        sendTo = StringVar()
-        sendTo.set('------')
-        contacts = ['A', 'B', 'C']
+        cursor = self.connect()
+        if self.userType == 'patient':
+
+            query = 'SELECT FName,LName FROM DOCTOR'
+            cursor.execute(query)
+            doctorsList = list(cursor.fetchall())
+            recipNames = []
+            for doctor in doctorsList:
+                recipNames.append(doctor[0]+' '+doctor[1])
+
+        if self.userType == 'doctor':
+
+            query = 'SELECT FName,LName FROM DOCTOR'
+            cursor.execute(query)
+            doctorsList = list(cursor.fetchall())
+            query = 'SELECT FName,LName FROM PATIENT'
+            cursor.execute(query)
+            patientList = list(cursor.fetchall())
+            doctorsList.extend(patientList)
+            recipients = doctorsList
+
+            recipNames = []
+            for recipient in recipients:
+                recipNames.append(recipient[0]+' '+recipient[1])
+
+        cursor.close()
+        self.db.close()
+
+        self.sendTo = StringVar()
+        self.sendTo.set('------')
+
 
         toFrame = Frame(bottomFrame, background='#cfb53b')
         toFrame.pack(pady=15)
         Label(toFrame, text='Select Name:   ', background='#cfb53b').grid(row=0, column=0)
-        contactPulldown = ttk.Combobox(toFrame, textvariable=sendTo, values=contacts)
+        contactPulldown = ttk.Combobox(toFrame, textvariable=self.sendTo, values=recipNames)
         contactPulldown.grid(row=0, column=1, sticky='w')
 
         messageFrame = Frame(bottomFrame, background='#cfb53b')
@@ -961,7 +989,7 @@ class GTMS:
         scroll = Scrollbar(messageFrame)
         scroll.grid(row=0, column=1, sticky='NS')
 
-        self.box = Text(messageFrame, wrap='word', font='Arial 12 italic', relief=GROOVE)
+        self.box = Text(messageFrame, wrap='word', font='Arial 12', relief=GROOVE)
 
         scroll.config()
 
@@ -979,7 +1007,39 @@ class GTMS:
 
     def getMessage(self):
 
+        recipient = self.sendTo.get()
         message = self.box.get("1.0", 'end')
+
+        cursor = self.connect()
+
+        name = recipient.split()
+        query = 'SELECT * FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
+        cursor.execute(query)
+        if cursor.fetchall():
+            self.recipientType = 'doctor'
+        else:
+            self.recipientType = 'patient'
+
+        if self.userType == 'patient':
+            query = '''INSERT INTO PATIENT_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status) VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''.format(self.username, recipient, message, "Unread")
+            cursor.execute(query)
+
+        elif self.userType == 'doctor':
+
+            if self.recipientType == 'doctor':
+                query = '''INSERT INTO DOCTOR_TO_DOCTOR Sender,Recipient,Content,DateTime,Status
+                        VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
+                        .format(self.username, recipient, message, "Unread")
+                cursor.execute(query)
+
+            elif self.recipientType == 'patient':
+                query = '''INSERT INTO DOCTOR_TO_PATIENT Sender,Recipient,Content,DateTime,Status
+                        VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
+                        .format(self.username, recipient, message, "Unread")
+                cursor.execute(query)
+
+        cursor.close()
+        self.db.close()
 
     def messagesPage(self):
 
@@ -1427,7 +1487,7 @@ class GTMS:
         self.patientProfile()
         self.patientWin.withdraw()
 
-        self.appoinmentPage()
+        self.appointmentPage()
         self.apptWin.withdraw()
 
         self.VisitHistory()
