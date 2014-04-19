@@ -666,7 +666,7 @@ class GTMS:
 
         #Main Body
         date_visits_frame = Frame(bottomFrame, bg=color)
-        date_visits_frame.grid(row=1, column=0, rowspan=5)
+        date_visits_frame.grid(row=1, column=0, rowspan=5, sticky=N)
         
         dateVisitsLabel = Label(date_visits_frame, text='Dates of Visits', bg=color)
         dateVisitsLabel.grid(row=0, column=0, sticky=N)
@@ -684,11 +684,11 @@ class GTMS:
         self.dateVisits = StringVar(value=date_visits)
 
         date_visits_lbox = Listbox(date_visits_frame, listvariable=self.dateVisits, width=12, height=5)
-        date_visits_lbox.grid(row=1, column=0, padx=3, sticky=N)
+        date_visits_lbox.grid(row=1, column=0, padx=10, sticky=N)
 
         #Vertical Separator
         separator = ttk.Separator(bottomFrame, orient=VERTICAL)
-        separator.grid(row=1, column=1, sticky='NSW', rowspan=4)
+        separator.grid(row=1, column=1, pady=5, sticky='NSW', rowspan=4)
 
         #Visit History Frame
         attributes = ['Consulting Doctor: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
@@ -716,8 +716,8 @@ class GTMS:
         diastolic_entry = Entry(bloodFrame, width=5)
         diastolic_entry.grid(row=0, column=3, padx=5)
 
-        diagnosis = Canvas(bottomFrame, bg='white', width=100, height=50)
-        diagnosis.grid(row=3, column=2, sticky=W)
+        diagnosis = Text(bottomFrame, width=22, height=4)
+        diagnosis.grid(row=3, column=2, padx=10, sticky=W)
 
         self.visitHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
 
