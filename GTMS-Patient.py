@@ -144,6 +144,10 @@ class GTMS:
 
         self.password_entry = Entry(bottomFrame, width=30, show='*')
         self.password_entry.grid(row=2, column=2, columnspan=3, sticky=EW, padx=5)
+        
+        note = Label(bottomFrame, text='Note: Choose a password that contains both letters and numbers and is between 6 - 15 characters long.',
+                     font=('Arial', 8), bg='#cfb53b', wraplength=175, justify=LEFT)
+        note.grid(row=2, column=5, sticky=W)
 
         confirm_label = Label(bottomFrame, text='Confirm Password: ', bg='#cfb53b', padx=10, pady=10)
         confirm_label.grid(row=3, column=1, sticky=W)
