@@ -319,7 +319,7 @@ class GTMS:
         self.allergiesEntry = ttk.Entry(bottomFrame, width=30)
         self.allergiesEntry.grid(row=9, column=1, padx=10, pady=10, sticky="NSEW")
 
-        addAllergies = ttk.Button(bottomFrame, text='+', width=5)#create code with SQL to put entry into DB under patient, then clear entry
+        addAllergies = ttk.Button(bottomFrame, text='+', width=5, command=self.AddAllergies)#create code with SQL to put entry into DB under patient, then clear entry
         addAllergies.grid(row=9, column=2)
         
         #This block of code is intended for when the patient edits his profile.
@@ -352,6 +352,15 @@ class GTMS:
         submit.grid(row=11, column=3, pady=10, padx=20)
 
         self.patientWin.protocol("WM_DELETE_WINDOW", self.EditToHP)
+        
+    def AddAllergies(self):
+        allergies = self.allergiesEntry.get()
+        username = self.User.get()
+        cursor = self.connect()
+        self.c.execute("INSERT INTO ALLERGIES(Username, Allergy) VALUES('%s', '%s')" % (username, allergies))
+        self.db.commit()
+
+        self.allergiesEntry.delete(0, END)
 
     def doctorProfile(self):
 
