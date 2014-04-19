@@ -563,6 +563,7 @@ class GTMS:
         hardCodedSpaceLabel = Label(bottomFrame, text='                                          ')
         hardCodedSpaceLabel.grid(row=0, column=1)
         hardCodedSpaceLabel.configure(background='#cfb53b')
+        
 
         messageText = 'You have {info from DB} unread messages'
         unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
