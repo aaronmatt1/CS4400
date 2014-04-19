@@ -24,15 +24,6 @@ class GTMS:
 
         self.LoginPage(LogWin)
 
-        self.Register()
-        self.newRegWin.withdraw()
-
-        self.doctorProfile()
-        self.doctorWin.withdraw()
-
-        self.doctorHomePage()
-        self.docHPWin.withdraw()
-
     def LoginPage(self, LogWin):
         #Top Banner
         banner = Label(LogWin, bg='#cfb53b', width=450, height=50, text='GTMS Login', padx=10, font=('Berlin Sans FB', 18),
@@ -82,7 +73,7 @@ class GTMS:
             if result[0][0] == 1:
                 self.userType = 'patient'
                 LogWin.iconify()
-
+                self.db.close()
                 self.patientScreens()
 
             else:
@@ -92,7 +83,7 @@ class GTMS:
                 if result[0][0] == 1:
                     self.userType = 'doctor'
                     LogWin.iconify()
-
+                    self.db.close()
                     self.doctorScreens()
 
                 #User must be Admin
@@ -105,8 +96,6 @@ class GTMS:
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
-
-        self.db.close()
 
     def Register(self):
         
@@ -636,9 +625,31 @@ class GTMS:
         hardCodedSpaceLabel.grid(row=0, column=1)
         hardCodedSpaceLabel.configure(background='#cfb53b')
 
-        messageText = 'You have {info from DB} unread messages'
+        cursor = self.connect()
+        query = 'SELECT COUNT(*) FROM PATIENT_TO_DOCTOR WHERE Recipient = "{}" and Status = "Unread"'\
+                .format(self.username)
+        cursor.execute(query)
+        messages1 = list(cursor.fetchall())[0][0]
+        query = 'SELECT COUNT(*) FROM DOCTOR_TO_DOCTOR WHERE Recipient = "{}" and Status = "Unread"'\
+                .format(self.username)
+        cursor.execute(query)
+        messages2 = list(cursor.fetchall())[0][0]
+        messages = messages1 + messages2
+        self.db.close()
+
+
+        messageText = 'You have {} unread messages'.format(messages)
+        if messages == 0:
+            messageText = 'You have no unread messages'
         unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT)
         unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
+        unreadMsgButton.configure(font=('Arial', 8),
+                                  foreground='blue',
+                                  background='#cfb53b')
+
+        messageText = 'Appointment Requests'
+        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.apptRequests)
+        unreadMsgButton.grid(row=1, column=2, padx=10)
         unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
@@ -1041,12 +1052,66 @@ class GTMS:
         cursor.close()
         self.db.close()
 
+    def apptRequests(self):
+
+        self.requestWin = Toplevel(LogWin)
+        self.requestWin.title('Appointment Requests')
+        self.requestWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.requestWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.requestWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.requestWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Appointment Requests", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        requestFrame = Frame(bottomFrame, background=color)
+        requestFrame.grid(row=0, column=0, sticky='NSEW', padx=10, pady=10)
+
+        cursor = self.connect()
+        query = 'SELECT Name,Date,ScheduledTime FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE DUsername = "{}"'\
+                .format(self.username)
+        print(query)
+        cursor.execute(query)
+        requests = list(cursor.fetchall())
+
+        requestList = []
+        for request in requests:
+            requestList.append([request[0], request[1], request[2]])
+        print(requestList)
+        headers = ['       Name      ',
+                   '       Date       ',
+                   '        Scheduled Time       ']
+
+        for x in range(len(headers)):
+            tableFrame = Frame(requestFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+            label = Label(tableFrame, text=headers[x], background=color)
+            label.pack(fill=BOTH)
+
+        for x in range(len(requestList)):
+            for y in range(len(requestList[x])):
+                tableFrame = Frame(requestFrame, borderwidth=1, background=color)
+                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1)
+                label = Label(tableFrame, text=requestList[x][y], background='white')
+                label.pack(fill=BOTH)
+            Button(requestFrame, width=8, text='Accept').grid(row=x+1, column=3, padx=5)
+            Button(requestFrame, width=8, text='Decline').grid(row=x+1, column=4, padx=5)
+
+        self.requestWin.protocol("WM_DELETE_WINDOW", self.requestsToDocHP)
+
     def messagesPage(self):
 
         cursor = self.connect()
-
-        self.userType = 'patient'
-        self.username = 'AMM1'
 
         self.readMessageWin= Toplevel(LogWin)
         self.readMessageWin.title('Messages')
@@ -1331,11 +1396,11 @@ class GTMS:
                 scheduled_time = findall('[a-zA-Z]+: (\d+:\d+:00 - \d+:\d+:00)', scheduled_appt)                
                 self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime) VALUES('%s', '%s', '%s', '%s')" % (patient_username, doc_username, day_date, scheduled_time))
                 db.commit()
-                info = messagebox.showinfo("Appointment Requests", "Appointment requests complete.")
+                info = mbox.showinfo("Appointment Requests", "Appointment requests complete.")
                 self.apptWin.destroy()
             #Wait for request to be accepted
             else:
-                info = messagebox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")
+                info = mbox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")
                         
         self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment', command=RequestAppt)
         self.requestButton.grid(row=2, column=0, columnspan=3, pady=5, sticky='EW')
@@ -1477,9 +1542,22 @@ class GTMS:
         self.messageWin.withdraw()
         self.patHPWin.deiconify()
 
+    def docHPToRequests(self):
+
+        self.docHPWin.withdraw()
+        self.requestWin.deiconify()
+
+    def requestsToDocHP(self):
+
+        self.requestWin.withdraw()
+        self.docHPWin.deiconify()
+
     def patientScreens(self):
 
         self.patientHomePage()
+
+        self.Register()
+        self.newRegWin.withdraw()
 
         self.messagesPage()
         self.readMessageWin.withdraw()
@@ -1506,7 +1584,21 @@ class GTMS:
         self.messageWin.withdraw()
 
     def doctorScreens(self):
-        pass
+
+        self.doctorHomePage()
+
+        self.Register()
+        self.newRegWin.withdraw()
+
+        self.messagesPage()
+        self.readMessageWin.withdraw()
+
+        self.doctorProfile()
+        self.doctorWin.withdraw()
+
+
+
+
 
     def adminScreens(self):
         pass
