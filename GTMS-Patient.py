@@ -942,10 +942,23 @@ class GTMS:
         prescrip_day.config(width=5, state='readonly')
         prescrip_day.grid(row=0, column=2, sticky=W)
         
+        add = Button(medsWin, text='Add medication to basket', relief=FLAT, fg='blue', bg=color, command=self.AddMeds)
+        add.grid(row=6, column=1, padx=10, pady=10)
+        
         checkout = ttk.Button(bottomFrame, text='Checkout', cursor='hand2', command=self.PaymentInfo)
         checkout.grid(row=6, column=2, padx=10, pady=10)
 
         self.orderWin.protocol("WM_DELETE_WINDOW", self.orderToHP)
+        
+    def AddMeds(self):
+        meds_name = self.meds_name.get()
+        dosage = self.dosage_amount.get()
+        duration_month = self.duration_months.get()
+        duration_day = self.duration_days.get()
+        consulting_doc = self.consulting_doctor.get()
+        date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
+        db = self.Connect()
+        cursor = db.cursor()
 
     def sendMessage(self):
 
