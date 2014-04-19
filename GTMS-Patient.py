@@ -727,6 +727,15 @@ class GTMS:
 
         diagnosis = Text(bottomFrame, width=22, height=4)
         diagnosis.grid(row=3, column=2, padx=10, sticky=W)
+        
+        meds_frame = Frame(bottomFrame, bg='black')
+        meds_frame.grid(row=4, column=2, sticky=W)
+
+        col_names = ['Medicine Name', 'Dosage', 'Duration', 'Notes']
+
+        for i in range(len(col_names)):
+            label = Label(, text=col_names[i], bg='white')
+            label.grid(row=0, column=i, padx=1, pady=1, sticky=NSEW)
 
         self.visitHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
 
@@ -816,11 +825,28 @@ class GTMS:
 
         try:
             rating = int(self.rating.get())
+            patient_username = self.User.get()
+            doc_name = self.doctor.get()
+            doc_name = doc_name[4:]
+            doc_name = doc_name.split()
+            fname = doc_name[0]
+            lname = doc_name[1]
+            print(fname, lname)
+            query = "SELECT Username FROM DOCTOR WHERE FName='%s' AND LName='%s'" % (fname, lname)
+            
+            cursor = self.connect()
 
-            #cursor = self.connect()
-            #self.db.close()
-            #cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(
+            self.c.execute(query)
+            result = self.c.fetchall()
+            print(result)
+            doc_username = result[0][0]
+            
+            self.c.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
+
+            info = mbox.showinfo("Rating Doctor", "Rating submitted.")
+            
             self.patHPWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
+            
         except:
             mbox.showerror(title='ERROR', message='Please Select a Rating')
             return
@@ -943,42 +969,14 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        cursor = self.connect()
-        if self.userType == 'patient':
-
-            query = 'SELECT FName,LName FROM DOCTOR'
-            cursor.execute(query)
-            doctorsList = list(cursor.fetchall())
-            recipNames = []
-            for doctor in doctorsList:
-                recipNames.append(doctor[0]+' '+doctor[1])
-
-        if self.userType == 'doctor':
-
-            query = 'SELECT FName,LName FROM DOCTOR'
-            cursor.execute(query)
-            doctorsList = list(cursor.fetchall())
-            query = 'SELECT FName,LName FROM PATIENT'
-            cursor.execute(query)
-            patientList = list(cursor.fetchall())
-            doctorsList.extend(patientList)
-            recipients = doctorsList
-
-            recipNames = []
-            for recipient in recipients:
-                recipNames.append(recipient[0]+' '+recipient[1])
-
-        cursor.close()
-        self.db.close()
-
-        self.sendTo = StringVar()
-        self.sendTo.set('------')
-
+        sendTo = StringVar()
+        sendTo.set('------')
+        contacts = ['A', 'B', 'C']
 
         toFrame = Frame(bottomFrame, background='#cfb53b')
         toFrame.pack(pady=15)
         Label(toFrame, text='Select Name:   ', background='#cfb53b').grid(row=0, column=0)
-        contactPulldown = ttk.Combobox(toFrame, textvariable=self.sendTo, values=recipNames)
+        contactPulldown = ttk.Combobox(toFrame, textvariable=sendTo, values=contacts)
         contactPulldown.grid(row=0, column=1, sticky='w')
 
         messageFrame = Frame(bottomFrame, background='#cfb53b')
@@ -989,7 +987,7 @@ class GTMS:
         scroll = Scrollbar(messageFrame)
         scroll.grid(row=0, column=1, sticky='NS')
 
-        self.box = Text(messageFrame, wrap='word', font='Arial 12', relief=GROOVE)
+        self.box = Text(messageFrame, wrap='word', font='Arial 12 italic', relief=GROOVE)
 
         scroll.config()
 
@@ -1007,39 +1005,7 @@ class GTMS:
 
     def getMessage(self):
 
-        recipient = self.sendTo.get()
         message = self.box.get("1.0", 'end')
-
-        cursor = self.connect()
-
-        name = recipient.split()
-        query = 'SELECT * FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
-        cursor.execute(query)
-        if cursor.fetchall():
-            self.recipientType = 'doctor'
-        else:
-            self.recipientType = 'patient'
-
-        if self.userType == 'patient':
-            query = '''INSERT INTO PATIENT_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status) VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''.format(self.username, recipient, message, "Unread")
-            cursor.execute(query)
-
-        elif self.userType == 'doctor':
-
-            if self.recipientType == 'doctor':
-                query = '''INSERT INTO DOCTOR_TO_DOCTOR Sender,Recipient,Content,DateTime,Status
-                        VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipient, message, "Unread")
-                cursor.execute(query)
-
-            elif self.recipientType == 'patient':
-                query = '''INSERT INTO DOCTOR_TO_PATIENT Sender,Recipient,Content,DateTime,Status
-                        VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipient, message, "Unread")
-                cursor.execute(query)
-
-        cursor.close()
-        self.db.close()
 
     def messagesPage(self):
 
@@ -1487,7 +1453,7 @@ class GTMS:
         self.patientProfile()
         self.patientWin.withdraw()
 
-        self.appointmentPage()
+        self.appoinmentPage()
         self.apptWin.withdraw()
 
         self.VisitHistory()
