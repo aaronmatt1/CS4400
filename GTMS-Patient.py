@@ -1147,7 +1147,7 @@ class GTMS:
         order = ttk.Button(bottomFrame, text='Order', cursor='hand2', command=self.PayMeds)
         order.grid(row=6, column=2, padx=5, pady=5)
 
-    def appoinmentPage(self):
+    def appointmentPage(self):
 
         self.apptWin = Toplevel(LogWin)
         self.apptWin.title('Appointments')
@@ -1257,7 +1257,27 @@ class GTMS:
         self.timePulldown.config(state='readonly')
         self.timePulldown.config(width=30)
         self.timePulldown.grid(row=1, column=1, padx=5, pady=5)
-        self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment')
+        
+        def RequestAppt():
+            patient_username = self.User.get()
+            doc_username = username
+            db = self.connect()
+            self.c.execute("SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername='%s'" % (patient_username))
+            result=self.c.fetchall()
+            #If user is visiting for first time
+            if result[0][0] == 0:
+                scheduled_appt = self.timeSelected.get()
+                day_date = findall('([a-zA-Z]+): .+', scheduled_appt)
+                scheduled_time = findall('[a-zA-Z]+: (\d+:\d+:00 - \d+:\d+:00)', scheduled_appt)                
+                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime) VALUES('%s', '%s', '%s', '%s')" % (patient_username, doc_username, day_date, scheduled_time))
+                db.commit()
+                info = messagebox.showinfo("Appointment Requests", "Appointment requests complete.")
+                self.apptWin.destroy()
+            #Wait for request to be accepted
+            else:
+                info = messagebox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")
+                        
+        self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment', command=RequestAppt)
         self.requestButton.grid(row=2, column=0, columnspan=3, pady=5, sticky='EW')
 
     def PsubmitForm(self):
