@@ -935,7 +935,7 @@ class GTMS:
         days = Label(duration_frame, text='days', bg=color)
         days.grid(row=0, column=3, sticky=W)
 
-        self.consulting_doctor = Entry(bottomFrame, width=20)
+        self.consulting_doctor = Entry(bottomFrame, width=30)
         self.consulting_doctor.grid(row=4, column=1, columnspan=4, sticky=W)
 
         date_prescription_frame = Frame(bottomFrame)
@@ -966,7 +966,7 @@ class GTMS:
         prescrip_day.config(width=5, state='readonly')
         prescrip_day.grid(row=0, column=2, sticky=W)
         
-        add = Button(date_prescription_frame, text='Add medication to basket', relief=FLAT, fg='blue', bg=color, command=self.AddMeds)
+        add = Button(bottomFrame, text='Add medication to basket', relief=FLAT, fg='blue', bg=color, command=self.AddMeds)
         add.grid(row=6, column=1, padx=10, pady=10)
         
         checkout = ttk.Button(bottomFrame, text='Checkout', cursor='hand2', command=self.PaymentInfo)
@@ -981,7 +981,7 @@ class GTMS:
         duration_day = self.duration_days.get()
         consulting_doc = self.consulting_doctor.get()
         date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
-        db = self.Connect()
+        db = self.connect()
         cursor = db.cursor()
 
     def sendMessage(self):
