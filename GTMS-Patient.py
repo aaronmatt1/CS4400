@@ -927,7 +927,7 @@ class GTMS:
         days = Label(duration_frame, text='days', bg=color)
         days.grid(row=0, column=3, sticky=W)
 
-        self.consulting_doctor = Entry(bottomFrame, width=20)
+        self.consulting_doctor = Entry(bottomFrame, width=30)
         self.consulting_doctor.grid(row=4, column=1, columnspan=4, sticky=W)
 
         date_prescription_frame = Frame(bottomFrame)
