@@ -958,7 +958,7 @@ class GTMS:
         prescrip_day.config(width=5, state='readonly')
         prescrip_day.grid(row=0, column=2, sticky=W)
         
-        add = Button(date_prescription_frame, text='Add medication to basket', relief=FLAT, fg='blue', bg=color, command=self.AddMeds)
+        add = Button(bottomFrame, text='Add medication to basket', relief=FLAT, fg='blue', bg=color, command=self.AddMeds)
         add.grid(row=6, column=1, padx=10, pady=10)
         
         checkout = ttk.Button(bottomFrame, text='Checkout', cursor='hand2', command=self.PaymentInfo)
