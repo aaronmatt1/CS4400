@@ -1,5 +1,5 @@
 __author__ = 'jsuit'
-
+"""Needs testing ... Not sure what pymysql will return on some of these querys"""
 import pymysql
 
 class ViewAppts(object):
