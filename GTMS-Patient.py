@@ -163,56 +163,56 @@ class GTMS:
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
         
     def RegisterNew(self):
-        #try:
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-        confirm = self.confirm_entry.get()
-        #If username and password entries are not empty
-        if username != '' and password != '':
-            #If password and confirm match
-            if password.split() == confirm.split():
-                #If username and password are less than 15 chars
-                if len(password) < 15 or len(username) < 15:
-                    num = findall("\d+", password)
-                    letters = findall("[a-zA-Z]", password)
-                    #If password contains both letters and numbers
-                    if num != [] and letters != []:
-                        cursor = self.connect()
-                        
-                        cursor.execute('SELECT * FROM USER WHERE Username= "{}"'.format(username))
-                        data = []
-                        for i in cursor:
-                            data.append(i)
-                        #If username is not taken
-                        if data == []:
-                            cursor.execute('INSERT INTO USER (Username, Password) VALUES ("{}", "{}")'.format(username, password))
-                            mbox.showinfo("Registration Complete", "User is now registered into GTMRS database")
-                            self.db.commit()
-                            #If user is patient
-                            if self.Type.get() == 'Patient':
-                                self.newRegWin.iconify()
-                                self.patientProfile()
-                            #If user is doctor
-                            elif self.Type.get() == 'Doctor':
-                                self.newRegWin.iconify()
-                                self.doctorProfile()
+        try:
+            username = self.username_entry.get()
+            password = self.password_entry.get()
+            confirm = self.confirm_entry.get()
+            #If username and password entries are not empty
+            if username != '' and password != '':
+                #If password and confirm match
+                if password.split() == confirm.split():
+                    #If username and password are less than 15 chars
+                    if len(password) < 15 or len(username) < 15:
+                        num = findall("\d+", password)
+                        letters = findall("[a-zA-Z]", password)
+                        #If password contains both letters and numbers
+                        if num != [] and letters != []:
+                            cursor = self.connect()
+                            
+                            cursor.execute('SELECT * FROM USER WHERE Username= "{}"'.format(username))
+                            data = []
+                            for i in cursor:
+                                data.append(i)
+                            #If username is not taken
+                            if data == []:
+                                cursor.execute('INSERT INTO USER (Username, Password) VALUES ("{}", "{}")'.format(username, password))
+                                mbox.showinfo("Registration Complete", "User is now registered into GTMRS database")
+                                self.db.commit()
+                                #If user is patient
+                                if self.Type.get() == 'Patient':
+                                    self.newRegWin.iconify()
+                                    self.patientProfile()
+                                #If user is doctor
+                                elif self.Type.get() == 'Doctor':
+                                    self.newRegWin.iconify()
+                                    self.doctorProfile()
+                            else:
+                                error = mbox.showerror("Registration Error", "Username is already in use.")
+                                return
                         else:
-                            error = mbox.showerror("Registration Error", "Username is already in use.")
+                            error = mbox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
                             return
                     else:
-                        error = mbox.showerror("Registration Error", "Please verify that password contains both letters and numbers.")
-                        return
+                        error = mbox.showerror("Registration Error", "Please enter shorter password and/or username.")
                 else:
-                    error = mbox.showerror("Registration Error", "Please enter shorter password and/or username.")
+                    error = mbox.showerror("Registration Error", "Please check that password is entered correctly.")
+                    return
             else:
-                error = mbox.showerror("Registration Error", "Please check that password is entered correctly.")
-                return
-        else:
-            error = mbox.showerror("Registration Error", "Please enter valid username and/or password.")
-            return                
-##        except:
-##            error = mbox.showerror("Registration Error", "Please try again.")
-##            return
+                error = mbox.showerror("Registration Error", "Please enter valid username and/or password.")
+                return                
+        except:
+            error = mbox.showerror("Registration Error", "Please try again.")
+            return
 
     def patientProfile(self):
 
@@ -563,6 +563,7 @@ class GTMS:
         hardCodedSpaceLabel = Label(bottomFrame, text='                                          ')
         hardCodedSpaceLabel.grid(row=0, column=1)
         hardCodedSpaceLabel.configure(background='#cfb53b')
+        
 
         messageText = 'You have {info from DB} unread messages'
         unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
