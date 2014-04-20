@@ -1144,9 +1144,6 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        requestFrame = Frame(bottomFrame, background=color)
-        requestFrame.grid(row=0, column=0, sticky='NSEW', padx=10, pady=10)
-
         cursor = self.connect()
         query = 'SELECT Name,Date,ScheduledTime FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE DUsername = "{}"'\
                 .format(self.username)
@@ -1154,26 +1151,64 @@ class GTMS:
         requests = list(cursor.fetchall())
 
         requestList = []
+        
         for request in requests:
             requestList.append([request[0], request[1], request[2]])
+
         headers = ['       Name      ',
                    '       Date       ',
                    '        Scheduled Time       ']
 
-        for x in range(len(headers)):
-            tableFrame = Frame(requestFrame, borderwidth=1, background='black')
-            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
-            label = Label(tableFrame, text=headers[x], background=color)
-            label.pack(fill=BOTH)
+        acceptDict = {}
+        declineDict = {}
+        frameDict = {}
 
         for x in range(len(requestList)):
+            acceptDict[x] = requestList[x]
+            declineDict[x] = requestList[x]
+            frameDict[x] = requestList[x]
+
+        def AcceptAppt( e):
+            print('k')
+            for x in range(len(acceptDict)):
+                if e.widget == acceptDict[x]:
+                    print(requestList[x])
+
+        def DeclineAppt( e):
+            print('l')
+            for x in range(len(declineDict)):
+                if e.widget == declineDict[x]:
+                    doc_username = self.User.get()
+                    db = self.connect
+                    query = "SELECT PUsername FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE Name='{}' AND Date='{}' AND ScheduledTime='{}'"\
+                            .format(requestList[x][0], requestList[x][1], requestList[x][2])
+                    self.c.execute(query)
+                    result = self.c.fetchall()
+                    patient_username = result[0][0]
+
+                    query = "DELETE FROM REQUEST_APPOINTMENT WHERE PUsername='{}' AND DUsername='{}' AND Date='{}' AND ScheduledTime='{}'".format(patient_username, doc_username, requestList[x][1], requestList[x][2])
+                    self.c.execute(query)
+                    frameDict[x].destroy()
+                    print("Entry deleted.")
+
+        for x in range(len(headers)):
+            label = Label(bottomFrame, text=headers[x], background=color)
+            label.grid(row=0, column=x, sticky=W)
+
+        for x in range(len(requestList)):
+            frameDict[x] = Frame(bottomFrame, borderwidth=1, background=color)
+            frameDict[x].grid(row=x+1, column=0, columnspan=3, sticky='NSEW', padx=1)
             for y in range(len(requestList[x])):
-                tableFrame = Frame(requestFrame, borderwidth=1, background=color)
-                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1)
-                label = Label(tableFrame, text=requestList[x][y], background='white')
-                label.pack(fill=BOTH)
-            Button(requestFrame, width=8, text='Accept').grid(row=x+1, column=3, padx=5)
-            Button(requestFrame, width=8, text='Decline').grid(row=x+1, column=4, padx=5)
+                label = Label(frameDict[x], text=requestList[x][y], background='white')
+                label.grid(row=x+1, column=y, padx=1)
+
+            acceptDict[x] = ttk.Button(frameDict[x], width=8, text='Accept')
+            acceptDict[x].bind("<ButtonRelease-1>", AcceptAppt)
+            acceptDict[x].grid(row=x+1, column=3, padx=5)
+            
+            declineDict[x] = ttk.Button(frameDict[x], width=8, text='Decline')
+            declineDict[x].bind("<ButtonRelease-1>", DeclineAppt)
+            declineDict[x].grid(row=x+1, column=4, padx=5)
 
         self.requestWin.protocol("WM_DELETE_WINDOW", self.requestsToDocHP)
 
