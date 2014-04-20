@@ -973,7 +973,7 @@ class GTMS:
         duration_day = self.duration_days.get()
         consulting_doc = self.consulting_doctor.get()
         date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
-        db = self.Connect()
+        db = self.connect()
         cursor = db.cursor()
 
     def sendMessage(self):
