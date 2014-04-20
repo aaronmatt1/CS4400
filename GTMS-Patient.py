@@ -563,14 +563,22 @@ class GTMS:
         hardCodedSpaceLabel = Label(bottomFrame, text='                                          ')
         hardCodedSpaceLabel.grid(row=0, column=1)
         hardCodedSpaceLabel.configure(background='#cfb53b')
-        
 
-        messageText = 'You have {info from DB} unread messages'
-        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
-        unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
-        unreadMsgButton.configure(font=('Arial', 8),
+        cursor = self.connect()
+        query = 'SELECT COUNT(*) FROM DOCTOR_TO_PATIENT WHERE Recipient = "{}" and Status = "Unread"'\
+                .format(self.username)
+        cursor.execute(query)
+        messages = list(cursor.fetchall())[0][0]
+
+
+        messageText = 'You have {} unread messages'.format(messages)
+        self.unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
+        self.unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
+        self.unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+        if messages == 0:
+            self.unreadMsgButton.config(state=DISABLED)
 
         self.patHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
@@ -646,11 +654,13 @@ class GTMS:
         messageText = 'You have {} unread messages'.format(messages)
         if messages == 0:
             messageText = 'You have no unread messages'
-        unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
-        unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
-        unreadMsgButton.configure(font=('Arial', 8),
+        self.unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.messagesPage)
+        self.unreadMsgButton.grid(row=0, column=2, padx=10, pady=10)
+        self.unreadMsgButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
+        if messages == 0:
+            self.unreadMsgButton.config(state=DISABLED)
 
         messageText = 'Appointment Requests'
         unreadMsgButton = Button(bottomFrame, text=messageText, relief=FLAT, command=self.apptRequests)
@@ -847,14 +857,12 @@ class GTMS:
             doc_name = doc_name.split()
             fname = doc_name[0]
             lname = doc_name[1]
-            print(fname, lname)
             query = "SELECT Username FROM DOCTOR WHERE FName='%s' AND LName='%s'" % (fname, lname)
             
             cursor = self.connect()
 
             self.c.execute(query)
             result = self.c.fetchall()
-            print(result)
             doc_username = result[0][0]
             
             self.c.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
@@ -1067,30 +1075,48 @@ class GTMS:
         cursor = self.connect()
 
         name = recipient.split()
-        query = 'SELECT * FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
+        query = 'SELECT Username FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
         cursor.execute(query)
-        if cursor.fetchall():
+        recipUsername = cursor.fetchone()
+        if recipUsername[0]:
             self.recipientType = 'doctor'
         else:
             self.recipientType = 'patient'
+            query = 'SELECT Username FROM PATIENT WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
+            cursor.execute(query)
+            recipUsername = cursor.fetchone()
+            recipUsername = recipUsername[0]
+
 
         if self.userType == 'patient':
-            query = '''INSERT INTO PATIENT_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status) VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''.format(self.username, recipient, message, "Unread")
+            query = '''INSERT INTO PATIENT_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status) VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
+                    .format(self.username, recipUsername[0], message, "Unread")
             cursor.execute(query)
+            mbox.showinfo(title='Message Sent', message='Message Sent!')
+            self.box.delete("1.0", END)
+            self.CommToPatHP()
 
         elif self.userType == 'doctor':
 
             if self.recipientType == 'doctor':
                 query = '''INSERT INTO DOCTOR_TO_DOCTOR Sender,Recipient,Content,DateTime,Status
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipient, message, "Unread")
+                        .format(self.username, recipUsername[0], message, "Unread")
                 cursor.execute(query)
+                mbox.showinfo(title='Message Sent', message='Message Sent!')
+                self.box.delete("1.0", END)
+                self.sendTo.set('----')
+                self.CommToPatHP()
 
             elif self.recipientType == 'patient':
                 query = '''INSERT INTO DOCTOR_TO_PATIENT Sender,Recipient,Content,DateTime,Status
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipient, message, "Unread")
+                        .format(self.username, recipUsername, message, "Unread")
                 cursor.execute(query)
+                mbox.showinfo(title='Message Sent', message='Message Sent!')
+                self.box.delete("1.0", END)
+                self.sendTo.set('----')
+                self.CommToPatHP()
 
         cursor.close()
         self.db.close()
@@ -1154,7 +1180,7 @@ class GTMS:
 
         cursor = self.connect()
 
-        self.readMessageWin= Toplevel(LogWin)
+        self.readMessageWin = Toplevel(LogWin)
         self.readMessageWin.title('Messages')
         self.readMessageWin.configure(background='#cfb53b')
 
@@ -1192,18 +1218,32 @@ class GTMS:
             tableName = 'DOCTOR_TO_PATIENT'
             query = '''SELECT Sender, Content, Status, DateTime
                     FROM '''+tableName+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
+
+            cursor.execute(query)
+            unreadMessages = list(cursor.fetchall())
+
+            unreadMessagesList = []
+            for mssg in unreadMessages:
+                unreadMessagesList.append([mssg[0], mssg[2], mssg[1], mssg[3]])
+
         elif self.userType == 'doctor':
             tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
             query = '''SELECT Sender, Content, Status, DateTime
-                    FROM '''+tableName[0]+''' NATURAL JOIN '''+tableName[1]+''' WHERE Status = "Unread" AND Recipient = "{}"'''\
-                    .format(self.username)
+                    FROM '''+tableName[0]+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
 
-        cursor.execute(query)
-        unreadMessages = list(cursor.fetchall())
+            cursor.execute(query)
+            unreadMessages = list(cursor.fetchall())
 
-        unreadMessagesList = []
-        for mssg in unreadMessages:
-            unreadMessagesList.append([mssg[0], mssg[2], mssg[1], mssg[3]])
+            query = '''SELECT Sender, Content, Status, DateTime
+                    FROM '''+tableName[1]+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
+
+            cursor.execute(query)
+            unreadMessages2 = list(cursor.fetchall())
+
+            unreadMessages.extend(unreadMessages2)
+            unreadMessagesList = []
+            for mssg in unreadMessages:
+                unreadMessagesList.append([mssg[0], mssg[2], mssg[1], mssg[3]])
 
         for x in range(len(unreadMessagesList)):
             for y in range(len(unreadMessagesList[x])):
@@ -1217,6 +1257,7 @@ class GTMS:
             query = 'UPDATE '+tableName+' SET Status = "Read" WHERE Status = "Unread" AND Recipient = "{}"'.format(self.username)
             cursor.execute(query)
             self.db.commit()
+            self.unreadMsgButton.config(text="You have no new messages", state=DISABLED)
 
         elif self.userType == 'doctor':
             tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
@@ -1225,14 +1266,14 @@ class GTMS:
             query = '''UPDATE '''+tableName[1]+''' SET Status="Read" WHERE Recipient = "{}"'''.format(self.username)
             cursor.execute(query)
             self.db.commit()
+            self.unreadMsgButton.config(text="You have no new messages", state=DISABLED)
 
         self.db.close()
 
         if self.userType == 'patient':
             self.readMessageWin.protocol("WM_DELETE_WINDOW", self.MssgToHP)
-        elif self.userType =='doctor':
+        elif self.userType == 'doctor':
             self.readMessageWin.protocol("WM_DELETE_WINDOW", self.MssgToDocHP)
-
 
     def PaymentInfo(self):
 
@@ -1612,9 +1653,6 @@ class GTMS:
 
         self.Register()
         self.newRegWin.withdraw()
-
-        self.messagesPage()
-        self.readMessageWin.withdraw()
 
         self.patientProfile()
         self.patientWin.withdraw()
