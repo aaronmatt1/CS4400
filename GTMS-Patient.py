@@ -692,7 +692,7 @@ class GTMS:
         date_visits_frame = Frame(bottomFrame, bg=color)
         date_visits_frame.grid(row=1, column=0, rowspan=5, sticky=N)
         
-        dateVisitsLabel = ttk.Label(date_visits_frame, text='Dates of Visits', bg=color)
+        dateVisitsLabel = Label(date_visits_frame, text='Dates of Visits', background=color)
         dateVisitsLabel.grid(row=0, column=0, sticky=N)
 
         #Date Visits Listbox
@@ -718,7 +718,7 @@ class GTMS:
         attributes = ['Consulting Doctor: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
         count = 1
         for attribute in attributes:
-            attribute_label = ttk.Label(bottomFrame, text=attribute, bg=color)
+            attribute_label = Label(bottomFrame, text=attribute, bg=color)
             attribute_label.grid(row=count, column=1, padx=10, pady=10, sticky=W)
             count += 1
 
@@ -728,13 +728,13 @@ class GTMS:
         bloodFrame = Frame(bottomFrame, background=color)
         bloodFrame.grid(row=2, column=2, sticky=W)
 
-        systolic_lbl = ttk.Label(bloodFrame, text='Systolic: ', bg=color)
+        systolic_lbl = Label(bloodFrame, text='Systolic: ', bg=color)
         systolic_lbl.grid(row=0, column=0)
 
         systolic_entry = Entry(bloodFrame, width=5)
         systolic_entry.grid(row=0, column=1, padx=5)
 
-        diastolic_lbl = ttk.Label(bloodFrame, text='Diastolic: ', bg=color)
+        diastolic_lbl = Label(bloodFrame, text='Diastolic: ', bg=color)
         diastolic_lbl.grid(row=0, column=2, sticky=N)
 
         diastolic_entry = Entry(bloodFrame, width=5)
@@ -1436,10 +1436,11 @@ class GTMS:
             #If user is visiting for first time
             if result[0][0] == 0:
                 scheduled_appt = self.timeSelected.get()
-                day_date = findall('([a-zA-Z]+): .+', scheduled_appt)
-                scheduled_time = findall('[a-zA-Z]+: (\d+:\d+:00 - \d+:\d+:00)', scheduled_appt)                
+                day_date = findall('([a-zA-Z]+): .+', scheduled_appt)[0]
+                pattern = '(\d+:\d+:00 - \d+:\d+:00)'
+                scheduled_time = findall(pattern, scheduled_appt)[0]
                 self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime) VALUES('%s', '%s', '%s', '%s')" % (patient_username, doc_username, day_date, scheduled_time))
-                db.commit()
+                self.db.commit()
                 info = mbox.showinfo("Appointment Requests", "Appointment requests complete.")
                 self.apptWin.destroy()
             #Wait for request to be accepted
@@ -1605,6 +1606,9 @@ class GTMS:
 
         self.patientHomePage()
 
+        self.doctorProfile()
+        self.doctorWin.withdraw()
+
         self.Register()
         self.newRegWin.withdraw()
 
@@ -1641,10 +1645,6 @@ class GTMS:
 
         self.doctorProfile()
         self.doctorWin.withdraw()
-
-
-
-
 
     def adminScreens(self):
         pass
