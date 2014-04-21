@@ -390,8 +390,7 @@ class GTMS:
                        'Eye Physician',
                        'Orthopedics',
                        'Psychiatry',
-                       'Gynecologist',
-                       'Cardiologist']
+                       'Gynecologist']
 
         self.days = StringVar()
         self.days.set('Monday')
@@ -1645,13 +1644,11 @@ class GTMS:
         self.c.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (username))
         result = self.c.fetchall()
         if result[0][0] == 1:
-            #rootWin.iconify()
             self.patientProfile()
         else:
             self.c.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
             result = self.c.fetchall()
             if result[0][0]  == 1:
-                #rootWin.iconify()
                 self.doctorProfile()
                 
     def Billing(self):
