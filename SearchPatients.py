@@ -9,7 +9,7 @@ class SearchPatients(object):
         def search(self, name, phone, dusername,db):
                 c = db.cursor()
                 if name is not None and name != '' and phone!= '' and phone is not None:
-                        q= """SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P
+                        q = """SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P
                                 INNER JOIN
                                 VISIT AS V
                                 ON P.Username = V.PUsername
@@ -29,7 +29,8 @@ class SearchPatients(object):
                                 ON P.Username = V.PUsername
                                 WHERE WorkPhone = %s AND V.DUsername = %s"""  %phone,dusername
                 if q is not None:
-                        data = c.execute(c)
+                        data = c.execute(q)
+                        c.close()
                         return data
                 else:
                         return None
