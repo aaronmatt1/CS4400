@@ -693,12 +693,12 @@ class GTMS:
         billing.grid(row=0, column=0)
         
         docReport = Button(bottomFrame, text='Doctor Performance Report', relief=FLAT, fg='blue', command=self.DocReport)
-        docReport.grid(row=1. column=0)
+        docReport.grid(row=1, column=0)
         
-        surgeryReport = Button(bottomFrame, text='Surgery Report', relief=FLAT, fg='blue', command=self.surgeryReport)
+        surgeryReport = Button(bottomFrame, text='Surgery Report', relief=FLAT, fg='blue', command=self.SurgeryReport)
         surgeryReport.grid(row=2, column=0)
         
-        patientReport = Button(bottomFrame, text='Patient Visit Report', relief=FLAT, fg='blue', command=self.patientReport)
+        patientReport = Button(bottomFrame, text='Patient Visit Report', relief=FLAT, fg='blue', command=self.PatientReport)
         patientReport.grid(row=3, column=0)
             
                                   
