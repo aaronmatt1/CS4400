@@ -153,7 +153,7 @@ class GTMS:
         register = ttk.Button(bottomFrame, text='Register', command=self.RegisterNew, cursor='hand2')
         register.grid(row=5, column=2, sticky=EW, pady=10, padx=5)
         #Cancel Button: Return To Login
-        cancel = ttk.Button(bottomFrame, text='Cancel')#, command=self.BackToLogin(reg), cursor='hand2')
+        cancel = ttk.Button(bottomFrame, text='Cancel', command=lambda: self.newRegWin.destroy(), cursor='hand2')
         cancel.grid(row=5, column=3, sticky=EW, pady=10, padx=5)
         
     def RegisterNew(self):
