@@ -524,7 +524,7 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.patHPToAppts)
+        makeAppointButton = Button(bottomFrame, text='Make Appointments', relief=FLAT, command=self.appointmentPage)
         makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
         makeAppointButton.configure(font='Arial',
                                     foreground='blue',
@@ -851,29 +851,38 @@ class GTMS:
 
         try:
             rating = int(self.rating.get())
-            patient_username = self.User.get()
-            doc_name = self.doctor.get()
-            doc_name = doc_name[4:]
-            doc_name = doc_name.split()
-            fname = doc_name[0]
-            lname = doc_name[1]
-            query = "SELECT Username FROM DOCTOR WHERE FName='%s' AND LName='%s'" % (fname, lname)
-            
-            cursor = self.connect()
 
-            self.c.execute(query)
-            result = self.c.fetchall()
-            doc_username = result[0][0]
-            
-            self.c.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
-
-            info = mbox.showinfo("Rating Doctor", "Rating submitted.")
-            
-            self.patHPWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
-            
         except:
             mbox.showerror(title='ERROR', message='Please Select a Rating')
             return
+
+        patient_username = self.User.get()
+        doc_name = self.doctor.get()
+        doc_name = doc_name[4:]
+        doc_name = doc_name.split()
+        fname = doc_name[0]
+        lname = doc_name[1]
+        query = "SELECT Username FROM DOCTOR WHERE FName='%s' AND LName='%s'" % (fname, lname)
+
+        cursor = self.connect()
+
+        self.c.execute(query)
+        result = self.c.fetchall()
+        doc_username = result[0][0]
+
+        try:
+            self.c.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
+        except:
+            mbox.showerror("ERROR", "You have already rated this doctor!")
+            return
+
+        self.rateWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
+
+        info = mbox.showinfo("Rating Doctor", "Rating submitted!")
+        self.doctor.set('--Select a Specialist--')
+        self.rating.set('----')
+        self.rateToHP()
+        return
 
     def OrderMeds(self):
 
@@ -1401,7 +1410,7 @@ class GTMS:
 
         self.cursor = self.connect()
 
-        query = "SELECT Username,FName,LName,AvgRating FROM `DOCTOR` WHERE Specialty = '{}'".format(self.specialty.get())
+        query = "SELECT Username,FName,LName FROM `DOCTOR` WHERE Specialty = '{}'".format(self.specialty.get())
         self.cursor.execute(query)
         specialists = list(self.c.fetchall())
 
@@ -1409,7 +1418,6 @@ class GTMS:
         self.docRatingDict = {}
         for specialist in specialists:
             doctorsList.append(specialist[1]+' '+specialist[2])
-            self.docRatingDict[specialist[0]] = specialist[3]
 
         self.docSelected = StringVar()
 
@@ -1438,13 +1446,21 @@ class GTMS:
         self.cursor.execute(userNameQuery)
         username = self.cursor.fetchone()[0]
 
-        self.rateLabel.config(text='Avg Rating: {}'.format(self.docRatingDict[username]))
+        avgRatingQ = 'SELECT AVG(Rating) FROM RATES WHERE DUsername="{}"'.format(username)
+        self.cursor.execute(avgRatingQ)
+
+        try:
+            avgRating = float(self.cursor.fetchone()[0])
+            self.rateLabel.config(text='Avg Rating: %0.2f'%(avgRating))
+        except:
+            self.rateLabel.config(text='No Ratings')
 
         timeQuery = '''SELECT Day_Date,From_Time,To_Time
                         FROM AVAILABILITY
                         NATURAL JOIN DOCTOR
                         WHERE DOCTOR.Username = AVAILABILITY.Username
                         AND DOCTOR.Username = "{}"'''.format(username)
+
         self.cursor.execute(timeQuery)
         times = list(self.c.fetchall())
         timesList = []
@@ -1468,6 +1484,9 @@ class GTMS:
         self.timePulldown.config(state='readonly')
         self.timePulldown.config(width=30)
         self.timePulldown.grid(row=1, column=1, padx=5, pady=5)
+
+        if not timesList:
+            self.timePulldown.config(values=['No Available Times'], state=DISABLED)
         
         def RequestAppt():
             patient_username = self.User.get()
@@ -1621,7 +1640,7 @@ class GTMS:
 
     def ApptToPatHP(self):
 
-        self.apptWin.withdraw()
+        self.apptWin.destroy()
         self.patHPWin.deiconify()
 
     def CommToPatHP(self):
@@ -1656,9 +1675,6 @@ class GTMS:
 
         self.patientProfile()
         self.patientWin.withdraw()
-
-        self.appointmentPage()
-        self.apptWin.withdraw()
 
         self.VisitHistory()
         self.visitHistWin.withdraw()
