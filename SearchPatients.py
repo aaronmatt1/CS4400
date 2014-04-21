@@ -33,4 +33,5 @@ class SearchPatients(object):
                         c.close()
                         return data
                 else:
+                        c.close()
                         return None
