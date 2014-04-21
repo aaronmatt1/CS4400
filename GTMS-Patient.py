@@ -669,7 +669,38 @@ class GTMS:
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
     def adminHomePage(self):
-        pass
+        self.adminHPWin = Toplevel()
+        self.adminHPWin.title('Administrator HomePage')
+        self.adminHPWin.config(bg=color)
+        
+        topFrame = Frame(self.adminHPWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.adminHPWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.adminHPWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = ttk.Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = ttk.Label(topFrame, text="Administrator HomePage", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+        
+        billing = Button(bottomFrame, text='Billing', relief=FLAT, fg='blue', command=self.Billing)
+        billing.grid(row=0, column=0)
+        
+        docReport = Button(bottomFrame, text='Doctor Performance Report', relief=FLAT, fg='blue', command=self.DocReport)
+        docReport.grid(row=1. column=0)
+        
+        surgeryReport = Button(bottomFrame, text='Surgery Report', relief=FLAT, fg='blue', command=self.surgeryReport)
+        surgeryReport.grid(row=2, column=0)
+        
+        patientReport = Button(bottomFrame, text='Patient Visit Report', relief=FLAT, fg='blue', command=self.patientReport)
+        patientReport.grid(row=3, column=0)
+            
                                   
     def VisitHistory(self):
 
@@ -1622,6 +1653,18 @@ class GTMS:
             if result[0][0]  == 1:
                 #rootWin.iconify()
                 self.doctorProfile()
+                
+    def Billing(self):
+        pass
+    
+    def DocReport(self):
+        pass
+    
+    def SurgeryReport(self):
+        pass
+    
+    def Patientreport(self):
+        pass
 
     def patHPToAppts(self):
 
