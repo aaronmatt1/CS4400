@@ -8,6 +8,7 @@ class VisitHistoryPatient(VisitHistory):
         c= db.cursor()
         q = "SELECT * FROM PATIENT WHERE PUsername = %s" %username
         num = c.execute(q)
+        c.close()
         if num ==1:
                 return True
         else: return False
