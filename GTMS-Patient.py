@@ -599,21 +599,21 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        makeAppointButton = Button(bottomFrame, text='View Appointments \n Calendar', relief=FLAT)
-        makeAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
-        makeAppointButton.configure(font='Arial',
+        viewAppointButton = Button(bottomFrame, text='View Appointments Calendar', relief=FLAT)
+        viewAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
+        viewAppointButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        viewPrescripButton = Button(bottomFrame, text='Prescriptions', relief=FLAT)
-        viewPrescripButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
-        viewPrescripButton.configure(font='Arial',
+        patientVisitsButton = Button(bottomFrame, text='Patient Visits', relief=FLAT)
+        patientVisitsButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
+        patientVisitsButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        orderMedButton = Button(bottomFrame, text='Create Surgery \n Records', relief=FLAT)
-        orderMedButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
-        orderMedButton.configure(font='Arial',
+        recordSurgeryButton = Button(bottomFrame, text='Record Surgery', relief=FLAT)
+        recordSurgeryButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
+        recordSurgeryButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
@@ -623,9 +623,9 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        rateDocButton = Button(bottomFrame, text='Edit Profile', relief=FLAT)
-        rateDocButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
-        rateDocButton.configure(font='Arial',
+        editProfileButton = Button(bottomFrame, text='Edit Profile', relief=FLAT)
+        editProfileButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
+        editProfileButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
