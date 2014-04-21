@@ -30,3 +30,10 @@ class VisitHistoryPatient(VisitHistory):
                 q = """SELECT DiastolicBP, SystolicBP FROM VISIT WHERE DUsername = %s AND PUsername =%s Date = %s""" %\
                     dusername, pusername,date
                 return c.execute(q)
+
+        """ query = "SELECT DateVisit FROM VISIT WHERE PUsername = %s AND DUsername = %s" %pusername, dusername"""
+        def getDates(self, pusername, dusername, db):
+                c = db.cursor()
+                q = "SELECT DateVisit FROM VISIT WHERE PUsername = %s AND DUsername = %s" %pusername, dusername
+                return c.execute(q)
+
