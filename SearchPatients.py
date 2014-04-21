@@ -17,13 +17,13 @@ class SearchPatients(object):
 
 
                 elif name is not None and name != '' and (phone == '' or phone is None):
-                       q= """SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P
+                       q = """SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P
                                 INNER JOIN
                                 VISIT AS V
                                 ON P.Username = V.PUsername
                                 WHERE Name = %s AND V.DUsername = %s"""  %name, phone,dusername
                 elif not(phone == '' or phone is None):
-                       q= """SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P
+                       q = """SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P
                                 INNER JOIN
                                 VISIT AS V
                                 ON P.Username = V.PUsername
