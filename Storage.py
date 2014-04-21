@@ -1,4 +1,4 @@
-Original Appointment Window
+#Original Appointment Window
     #     self.apptWin = Toplevel(LogWin)
     #     self.apptWin.title('Appointments')
     #     self.apptWin.configure(background='#cfb53b')
@@ -47,7 +47,7 @@ Original Appointment Window
     #         label.pack(fill=BOTH)
 
 
-Original Update Appt Win
+#Original Update Appt Win
 
 # self.doctorsInfo = {
 #             'A': ['Phone', 'Room', ['Available4'], '******'],

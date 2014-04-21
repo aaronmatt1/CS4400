@@ -15,7 +15,9 @@ class VisitHistoryPatient(VisitHistory):
                 q = """SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION
 	            WHERE DateVisit = %s AND DUsername = %s AND PUsername =
                 %s""" % date, dusername, pusername
-                return c.execute(q)
+                data = c.execute(q)
+                c.close()
+                return data
 
         """RETURNS q = SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = %s AND DateVisit = %s
                 AND DUsername = %s % pusername, date, dusername"""
@@ -23,17 +25,23 @@ class VisitHistoryPatient(VisitHistory):
                 q = """SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = %s AND DateVisit = %s
                 AND DUsername = %s""" % pusername, date, dusername
                 c = db.cursor()
-                return c.execute(q)
+                data = c.execute(q)
+                c.close()
+                return data
         """SELECT DiastolicBP, SystolicBP FROM VISIT WHERE DUsername = %s AND PUsername =%s Date = %s"""
         def getBP(self,db, dusername, pusername, date):
                 c = db.cursor()
                 q = """SELECT DiastolicBP, SystolicBP FROM VISIT WHERE DUsername = %s AND PUsername =%s Date = %s""" %\
                     dusername, pusername,date
-                return c.execute(q)
+                data = c.execute(q)
+                c.close()
+                return data
 
         """ query = "SELECT DateVisit FROM VISIT WHERE PUsername = %s AND DUsername = %s" %pusername, dusername"""
         def getDates(self, pusername, dusername, db):
                 c = db.cursor()
                 q = "SELECT DateVisit FROM VISIT WHERE PUsername = %s AND DUsername = %s" %pusername, dusername
-                return c.execute(q)
+                data = c.execute(q)
+                c.close()
+                return data
 
