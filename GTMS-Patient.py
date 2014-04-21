@@ -1582,7 +1582,14 @@ class GTMS:
                 self.apptWin.destroy()
             #Wait for request to be accepted
             else:
-                info = mbox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")
+                scheduled_appt = self.timeSelected.get()
+                day_date = findall('([a-zA-Z]+): .+', scheduled_appt)[0]
+                pattern = '(\d+:\d+:00 - \d+:\d+:00)'
+                scheduled_time = findall(pattern, scheduled_appt)[0]
+                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime) VALUES('%s', '%s', '%s', '%s')" % (patient_username, doc_username, day_date, scheduled_time))
+                self.db.commit()
+                info = mbox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")                
+                self.apptWin.destroy()
                         
         self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment', command=RequestAppt)
         self.requestButton.grid(row=2, column=0, columnspan=3, pady=5, sticky='EW')
