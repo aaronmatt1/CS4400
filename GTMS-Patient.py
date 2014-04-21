@@ -161,8 +161,8 @@ class GTMS:
             username = self.username_entry.get()
             password = self.password_entry.get()
             confirm = self.confirm_entry.get()
-            #If username and password entries are not empty
-            if username != '' and password != '':
+            #If username,  password , and confirm password entries are not empty
+            if username != '' and password != '' and confirm != '':
                 #If password and confirm match
                 if password.split() == confirm.split():
                     #If username and password are less than 15 chars
