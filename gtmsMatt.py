@@ -379,13 +379,14 @@ class GTMS:
         attributes = [
             '     License Number: ',
             '     First Name: ',
+            '     Last Name: ',
             '     Date of Birth: ',
             '     Work Phone: ',
+            '     Specialty: ',
             '     Room Number: ',
             '     Home Address: ',
         ]
 
-        rows = 0
 
         self.specialty = StringVar()
         self.specialty.set('--Select Your Specialty--')
@@ -416,10 +417,12 @@ class GTMS:
                    '12:00pm', '12:30pm', '1:00pm', '1:30pm', '2:00pm', '2:30pm', '3:00pm', '3:30pm',
                    '4:00pm', '4:30pm', '5:00pm', '5:30pm', '6:00pm']
 
+        rows = 0
+
         for x in range(len(attributes)):
 
-            if rows == 5:
-                specialtyLabel = Label(bottomFrame, text="     Specialty: ")
+            if x == 5:
+                specialtyLabel = Label(bottomFrame, text=attributes[rows])
                 specialtyLabel.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
                 specialtyLabel.configure(background='#cfb53b')
 
@@ -429,11 +432,12 @@ class GTMS:
                 self.specialtyPulldown.configure(background='#999')
                 self.specialtyPulldown.config(state='readonly')
                 rows += 1
+            else:
 
-            labelname = Label(bottomFrame, text=attributes[x])
-            labelname.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
-            labelname.configure(background='#cfb53b')
-            rows += 1
+                labelname = Label(bottomFrame, text=attributes[x])
+                labelname.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
+                labelname.configure(background='#cfb53b')
+                rows += 1
 
         self.licenseEntry = ttk.Entry(bottomFrame, width=30)
         self.licenseEntry.grid(row=0, column=1, padx=10, pady=10, sticky="NSEW")
@@ -458,7 +462,7 @@ class GTMS:
 
         #Creating Availability Pulldown Row
         availableFrame = Frame(bottomFrame)
-        availableFrame.grid(row=rows, column=0, pady=10, columnspan=5)
+        availableFrame.grid(row=rows+1, column=0, pady=10, columnspan=5)
         availableFrame.configure(background='#cfb53b')
 
         availableLabel = Label(availableFrame, text='     Availability: ')
@@ -569,13 +573,12 @@ class GTMS:
             mbox.showinfo("Success", "Profile Edited")
             return
             
-
         plusButton = ttk.Button(availableFrame, text='+', width=2.5, command=addTimes)
         plusButton.grid(row=0, column=6, padx=5)
 
         #Putting Buttons at the Bottom
         buttonFrame = Frame(bottomFrame)
-        buttonFrame.grid(row=9, column=0, columnspan=5)
+        buttonFrame.grid(row=10, column=0, columnspan=5)
         buttonFrame.configure(background='#cfb53b')
 
         self.createButton = ttk.Button(buttonFrame, text='Create Profile', command=createProfile)

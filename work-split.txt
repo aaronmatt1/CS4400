@@ -21,3 +21,7 @@ Juan
 
 
 We need to work on User Functionality functions and whatever they are going to do
+
+!!!!!!!!!!!!CHANGES!!!!!!!!!!!!
+
+-Changed all date related attributes to DATE data type
