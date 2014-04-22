@@ -255,7 +255,6 @@ class GTMS:
         self.annualIncome = StringVar()
         self.annualIncome.set('--Select Your Annual Income--')
 
-        #its working, but label names are not coming out in any specific order. Any ideas?
         rows = 0
         for x in range(len(attributes)):
 
@@ -328,7 +327,10 @@ class GTMS:
         if result[0] != 0:
             cursor.execute('SELECT * FROM PATIENT WHERE Username = "{}"'.format(self.username))
             result = self.c.fetchall()
-            result = result[0]
+            result = list(result[0])
+            for x in range(len(result)):
+                if not result[x]:
+                    result[x] = ''
             self.nameEntry.insert(END, result[0])
             self.dobEntry.insert(END, result[3])
             self.gender.set(result[4])
@@ -495,14 +497,14 @@ class GTMS:
         #can then edit the necessary info.
         cursor = self.connect()
         cursor.execute('SELECT COUNT(*) FROM DOCTOR WHERE Username = "{}"'.format(self.username))
-        result = self.c.fetchall()
+        result = cursor.fetchall()
         #PATIENT(Name, HomePhone, Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
         result = result[0]
         #If the patient info is in the PATIENT table, insert the current info
         #into the corresponding entries
         if result[0] != 0:
             cursor.execute('SELECT * FROM DOCTOR WHERE Username = "{}"'.format(self.username))
-            result = self.c.fetchall()
+            result = cursor.fetchall()
             result = result[0]
             self.licenseEntry.insert(END, result[1])
             self.fNameEntry.insert(END, result[2])
@@ -833,10 +835,10 @@ class GTMS:
 
         #Date Visits Listbox
         username = self.username_entry.get()
-        self.connect()
+        cursor = self.connect()
 
-        self.c.execute("SELECT DateVisit FROM VISIT WHERE PUsername='%s'" % (username))
-        result = self.c.fetchall()
+        cursor.execute("SELECT DateVisit FROM VISIT WHERE PUsername='%s'" % (username))
+        result = cursor.fetchall()
         date_visits = ()
         for date in result:
             date_visits += (date[0],)
@@ -946,7 +948,7 @@ class GTMS:
         cursor = self.connect()
 
         cursor.execute("SELECT FName, LName FROM DOCTOR")
-        result = self.c.fetchall()
+        result = cursor.fetchall()
         doctors = []
         for doctor in result:
             doctors.append('Dr. ' + doctor[0] + ' ' + doctor[1])
@@ -989,12 +991,12 @@ class GTMS:
 
         cursor = self.connect()
 
-        self.c.execute(query)
-        result = self.c.fetchall()
+        cursor.execute(query)
+        result = cursor.fetchall()
         doc_username = result[0][0]
 
         try:
-            self.c.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
+            cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
         except:
             mbox.showerror("ERROR", "You have already rated this doctor!")
             return
@@ -1049,23 +1051,17 @@ class GTMS:
         self.dosage_amount = Entry(dosage_frame, width=5)
         self.dosage_amount.grid(row=0, column=0, sticky=W)
 
-        per = Label(dosage_frame, text='every day', bg=color)
+        per = Label(dosage_frame, text='mg/day', bg=color)
         per.grid(row=0, column=1, sticky=W)
 
         duration_frame = Frame(bottomFrame)
         duration_frame.grid(row=3, column=1, sticky=W)
 
-        self.duration_months = Entry(duration_frame, width=5)
-        self.duration_months.grid(row=0, column=0, sticky=W)
-
-        months = Label(duration_frame, text='months', bg=color)
-        months.grid(row=0, column=1, sticky=W)
-
         self.duration_days = Entry(duration_frame, width=5)
-        self.duration_days.grid(row=0, column=2, sticky=W)
+        self.duration_days.grid(row=0, column=0, sticky=W)
 
         days = Label(duration_frame, text='days', bg=color)
-        days.grid(row=0, column=3, sticky=W)
+        days.grid(row=0, column=1, sticky=W)
 
         self.consulting_doctor = Entry(bottomFrame, width=30)
         self.consulting_doctor.grid(row=4, column=1, columnspan=4, sticky=W)
@@ -1110,11 +1106,28 @@ class GTMS:
 
         meds_name = self.meds_name.get()
         dosage = self.dosage_amount.get()
-        duration_month = self.duration_months.get()
-        duration_day = self.duration_days.get()
-        consulting_doc = self.consulting_doctor.get()
-        date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
+        duration_days = self.duration_days.get()
+        docFname, docLname = self.consulting_doctor.get().split()
+        
         cursor = self.connect()
+        query = 'SELECT Username FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(docFname,docLname)
+        cursor.execute(query)
+        consulting_doc = cursor.fetchone()
+        print(consulting_doc)
+        date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
+
+        query = 'SELECT COUNT(*) FROM PRESCRIPTION WHERE MedName="{}" AND Dosage="{}" AND Duration="{}" AND DUsername="{}" AND DateVisit="{}" AND PUsername="{}"'\
+                .format(meds_name, dosage, duration_days, consulting_doc[0], date_prescription, self.username)
+        print(query)
+        cursor.execute(query)
+        if cursor.fetchone()[0] != 0:
+            mbox.showinfo("Medicine Added", "Your prescription has been added to the cart")
+            medCost = 100
+            return
+        else:
+            mbox.showerror("ERROR", "You have not been prescribed this medication")
+            return
+
         
     def sendMessage(self):
 
@@ -1752,10 +1765,8 @@ class GTMS:
                                         VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
                                         .format(PName, HomePhone, self.username_entry.get(), DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
                             else:
-                                query = '''UPDATE SET(Name="{}",HomePhone="{}",Username="{}",DOB="{}",Gender="{}",Address="{}",WorkPhone="{}",Height="{}",Weight="{}",AnnualIncome="{}")
-                                        WHERE Username="{}"'''\
-                                        .format(PName, HomePhone, self.username_entry.get(), DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome,self.username)
-                            
+                                query = 'UPDATE PATIENT SET Name="{}", HomePhone="{}", Username="{}", DOB="{}", Gender="{}", Address="{}", WorkPhone="{}", Height="{}", Weight="{}", AnnualIncome="{}" WHERE Username="{}"'\
+                                        .format(PName, HomePhone, self.username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome,self.username)
                             self.c.execute(query)
                             
                             self.patientWin.destroy()
