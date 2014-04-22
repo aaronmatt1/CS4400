@@ -53,6 +53,7 @@ class GTMS:
         
     def LoginCheck(self):
 
+        self.Registering = FALSE
         self.username = self.User.get()
         password = self.Pass.get()
         self.cursor = self.connect()
@@ -158,6 +159,7 @@ class GTMS:
         
     def RegisterNew(self):
         #try:
+        self.Registering = TRUE
         self.username = self.username_entry.get()
         password = self.password_entry.get()
         confirm = self.confirm_entry.get()
@@ -184,10 +186,12 @@ class GTMS:
                             self.db.commit()
                             #If user is patient
                             if self.Type.get() == 'Patient':
+                                self.userType = 'patient'
                                 self.newRegWin.iconify()
                                 self.patientProfile()
                             #If user is doctor
                             elif self.Type.get() == 'Doctor':
+                                self.userType = 'doctor'
                                 self.newRegWin.iconify()
                                 self.doctorProfile()
                         else:
@@ -1646,17 +1650,21 @@ class GTMS:
 
                             self.connect()
 
-                            #####CHANGE THIS TO UPDATE###########
-                    
-                            query = '''INSERT INTO PATIENT(Name,HomePhone,Username,DOB,Gender,Address,WorkPhone,Height,Weight,AnnualIncome)
-                                    VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
-                                    .format(PName, HomePhone, self.username_entry.get(), DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+                            ##If patient is registering, insert. If updating, Update
+                            if self.Registering:
+                                query = '''INSERT INTO PATIENT(Name,HomePhone,Username,DOB,Gender,Address,WorkPhone,Height,Weight,AnnualIncome)
+                                        VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}","{}")'''\
+                                        .format(PName, HomePhone, self.username_entry.get(), DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+                            else:
+                                query = '''UPDATE SET(Name="{}",HomePhone="{}",Username="{}",DOB="{}",Gender="{}",Address="{}",WorkPhone="{}",Height="{}",Weight="{}",AnnualIncome="{}")
+                                        WHERE Username="{}"'''\
+                                        .format(PName, HomePhone, self.username_entry.get(), DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome,self.username)
                             
                             self.c.execute(query)
                             
                             self.patientWin.destroy()
                             self.patientScreens()
-                            
+
                         else:
                             error = mbox.showerror("Patient Form", "Please enter a valid annual income.")
                             return
@@ -1677,6 +1685,7 @@ class GTMS:
         pass
     
     def EditProfile(self):
+        self.Registering = FALSE
         username = self.username_entry.get()
         self.c.execute("SELECT COUNT(*) FROM PATIENT WHERE Username= %s", (username))
         result = self.c.fetchall()
