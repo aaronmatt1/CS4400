@@ -86,6 +86,7 @@ class GTMS:
                 else:
                     self.userType = 'admin'
                     LogWin.iconify()
+                    self.db.close()
                     self.adminScreens()
 
         else:
@@ -187,12 +188,12 @@ class GTMS:
                             #If user is patient
                             if self.Type.get() == 'Patient':
                                 self.userType = 'patient'
-                                self.newRegWin.iconify()
+                                self.newRegWin.withdraw()
                                 self.patientProfile()
                             #If user is doctor
                             elif self.Type.get() == 'Doctor':
                                 self.userType = 'doctor'
-                                self.newRegWin.iconify()
+                                self.newRegWin.withdraw()
                                 self.doctorProfile()
                         else:
                             error = mbox.showerror("Registration Error", "Username is already in use.")
@@ -344,6 +345,7 @@ class GTMS:
         self.patientWin.protocol("WM_DELETE_WINDOW", self.EditToHP)
         
     def AddAllergies(self):
+
         allergies = self.allergiesEntry.get()
         cursor = self.connect()
         self.c.execute("INSERT INTO ALLERGIES(Username, Allergy) VALUES('%s', '%s')" % (self.username, allergies))
@@ -483,7 +485,92 @@ class GTMS:
         self.toEntry.grid(row=0, column=5, padx=5, sticky="W")
         self.toEntry.config(state='readonly')
 
-        plusButton = ttk.Button(availableFrame, text='+', width=2.5)
+        #This block of code is intended for when the doctor edits his profile.
+        #In this case, the doctors's current information will be pulled from
+        #the database and inserted into the appropriate entry. The patient
+        #can then edit the necessary info.
+        cursor = self.connect()
+        cursor.execute('SELECT COUNT(*) FROM DOCTOR WHERE Username = "{}"'.format(self.username))
+        result = self.c.fetchall()
+        #PATIENT(Name, HomePhone, Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome)
+        result = result[0]
+        #If the patient info is in the PATIENT table, insert the current info
+        #into the corresponding entries
+        if result[0] != 0:
+            cursor.execute('SELECT * FROM DOCTOR WHERE Username = "{}"'.format(self.username))
+            result = self.c.fetchall()
+            result = result[0]
+            self.licenseEntry.insert(END, result[1])
+            self.fNameEntry.insert(END, result[2])
+            self.lNameEntry.insert(END, result[3])
+            self.DdobEntry.insert(END, result[4])
+            self.DworkPhoneEntry.insert(END, result[5])
+            self.specialty.set(result[6])
+            self.roomEntry.insert(END, result[7])
+            self.DaddressEntry.insert(END, result[8])
+        self.db.close()
+            
+
+        def addTimes():
+
+            timePattern = '\d*:\d\d'
+            
+            day = self.days.get()
+            fromTime = re.findall(timePattern, self.fromEntry.get())[0]+':00'
+            toTime = re.findall(timePattern, self.toEntry.get())[0]+':00'
+            try:
+                query = 'INSERT INTO AVAILABILITY (Username,Day_Date,From_Time,To_Time) VALUES ("{}","{}","{}","{}")'.format(self.username,day,fromTime,toTime)
+                cursor = self.connect()
+                cursor.execute(query)
+                self.db.close()
+                mbox.showinfo("Time Added","You have added an availability on {} from {} to {}".format(day, self.fromEntry.get(), self.toEntry.get()))
+                return
+            except:
+                mbox.showerror("ERROR", "You have already added this availability.")
+                return
+
+        def createProfile():
+
+            ##If a user that has already created a profile tries to hit create again, a SQL primary key error will be thrown and this will show the user a message
+            try:
+                LicenseNo = int(self.licenseEntry.get())
+                First = self.fNameEntry.get()
+                Last = self.lNameEntry.get()
+                DOB = self.DdobEntry.get()
+                specialty = self.specialty.get()
+                workPhone = self.DworkPhoneEntry.get()
+                roomNo = int(self.roomEntry.get())
+                address = self.DaddressEntry.get()
+                query = 'INSERT INTO DOCTOR VALUES("{}","{}","{}","{}","{}","{}","{}","{}","{}")'.format(self.username,LicenseNo,First,Last,DOB,workPhone,specialty,roomNo,address)
+                cursor = self.connect()
+                cursor.execute(query)
+                self.db.close()
+                mbox.showinfo("Success", "Profile Created! Welcome Doctor!")
+            except:
+                mbox.showerror("Error", "User already created in Database!")
+                self.createButton.config(state=DISABLED)
+            
+        def editProfile():
+
+            LicenseNo = int(self.licenseEntry.get())
+            First = self.fNameEntry.get()
+            Last = self.lNameEntry.get()
+            DOB = self.DdobEntry.get()
+            specialty = self.specialty.get()
+            workPhone = self.DworkPhoneEntry.get()
+            roomNo = int(self.roomEntry.get())
+            address = self.DaddressEntry.get()
+            query = 'UPDATE DOCTOR SET LicenseNo="{}", FName="{}", LName="{}", DOB="{}", WorkPhone="{}", Specialty="{}", RoomNo="{}", WorkAddress="{}" WHERE Username="{}"'\
+                    .format(LicenseNo,First,Last,DOB,workPhone,specialty,roomNo,address,self.username)
+            cursor = self.connect()
+            cursor.execute(query)
+            self.db.close()
+            self.profToDHP()
+            mbox.showinfo("Success", "Profile Edited")
+            return
+            
+
+        plusButton = ttk.Button(availableFrame, text='+', width=2.5, command=addTimes)
         plusButton.grid(row=0, column=6, padx=5)
 
         #Putting Buttons at the Bottom
@@ -491,11 +578,16 @@ class GTMS:
         buttonFrame.grid(row=9, column=0, columnspan=5)
         buttonFrame.configure(background='#cfb53b')
 
-        createButton = ttk.Button(buttonFrame, text='Create Profile')
-        createButton.pack(side=RIGHT, padx=5, pady=10)
+        self.createButton = ttk.Button(buttonFrame, text='Create Profile', command=createProfile)
+        self.createButton.pack(side=RIGHT, padx=5, pady=10)
 
-        editProfButton = ttk.Button(buttonFrame, text='Edit Profile')
-        editProfButton.pack(side=RIGHT, padx=5, pady=10)
+        self.editProfButton = ttk.Button(buttonFrame, text='Edit Profile', command=editProfile)
+        self.editProfButton.pack(side=RIGHT, padx=5, pady=10)
+
+
+
+
+
 
     def patientHomePage(self):
 
@@ -625,7 +717,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        editProfileButton = Button(bottomFrame, text='Edit Profile', relief=FLAT)
+        editProfileButton = Button(bottomFrame, text='Edit Profile', relief=FLAT, command=self.docHPToProfile)
         editProfileButton.grid(row=4, column=0, padx=20, pady=10, sticky='W')
         editProfileButton.configure(font='Arial',
                                     foreground='blue',
@@ -670,6 +762,7 @@ class GTMS:
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
     def adminHomePage(self):
+
         self.adminHPWin = Toplevel()
         self.adminHPWin.title('Administrator HomePage')
         self.adminHPWin.config(bg=color)
@@ -680,7 +773,7 @@ class GTMS:
         midFrame = Frame(self.adminHPWin, bd=1, background='black')
         midFrame.grid(row=1, column=0, sticky='EW')
         bottomFrame = Frame(self.adminHPWin)
-        bottomFrame.grid(row=2, column=0)
+        bottomFrame.grid(row=2, column=0, pady=15)
         bottomFrame.configure(background='#cfb53b')
 
         logo = ttk.Label(topFrame, image=self.photo)
@@ -690,17 +783,17 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
         
-        billing = Button(bottomFrame, text='Billing', relief=FLAT, fg='blue', command=self.Billing)
-        billing.grid(row=0, column=0)
+        billing = Button(bottomFrame, text='Billing', relief=FLAT, fg='blue', command=self.Billing, background=color)
+        billing.pack(anchor=CENTER, padx=10, pady=5)
         
-        docReport = Button(bottomFrame, text='Doctor Performance Report', relief=FLAT, fg='blue', command=self.DocReport)
-        docReport.grid(row=1, column=0)
+        docReport = Button(bottomFrame, text='Doctor Performance Report', relief=FLAT, fg='blue', command=self.DocReport, background=color)
+        docReport.pack(anchor=CENTER, padx=10, pady=5)
         
-        surgeryReport = Button(bottomFrame, text='Surgery Report', relief=FLAT, fg='blue', command=self.SurgeryReport)
-        surgeryReport.grid(row=2, column=0)
+        surgeryReport = Button(bottomFrame, text='Surgery Report', relief=FLAT, fg='blue', command=self.SurgeryReport, background=color)
+        surgeryReport.pack(anchor=CENTER, padx=10, pady=5)
         
-        patientReport = Button(bottomFrame, text='Patient Visit Report', relief=FLAT, fg='blue', command=self.PatientReport)
-        patientReport.grid(row=3, column=0)
+        patientReport = Button(bottomFrame, text='Patient Visit Report', relief=FLAT, fg='blue', command=self.PatientReport, background=color)
+        patientReport.pack(anchor=CENTER, padx=10, pady=5)
             
                                   
     def VisitHistory(self):
@@ -1706,7 +1799,7 @@ class GTMS:
     def SurgeryReport(self):
         pass
     
-    def Patientreport(self):
+    def PatientReport(self):
         pass
 
     def patHPToAppts(self):
@@ -1789,6 +1882,16 @@ class GTMS:
         self.docHPWin.withdraw()
         self.requestWin.deiconify()
 
+    def docHPToProfile(self):
+
+        self.docHPWin.withdraw()
+        self.doctorWin.deiconify()
+
+    def profToDHP(self):
+
+        self.doctorWin.withdraw()
+        self.docHPWin.deiconify()
+
     def requestsToDocHP(self):
 
         self.requestWin.withdraw()
@@ -1831,14 +1934,12 @@ class GTMS:
 
         self.doctorHomePage()
 
-        self.Register()
-        self.newRegWin.withdraw()
-
         self.doctorProfile()
         self.doctorWin.withdraw()
 
     def adminScreens(self):
-        pass
+        
+        self.adminHomePage()
 
     def connect(self):
 
