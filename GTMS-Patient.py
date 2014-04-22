@@ -1180,7 +1180,7 @@ class GTMS:
         pageName.configure(background='#cfb53b')
 
         cursor = self.connect()
-        query = 'SELECT Name,Date,ScheduledTime FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE DUsername = "{}"'\
+        query = 'SELECT Name,Date,ScheduledTime FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE DUsername = "{}" AND Status = "Pending"'\
                 .format(self.username)
         cursor.execute(query)
         requests = list(cursor.fetchall())
@@ -1204,44 +1204,72 @@ class GTMS:
             frameDict[x] = requestList[x]
 
         def AcceptAppt( e):
-            print('k')
             for x in range(len(acceptDict)):
                 if e.widget == acceptDict[x]:
-                    print(requestList[x])
+
+                    
+                    Pname = requestList[x][0]
+
+                    cursor = self.connect()
+                    query = 'SELECT Username FROM PATIENT WHERE Name = "{}"'.format(Pname)
+                    cursor.execute(query)
+                    patient = cursor.fetchone()
+
+                    query = 'SELECT FName, LName FROM DOCTOR WHERE Username = "{}"'.format(self.username)
+                    cursor.execute(query)
+                    dName = cursor.fetchone()
+                    doctor = 'Dr. '+dName[0] + ' ' + dName[1]
+
+                    message = 'Appointment Accepted \n\n'+ 'Day: '+ requestList[x][1] +'\n'+ 'Time: ' + requestList[x][2] + '\n' + 'Specialist: ' + doctor
+                    print(self.username, patient[0], message)
+
+                    query = 'INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,Status,DateTime) VALUES ("{}","{}","{}","Unread",CURRENT_TIMESTAMP)'.format(self.username,patient[0],message)
+                    print(query)
+                    cursor.execute(query)
+
+                    query = 'UPDATE REQUEST_APPOINTMENT SET Status="Accepted" WHERE DUsername="{}" AND PUsername="{}"'.format(self.username,patient[0])
+                    cursor.execute(query)
+                    cursor.close()
+                    self.db.commit()
+                    self.db.close()
+
 
         def DeclineAppt( e):
-            print('l')
             for x in range(len(declineDict)):
                 if e.widget == declineDict[x]:
                     doc_username = self.User.get()
-                    db = self.connect
+                    cursor = self.connect()
                     query = "SELECT PUsername FROM REQUEST_APPOINTMENT LEFT JOIN PATIENT ON PUsername = Username WHERE Name='{}' AND Date='{}' AND ScheduledTime='{}'"\
                             .format(requestList[x][0], requestList[x][1], requestList[x][2])
-                    self.c.execute(query)
-                    result = self.c.fetchall()
+                    cursor.execute(query)
+                    result = cursor.fetchall()
                     patient_username = result[0][0]
 
                     query = "DELETE FROM REQUEST_APPOINTMENT WHERE PUsername='{}' AND DUsername='{}' AND Date='{}' AND ScheduledTime='{}'".format(patient_username, doc_username, requestList[x][1], requestList[x][2])
-                    self.c.execute(query)
+                    cursor.execute(query)
                     frameDict[x].destroy()
-                    print("Entry deleted.")
+
+        requestFrame = Frame(bottomFrame, bg=color)
+        requestFrame.grid(row=0, column=0, sticky='NSEW', padx=15, pady=15)
 
         for x in range(len(headers)):
-            label = Label(bottomFrame, text=headers[x], background=color)
-            label.grid(row=0, column=x, sticky=W)
+            tableFrame = Frame(requestFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+            label = Label(tableFrame, text=headers[x], background=color)
+            label.pack(fill=BOTH)
 
         for x in range(len(requestList)):
-            frameDict[x] = Frame(bottomFrame, borderwidth=1, background=color)
-            frameDict[x].grid(row=x+1, column=0, columnspan=3, sticky='NSEW', padx=1)
             for y in range(len(requestList[x])):
-                label = Label(frameDict[x], text=requestList[x][y], background='white')
-                label.grid(row=x+1, column=y, padx=1)
+                tableFrame = Frame(requestFrame, borderwidth=1, background=color)
+                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1, pady=5)
+                label = Label(tableFrame, text=requestList[x][y], background='white')
+                label.pack(fill=BOTH)
 
-            acceptDict[x] = ttk.Button(frameDict[x], width=8, text='Accept')
+            acceptDict[x] = ttk.Button(requestFrame, width=8, text='Accept')
             acceptDict[x].bind("<ButtonRelease-1>", AcceptAppt)
             acceptDict[x].grid(row=x+1, column=3, padx=5)
             
-            declineDict[x] = ttk.Button(frameDict[x], width=8, text='Decline')
+            declineDict[x] = ttk.Button(requestFrame, width=8, text='Decline')
             declineDict[x].bind("<ButtonRelease-1>", DeclineAppt)
             declineDict[x].grid(row=x+1, column=4, padx=5)
 
@@ -1320,7 +1348,7 @@ class GTMS:
         for x in range(len(unreadMessagesList)):
             for y in range(len(unreadMessagesList[x])):
                 tableFrame = Frame(messageFrame, borderwidth=1, background=color)
-                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1)
+                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1, pady=5)
                 label = Label(tableFrame, text=unreadMessagesList[x][y], background='white')
                 label.pack(fill=BOTH)
 
@@ -1576,7 +1604,7 @@ class GTMS:
                 day_date = findall('([a-zA-Z]+): .+', scheduled_appt)[0]
                 pattern = '(\d+:\d+:00 - \d+:\d+:00)'
                 scheduled_time = findall(pattern, scheduled_appt)[0]
-                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime) VALUES('%s', '%s', '%s', '%s')" % (patient_username, doc_username, day_date, scheduled_time))
+                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Pending')" % (patient_username, doc_username, day_date, scheduled_time))
                 self.db.commit()
                 info = mbox.showinfo("Appointment Requests", "Appointment requests complete.")
                 self.apptWin.destroy()
@@ -1586,7 +1614,7 @@ class GTMS:
                 day_date = findall('([a-zA-Z]+): .+', scheduled_appt)[0]
                 pattern = '(\d+:\d+:00 - \d+:\d+:00)'
                 scheduled_time = findall(pattern, scheduled_appt)[0]
-                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime) VALUES('%s', '%s', '%s', '%s')" % (patient_username, doc_username, day_date, scheduled_time))
+                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Accepted')" % (patient_username, doc_username, day_date, scheduled_time))
                 self.db.commit()
                 info = mbox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")                
                 self.apptWin.destroy()
