@@ -1113,12 +1113,10 @@ class GTMS:
         query = 'SELECT Username FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(docFname,docLname)
         cursor.execute(query)
         consulting_doc = cursor.fetchone()
-        print(consulting_doc)
         date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
 
         query = 'SELECT COUNT(*) FROM PRESCRIPTION WHERE MedName="{}" AND Dosage="{}" AND Duration="{}" AND DUsername="{}" AND DateVisit="{}" AND PUsername="{}"'\
                 .format(meds_name, dosage, duration_days, consulting_doc[0], date_prescription, self.username)
-        print(query)
         cursor.execute(query)
         if cursor.fetchone()[0] != 0:
             mbox.showinfo("Medicine Added", "Your prescription has been added to the cart")
@@ -1332,10 +1330,9 @@ class GTMS:
                     doctor = 'Dr. '+dName[0] + ' ' + dName[1]
 
                     message = 'Appointment Accepted \n\n'+ 'Day: '+ requestList[x][1] +'\n'+ 'Time: ' + requestList[x][2] + '\n' + 'Specialist: ' + doctor
-                    print(self.username, patient[0], message)
 
                     query = 'INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,Status,DateTime) VALUES ("{}","{}","{}","Unread",CURRENT_TIMESTAMP)'.format(self.username,patient[0],message)
-                    print(query)
+
                     cursor.execute(query)
 
                     query = 'UPDATE REQUEST_APPOINTMENT SET Status="Accepted" WHERE DUsername="{}" AND PUsername="{}"'.format(self.username,patient[0])
