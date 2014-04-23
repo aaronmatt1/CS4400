@@ -857,7 +857,6 @@ class GTMS:
             SBP = systolic_entry.get()
             DBP = diastolic_entry.get()
             diagnosis = diagnosisText.get("1.0", END)
-
             query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(patientName)
             cursor = self.connect()
             cursor.execute(query)
@@ -1385,13 +1384,17 @@ class GTMS:
 	                       FROM VISIT
 	                       WHERE PUsername=%s""" % username
         cursor = self.connect()
-        totalCostNum = cursor.execute(totalCostVisit)
+        cursor.execute(totalCostVisit)
+        totalCostVisitNum = sum(list(cursor.fetchall()))
         costbyVisit = """SELECT DateVisit, BillingAmount as Cost
 	                    FROM VISIT
 	                    WHERE PUsername = %s
 	                    GROUP BY DateVisit""" % username
 
-        costByVisitData = cursor.execute(costbyVisit)
+        cursor.execute(costbyVisit)
+        costByVisitData = cursor.fetchall()
+        costByVisitData = list(costByVisitData)
+
 
         surgeryCostByType = """SELECT t1.Type, t1.Cost AS Cost, t1.Type
 		                        FROM PERFORMS_SURGERY AS PS
@@ -1400,7 +1403,9 @@ class GTMS:
                                 ON t1.CPT = PS.CPT
 		                        WHERE PS.PUsername =%s
 		                        GROUP BY t1.Type""" % username
-        sCostByTypeData = cursor.execute(surgeryCostByType)
+        cursor.execute(surgeryCostByType)
+        sCostByTypeData = cursor.fetchall()
+        sCostByTypeData = list(sCostByTypeData)
         #this should return a real number
 
         totalSurgeryCost = """SELECT Sum(t1.Cost)
@@ -1409,10 +1414,11 @@ class GTMS:
                                 (SELECT CPT,Cost FROM SURGERY) as t1
                                 ON t1.CPT = PS.CPT
 		                        WHERE PS.PUsername =%s""" % username
-        totalSurgeryCostNum = cursor.execute(totalSurgeryCost)
+        cursor.execute(totalSurgeryCost)
+        totalSurgeryCostNum = sum(list(cursor.fetchall()))
         cursor.close()
-        totalCost = totalCostNum + totalSurgeryCostNum
-        return (costByVisitData,totalCostNum,surgeryCostByType,totalCost)
+        totalCost = totalCostVisitNum + totalSurgeryCostNum
+        return (costByVisitData,sCostByTypeData,totalCost)
         #jborjas31
                                   
     def VisitHistory(self):
