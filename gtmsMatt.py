@@ -60,6 +60,19 @@ class GTMS:
         query = 'SELECT * FROM USER WHERE Username= "{}" AND Password= "{}"'.format(self.username, password)
         self.cursor.execute(query)
         result = self.cursor.fetchall()
+
+        def findDiscount():
+
+            query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(self.username)
+
+            cursor = self.connect()
+            cursor.execute(query)
+            income = cursor.fetchone()[0]
+            if income == '0-15000' or income == '15000-25000':
+                self.discount = TRUE
+            else:
+                self.discount = FALSE
+
         #If user account exists
         if result:
             show = mbox.showinfo("Login Complete", "Login successful.")
@@ -68,6 +81,7 @@ class GTMS:
             #If user is patient
             if result[0][0] == 1:
                 self.userType = 'patient'
+                findDiscount()
                 LogWin.iconify()
                 self.db.close()
                 self.patientScreens()
@@ -92,6 +106,19 @@ class GTMS:
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
+
+        def findDiscount():
+
+            query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(self.username)
+
+            cursor = self.connect()
+            cursor.execute(query)
+            income = cursor.fetchone()[0]
+            if income == '0-15000' or income == '15000-25000':
+                self.discount = TRUE
+            else:
+                self.discount = FALSE
+
 
     def Register(self):
 
@@ -169,7 +196,7 @@ class GTMS:
             #If password and confirm match
             if password.split() == confirm.split():
                 #If username and password are less than 15 chars
-                if len(password) < 15 or len(username) < 15:
+                if len(password) < 15 or len(self.username) < 15:
                     num = findall("\d+", password)
                     letters = findall("[a-zA-Z]", password)
                     #If password contains both letters and numbers
@@ -278,7 +305,7 @@ class GTMS:
                 incomeLabel = Label(bottomFrame, text="          Annual Income: ")
                 incomeLabel.grid(row=rows, column=0, padx=10, pady=10, sticky="W")
                 incomeLabel.configure(background='#cfb53b')
-                incomes = ['0-15000', '15000-30000', '30000-50000', '50000-75000', '75000-100000', '100000+']
+                incomes = ['0-15000', '15000-25000', '25000-50000', '50000-75000', '75000-100000', '100000+']
                 self.incomePulldown = ttk.Combobox(bottomFrame, textvariable=self.annualIncome, values=incomes)
                 self.incomePulldown.config(width=20)
                 self.incomePulldown.grid(row=rows, column=1, padx=10, pady=10, sticky="NSEW")
@@ -609,10 +636,6 @@ class GTMS:
         self.editProfButton.pack(side=RIGHT, padx=5, pady=10)
 
 
-
-
-
-
     def patientHomePage(self):
 
         self.patHPWin = Toplevel(LogWin)
@@ -840,8 +863,6 @@ class GTMS:
 
         def submitVisit():
 
-            bill = 50
-
             visitDate = dateVisitEntry.get()
             patientName = patientNameEntry.get()
             SBP = systolic_entry.get()
@@ -853,14 +874,28 @@ class GTMS:
             cursor.execute(query)
             patient = cursor.fetchone()[0]
 
+            query = 'SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}" AND Date="{}"'.format(patient,self.username,visitDate)
+            cursor.execute(query)
+            if cursor.fetchone()[0] == 0:
+                mbox.showerror("ERROR", "Appointment not scheduled for specified date")
+
+            query = 'SELECT COUNT(*) FROM VISIT WHERE PUsername="{}" AND DUsername="{}"'.format(patient,self.username)
+            cursor.execute(query)
+            if cursor.fetchone()[0] == 0:
+                bill = 100
+            else:
+                bill = 65
+
+            if self.discount:
+                bill = bill*0.2
+
             query = 'INSERT INTO VISIT VALUES ("{}", "{}", "{}", {}, {}, {})'.format(visitDate,self.username,patient,bill,SBP,DBP)
             cursor.execute(query)
 
             query = 'INSERT INTO DIAGNOSIS VALUES ("{}","{}","{}","{}")'.format(patient,visitDate,self.username,diagnosis)
             cursor.execute(query)
 
-            query = 'INSERT INTO RECORDS VALUES ("{}","{}","{}")'.format(patient,self.username,visitDate)
-            cursor.execute(query)
+            mbox.showinfo("Visit Recorded", "Your visit has been recorded!")
 
             self.db.commit()
             cursor.close()
@@ -882,7 +917,7 @@ class GTMS:
         prescribeName.pack()
         prescribeName.configure(background='#cfb53b')
 
-        attributes = ['Drug Name: ', 'Usage: ', 'Duration: ', 'Notes: ']
+        attributes = ['Drug Name: ', 'Dosage: ', 'Duration: ', 'Notes: ']
         count = 1
         for attribute in attributes:
             attribute_label = Label(prescriptionFrame, text=attribute, bg=color)
@@ -892,8 +927,8 @@ class GTMS:
         drugEntry = Entry(prescriptionFrame,width=25)
         drugEntry.grid(row=1,column=1, columnspan=5, sticky='W')
 
-        usageEntry = Entry(prescriptionFrame, width=25)
-        usageEntry.grid(row=2,column=1, sticky='W')
+        dosageEntry = Entry(prescriptionFrame, width=25)
+        dosageEntry.grid(row=2,column=1, sticky='W')
         Label(prescriptionFrame, text='mg/day', background=color).grid(row=2,column=2, columnspan=5, sticky='W')
 
         durationEntry = Entry(prescriptionFrame, width=5)
@@ -904,7 +939,57 @@ class GTMS:
         notes.grid(row=4,column=1,columnspan=5, padx=10, pady=10, sticky='EW')
 
         def addPrescrip():
-            print('Prescription Added')
+
+            visitDate = dateVisitEntry.get()
+            if not visitDate:
+                mbox.showerror("Error","Please Enter a Date")
+                return
+
+            cursor = self.connect()       
+            query = 'SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}" AND Date="{}"'.format(patient,self.username,visitDate)
+            cursor.execute(query)
+            if cursor.fetchone()[0] == 0:
+                mbox.showerror("ERROR", "Appointment not scheduled for specified date")
+                return
+
+            patientName = patientNameEntry.get()
+            if not patientName:
+                mbox.showerror("Error","Please Enter a patient name")
+                return
+
+            drugName = drugEntry.get()
+            if not drugName:
+                mbox.showerror("Error","Please Enter a Medication Name")
+                return
+
+            dosage = dosageEntry.get()
+            if not dosage:
+                mbox.showerror("Error","Please Enter a dosage")
+                return
+
+            duration = durationEntry.get()
+            if not duration:
+                mbox.showerror("Error","Please Enter a duration")
+                return
+
+            note = notes.get("1.0", END)
+
+            query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(patientName)
+            
+            cursor.execute(query)
+            patient = cursor.fetchone()[0]
+            if not patient:
+                mbox.showerror("ERROR", "Patient is not in the system")
+                return
+
+            query = 'INSERT INTO PRESCRIPTION VALUES ("{}","{}","{}","{}","{}","{}","{}","N")'.format(patient, self.username, drugName, visitDate, note, dosage, duration)
+            cursor.execute(query)
+
+            mbox.showinfo("Prescribe", "Prescription Added!")
+
+            self.db.commit()
+            cursor.close()
+            self.db.close()
 
         submitFrame = Frame(prescriptionFrame, background=color)
         submitFrame.grid(row=5, column=0, columnspan=6, pady=10, sticky='EW')
