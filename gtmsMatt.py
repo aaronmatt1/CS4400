@@ -787,7 +787,7 @@ class GTMS:
 
     def adminHomePage(self):
 
-        self.adminHPWin = Toplevel()
+        self.adminHPWin = Toplevel(LogWin)
         self.adminHPWin.title('Administrator HomePage')
         self.adminHPWin.config(bg=color)
         
@@ -818,7 +818,78 @@ class GTMS:
         
         patientReport = Button(bottomFrame, text='Patient Visit Report', relief=FLAT, fg='blue', command=self.PatientReport, background=color)
         patientReport.pack(anchor=CENTER, padx=10, pady=5)
-            
+
+    def DocReport(self):
+
+        self.adminHPWin.withdraw()
+
+        self.DocReportWin = Toplevel(LogWin)
+        self.DocReportWin.title('Doctor Performance Report')
+        self.DocReportWin.config(bg=color)
+        
+        topFrame = Frame(self.DocReportWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.DocReportWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.DocReportWin)
+        bottomFrame.grid(row=2, column=0, pady=15)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = ttk.Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = ttk.Label(topFrame, text="Doctor Performance Report", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        headers = ['       Specialty       ',
+                   '    Number of Surgeries Performed  ',
+                   '       Average Rating       ']
+
+        for x in range(len(headers)):
+            tableFrame = Frame(bottomFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+            label = Label(tableFrame, text=headers[x], background=color)
+            label.pack(fill=BOTH)
+
+
+        query = '''SELECT Specialty, COUNT(DISTINCT P.CPT)AS Surgeries, AVG(R.Rating)AS AvgRating FROM DOCTOR AS D
+                LEFT JOIN RATES AS R 
+                ON R.DUsername = D.Username
+                LEFT JOIN PERFORMS_SURGERY AS P
+                ON D.Username = P.DUsername
+                GROUP BY D.Specialty  '''
+
+        cursor = self.connect()
+        cursor.execute(query)
+
+        info = list(cursor.fetchall())
+        rows = 1
+        for x in info:
+            x = list(x)
+            x[2] = str(x[2])[0:4]
+            for y in range(len(x)):
+                tableFrame = Frame(bottomFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=rows, column=y, sticky='EW', padx=1, pady=1)
+                label = Label(tableFrame, text=x[y], background='white')
+                label.pack(fill=BOTH)
+            rows+=1
+
+        cursor.close()
+
+        self.DocReportWin.protocol("WM_DELETE_WINDOW", self.DocReportToAdminWin)
+
+
+    def SurgeryReport(self):
+        pass
+
+    def PatientReport(self):
+        pass
+
+    def Billing(self):
+        pass
+
                                   
     def VisitHistory(self):
 
@@ -1900,17 +1971,6 @@ class GTMS:
             if result[0][0]  == 1:
                 self.doctorProfile()
                 
-    def Billing(self):
-        pass
-    
-    def DocReport(self):
-        pass
-    
-    def SurgeryReport(self):
-        pass
-    
-    def PatientReport(self):
-        pass
 
     def patHPToAppts(self):
 
@@ -2011,6 +2071,11 @@ class GTMS:
 
         self.readMessageWin.withdraw()
         self.docHPWin.deiconify()
+
+    def DocReportToAdminWin(self):
+
+        self.DocReportWin.destroy()
+        self.adminHPWin.deiconify()
 
     def patientScreens(self):
 
