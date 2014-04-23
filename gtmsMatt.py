@@ -723,7 +723,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        patientVisitsButton = Button(bottomFrame, text='Patient Visits', relief=FLAT)
+        patientVisitsButton = Button(bottomFrame, text='Patient Visits', relief=FLAT, command=self.recordVisit)
         patientVisitsButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
         patientVisitsButton.configure(font='Arial',
                                     foreground='blue',
@@ -784,6 +784,41 @@ class GTMS:
 
 
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
+
+    def recordVisit(self):
+        
+        color = '#cfb53b'
+
+        self.recordWin = Toplevel(LogWin)
+        self.recordWin.title('Record/Prescribe')
+        self.recordWin.configure(background='#cfb53b')
+
+        topFrame = Frame(self.recordWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.recordWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.recordWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Record a Visit", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        separateFrame = Frame(self.recordWin, bd=1, background='black')
+        separateFrame.grid(row=3, column=0, sticky='EW')
+
+        prescriptionFrame = Frame(self.recordWin)
+        prescriptionFrame.grid(row=4, column=0)
+        prescriptionFrame.configure(background='#cfb53b')
+
+        prescribeName = Label(prescriptionFrame, text="Prescribe", font=("Arial", 25))
+        prescribeName.grid(row=0, column=0, sticky='EW')
+        prescribeName.configure(background='#cfb53b')
 
     def searchAppt(self):
 
@@ -1106,9 +1141,6 @@ class GTMS:
         pageName = Label(topFrame, text="Patient Visit Report", font=("Arial", 25))
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
-
-    def recordVisit(self):
-        pass
 
     def RateDoctor(self):
 
