@@ -727,13 +727,13 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        recordSurgeryButton = Button(bottomFrame, text='Record Surgery', relief=FLAT)
+        recordSurgeryButton = Button(bottomFrame, text='Record Surgery', relief=FLAT,command=self.surgeryRecord)
         recordSurgeryButton.grid(row=2, column=0, padx=20, pady=10, sticky='W')
         recordSurgeryButton.configure(font='Arial',
                                     foreground='blue',
                                     background='#cfb53b')
 
-        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT)
+        communicateButton = Button(bottomFrame, text='Communicate', relief=FLAT, command=self.sendMessage)
         communicateButton.grid(row=3, column=0, padx=20, pady=10, sticky='W')
         communicateButton.configure(font='Arial',
                                     foreground='blue',
@@ -993,6 +993,9 @@ class GTMS:
         spaceFormat = Label(formattingFrame, 
                             text='                                                                                                                                  ',
                             background=color).pack()
+
+    def surgeryRecord(self):
+        pass
 
     def searchAppt(self):
 
@@ -1558,22 +1561,32 @@ class GTMS:
             doctorsList = list(cursor.fetchall())
             recipNames = []
             for doctor in doctorsList:
-                recipNames.append(doctor[0]+' '+doctor[1])
+                recipNames.append('Dr. '+doctor[0]+' '+doctor[1])
+
+            self.messageWin.protocol("WM_DELETE_WINDOW", self.CommToPatHP)
 
         if self.userType == 'doctor':
 
             query = 'SELECT FName,LName FROM DOCTOR'
             cursor.execute(query)
+            doctorList =[]
             doctorsList = list(cursor.fetchall())
-            query = 'SELECT FName,LName FROM PATIENT'
+            for doctor in doctorsList:
+                doctorList.append('Dr. '+doctor[0]+' '+doctor[1])
+            query = 'SELECT Name FROM PATIENT'
             cursor.execute(query)
+            patients = []
             patientList = list(cursor.fetchall())
-            doctorsList.extend(patientList)
-            recipients = doctorsList
+            for patient in patientList:
+                patients.append(patient[0])
+            doctorList.extend(patients)
+            recipients = doctorList
 
             recipNames = []
             for recipient in recipients:
-                recipNames.append(recipient[0]+' '+recipient[1])
+                recipNames.append(recipient)
+
+            self.messageWin.protocol("WM_DELETE_WINDOW", self.CommToDocHP)
 
         cursor.close()
         self.db.close()
@@ -1610,7 +1623,7 @@ class GTMS:
 
         Button(bottomFrame, text='Send Message', command=self.getMessage).pack(pady=5, anchor=CENTER)
 
-        self.messageWin.protocol("WM_DELETE_WINDOW", self.CommToPatHP)
+        
 
     def getMessage(self):
 
@@ -1619,7 +1632,7 @@ class GTMS:
         cursor = self.connect()
 
         name = recipient.split()
-        query = 'SELECT * FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
+        query = 'SELECT * FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[-2], name[-1])
         cursor.execute(query)
         recipUsername = cursor.fetchone()
         if recipUsername[0]:
@@ -1643,18 +1656,18 @@ class GTMS:
         elif self.userType == 'doctor':
 
             if self.recipientType == 'doctor':
-                query = '''INSERT INTO DOCTOR_TO_DOCTOR Sender,Recipient,Content,DateTime,Status
+                query = '''INSERT INTO DOCTOR_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status)
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
                         .format(self.username, recipUsername[0], message, "Unread")
                 cursor.execute(query)
                 mbox.showinfo(title='Message Sent', message='Message Sent!')
                 self.box.delete("1.0", END)
                 self.sendTo.set('----')
-                self.CommToPatHP()
+                self.CommToDocHP()
 
 
             elif self.recipientType == 'patient':
-                query = '''INSERT INTO DOCTOR_TO_PATIENT Sender,Recipient,Content,DateTime,Status
+                query = '''INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,DateTime,Status)
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
                         .format(self.username, recipUsername, message, "Unread")
                 cursor.execute(query)
@@ -2368,6 +2381,11 @@ class GTMS:
 
         self.messageWin.withdraw()
         self.patHPWin.deiconify()
+
+    def CommToDocHP(self):
+
+        self.messageWin.withdraw()
+        self.docHPWin.deiconify()
 
     def docHPToRequests(self):
 
