@@ -399,13 +399,17 @@ class GTMS:
                        'Psychiatry',
                        'Gynecologist']
 
-        self.days = StringVar()
-        self.days.set('Monday')
-        days = ['Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday']
+        self.day = StringVar()
+        self.day.set("---")
+        days = list(range(1,31))
+
+        self.month = StringVar()
+        self.month.set("---")
+        months = list(range(1,13))
+
+        self.year = StringVar()
+        self.year.set("---")
+        years = list(range(2014,2050,1))
 
         self.fromTime = StringVar()
         self.fromTime.set('----')
@@ -467,28 +471,40 @@ class GTMS:
         availableFrame.grid(row=rows+1, column=0, pady=10, columnspan=5)
         availableFrame.configure(background='#cfb53b')
 
-        availableLabel = Label(availableFrame, text='     Availability: ')
+        date_available = Frame(availableFrame)
+        date_available.grid(row=0, column=1, sticky='NSEW')
+        date_available.configure(background=color)
+
+        availableLabel = Label(date_available, text='     Availability: ')
         availableLabel.grid(row=0, column=0, padx=10, pady=10, sticky='W')
         availableLabel.configure(background='#cfb53b')
 
-        self.availableEntry = ttk.Combobox(availableFrame, textvariable=self.days, values=days, width=11)
-        self.availableEntry.grid(row=0, column=1, padx=10, sticky="W")
-        self.availableEntry.config(state='readonly')
+        self.availableYearEntry = ttk.Combobox(date_available, textvariable=self.year, values=years, width=8)
+        self.availableYearEntry.grid(row=0, column=1, padx=2, sticky="W")
+        self.availableYearEntry.config(state='readonly')
 
-        fromLabel = Label(availableFrame, text='From: ')
-        fromLabel.grid(row=0, column=2)
+        self.availableMonthEntry = ttk.Combobox(date_available, textvariable=self.month, values=months, width=4)
+        self.availableMonthEntry.grid(row=0, column=2, padx=2, sticky="W")
+        self.availableMonthEntry.config(state='readonly')
+
+        self.availableDayEntry = ttk.Combobox(date_available, textvariable=self.day, values=days, width=6)
+        self.availableDayEntry.grid(row=0, column=3, padx=2, sticky="W")
+        self.availableDayEntry.config(state='readonly')
+
+        fromLabel = Label(date_available, text='From: ')
+        fromLabel.grid(row=0, column=4)
         fromLabel.configure(background='#cfb53b')
 
-        self.fromEntry = ttk.Combobox(availableFrame, textvariable=self.fromTime, values=fromTimes, width=8)
-        self.fromEntry.grid(row=0, column=3, padx=5, sticky="W")
+        self.fromEntry = ttk.Combobox(date_available, textvariable=self.fromTime, values=fromTimes, width=8)
+        self.fromEntry.grid(row=0, column=5, padx=5, sticky="W")
         self.fromEntry.config(state='readonly')
 
-        toLabel = Label(availableFrame, text='To: ')
-        toLabel.grid(row=0, column=4)
+        toLabel = Label(date_available, text='To: ')
+        toLabel.grid(row=0, column=6)
         toLabel.configure(background='#cfb53b')
 
-        self.toEntry = ttk.Combobox(availableFrame, textvariable=self.toTime, values=toTimes, width=8)
-        self.toEntry.grid(row=0, column=5, padx=5, sticky="W")
+        self.toEntry = ttk.Combobox(date_available, textvariable=self.toTime, values=toTimes, width=8)
+        self.toEntry.grid(row=0, column=7, padx=5, sticky="W")
         self.toEntry.config(state='readonly')
 
         #This block of code is intended for when the doctor edits his profile.
@@ -521,15 +537,18 @@ class GTMS:
 
             timePattern = '\d*:\d\d'
             
-            day = self.days.get()
+            day = self.day.get()
+            month = self.month.get()
+            year = self.year.get()
+            date= year+'-'+month+'-'+day
             fromTime = re.findall(timePattern, self.fromEntry.get())[0]+':00'
             toTime = re.findall(timePattern, self.toEntry.get())[0]+':00'
             try:
-                query = 'INSERT INTO AVAILABILITY (Username,Day_Date,From_Time,To_Time) VALUES ("{}","{}","{}","{}")'.format(self.username,day,fromTime,toTime)
+                query = 'INSERT INTO AVAILABILITY (Username,Day_Date,From_Time,To_Time) VALUES ("{}","{}","{}","{}")'.format(self.username,date,fromTime,toTime)
                 cursor = self.connect()
                 cursor.execute(query)
                 self.db.close()
-                mbox.showinfo("Time Added","You have added an availability on {} from {} to {}".format(day, self.fromEntry.get(), self.toEntry.get()))
+                mbox.showinfo("Time Added","You have added an availability on {} from {} to {}".format(date, self.fromEntry.get(), self.toEntry.get()))
                 return
             except:
                 mbox.showerror("ERROR", "You have already added this availability.")
@@ -1618,11 +1637,11 @@ class GTMS:
         except:
             pass
 
-        self.cursor = self.connect()
+        cursor = self.connect()
 
         query = "SELECT Username,FName,LName FROM `DOCTOR` WHERE Specialty = '{}'".format(self.specialty.get())
-        self.cursor.execute(query)
-        specialists = list(self.c.fetchall())
+        cursor.execute(query)
+        specialists = list(cursor.fetchall())
 
         self.db.close()
 
@@ -1640,9 +1659,9 @@ class GTMS:
         self.specialistPulldown.config(state='readonly')
         self.specialistPulldown.config(width=30)
 
-        Label(self.selectionFrame, text='Specialist:   ', background='#cfb53b').grid(row=0, column=0, padx=5, pady=10)
+        Label(self.selectionFrame, text='Specialist:   ', background='#cfb53b').grid(row=0, column=0, padx=5, pady=10, sticky='W')
 
-        self.specialistPulldown.grid(row=0, column=1, padx=5, pady=10)
+        self.specialistPulldown.grid(row=0, column=1, padx=5, pady=10, sticky='EW')
         self.rateLabel = Label(self.selectionFrame, text='Avg Rating: ')
         self.rateLabel.grid(row=0, column=2, padx=5, pady=10, sticky='W')
         self.rateLabel.configure(background='#cfb53b')
@@ -1651,16 +1670,25 @@ class GTMS:
 
     def specialistSelected(self, event=NONE):
 
-        self.cursor = self.connect()
+        try:
+            self.apptDateY.destroy()
+            self.apptDateD.destroy()
+            self.apptDateM.destroy()
+            self.timeSlot.destroy()
+            self.timePulldown.destroy()
+        except:
+            pass
+
+        cursor = self.connect()
 
         docName = self.docSelected.get().split()
 
         userNameQuery = 'SELECT Username FROM DOCTOR WHERE FName = "{}" AND LName = "{}"'.format(docName[0], docName[1])
-        self.cursor.execute(userNameQuery)
-        username = self.cursor.fetchone()[0]
+        cursor.execute(userNameQuery)
+        username = cursor.fetchone()[0]
 
         avgRatingQ = 'SELECT AVG(Rating) FROM RATES WHERE DUsername="{}"'.format(username)
-        self.cursor.execute(avgRatingQ)
+        cursor.execute(avgRatingQ)
 
         try:
             avgRating = float(self.cursor.fetchone()[0])
@@ -1668,69 +1696,138 @@ class GTMS:
         except:
             self.rateLabel.config(text='No Ratings')
 
-        timeQuery = '''SELECT Day_Date,From_Time,To_Time
+        timeQuery = '''SELECT Day_Date
                         FROM AVAILABILITY
                         NATURAL JOIN DOCTOR
                         WHERE DOCTOR.Username = AVAILABILITY.Username
                         AND DOCTOR.Username = "{}"'''.format(username)
 
-        self.cursor.execute(timeQuery)
+        cursor.execute(timeQuery)
         times = list(self.c.fetchall())
         timesList = []
+        ##Year Day Month
+        years = []
+        days =[]
+        months = []
         for timeSlot in times:
-            timesList.append(str(timeSlot[0])[0:3]+':  '+str(timeSlot[1])+' - '+str(timeSlot[2]))
+            Y,M,D = str(timeSlot[0]).split('-')
+            if Y not in years:
+                years.append(Y)
+            if D not in days:
+                days.append(D)
+            if M not in months:
+                months.append(M)
+        years.sort()
+        days.sort()
+        months.sort()
+        
+        self.apptYear = StringVar()
+        self.apptYear.set('----')
+        self.apptDay = StringVar()
+        self.apptDay.set('----')
+        self.apptMonth = StringVar()
+        self.apptMonth.set('----')
 
-        try:
-            self.timePulldown.destroy()
-        except:
-            pass
+        timeFrame = Frame(self.selectionFrame)
+        timeFrame.grid(row=1,column=0,columnspan=3)
+        timeFrame.configure(background=color)
 
-        self.timeSelected = StringVar()
-        self.timeSelected.set('--Select A Time--')
+        apptDateLabel = Label(timeFrame, text='Date:   ', background='#cfb53b')
+        apptDateLabel.grid(row=0, column=0, padx=5, pady=5, sticky='W')
 
-        self.timeSlot = Label(self.selectionFrame, text='Time Slot:   ', background='#cfb53b')
-        self.timeSlot.grid(row=1, column=0, padx=5, pady=5)
+        self.apptDateY = ttk.Combobox(timeFrame, textvariable=self.apptYear, values=years)
+        self.apptDateY.config(state='readonly')
+        self.apptDateY.config(width=8)
+        self.apptDateY.grid(row=0, column=1, padx=2, pady=5, sticky='W')
 
-        self.timePulldown = ttk.Combobox(self.selectionFrame, textvariable=self.timeSelected,
-                                             values=timesList)
-        self.timePulldown.config(state='readonly')
-        self.timePulldown.config(width=30)
-        self.timePulldown.grid(row=1, column=1, padx=5, pady=5)
+        self.apptDateM = ttk.Combobox(timeFrame, textvariable=self.apptMonth, values=months)
+        self.apptDateM.config(state='readonly')
+        self.apptDateM.config(width=6)
+        self.apptDateM.grid(row=0, column=2, padx=2, pady=5, sticky='W')
+
+        self.apptDateD = ttk.Combobox(timeFrame, textvariable=self.apptDay, values=days)
+        self.apptDateD.config(state='readonly')
+        self.apptDateD.config(width=4)
+        self.apptDateD.grid(row=0, column=3, padx=2, pady=5, sticky='W')
 
         self.disableRequest = FALSE
-        if not timesList:
-            self.timePulldown.config(values=['No Available Times'], state=DISABLED)
-            self.disableRequest = TRUE
-        
+
+        cursor.close()
+
+        def dateSelected():
+
+            try:
+                self.timeSlot.destroy()
+                self.timePulldown.destroy()
+            except:
+                pass
+
+            cursor = self.connect()
+
+            self.timeSelected = StringVar()
+            self.timeSelected.set('--Select A Time--')
+
+            self.apptDate = self.apptDateY.get() + '-' + self.apptDateM.get() + '-' + self.apptDateD.get()
+
+            query = '''SELECT From_Time,To_Time
+                        FROM AVAILABILITY
+                        NATURAL JOIN DOCTOR
+                        WHERE DOCTOR.Username = AVAILABILITY.Username
+                        AND DOCTOR.Username = "{}" AND AVAILABILITY.Day_Date = "{}"'''.format(username,self.apptDate)
+
+            cursor.execute(query)
+            apptTimes = list(cursor.fetchall())
+            apptTimesList = []
+            for time in apptTimes:
+                apptTimesList.append(str(time[0])+' - '+str(time[1]))
+
+            self.timeSlot = Label(timeFrame, text='Time Slot:   ', background='#cfb53b')
+            self.timeSlot.grid(row=1, column=0, padx=5, pady=5, sticky='W')
+
+            self.timePulldown = ttk.Combobox(timeFrame, textvariable=self.timeSelected, values=apptTimesList)
+            self.timePulldown.config(state='readonly')
+            self.timePulldown.config(width=15)
+            self.timePulldown.grid(row=1, column=1, padx=5, pady=5, columnspan=3, sticky='W')
+
+            if not apptTimesList:
+                self.timePulldown.config(values=['No Available Times'], state=DISABLED)
+                self.disableRequest = TRUE
+
+            cursor.close()
+
+        searchDateButton = Button(timeFrame, text='Search For Times', command=dateSelected)
+        searchDateButton.grid(row=0, column=4, padx=5)
+
         def RequestAppt():
+
+            cursor = self.connect()
+
             patient_username = self.username
             doc_username = username
-            db = self.connect()
-            self.c.execute("SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername='%s'" % (patient_username))
+            cursor.execute("SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername='%s'" % (patient_username))
             result=self.c.fetchall()
             #If user is visiting for first time
             if result[0][0] == 0:
                 scheduled_appt = self.timeSelected.get()
-                day_date = findall('([a-zA-Z]+): .+', scheduled_appt)[0]
                 pattern = '(\d+:\d+:00 - \d+:\d+:00)'
                 scheduled_time = findall(pattern, scheduled_appt)[0]
-                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Pending')" % (patient_username, doc_username, day_date, scheduled_time))
+                cursor.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Pending')" % (patient_username, doc_username, self.apptDate, scheduled_time))
                 self.db.commit()
                 info = mbox.showinfo("Appointment Requests", "Appointment requests complete.")
                 self.apptWin.destroy()
             #Wait for request to be accepted
             else:
                 scheduled_appt = self.timeSelected.get()
-                day_date = findall('([a-zA-Z]+): .+', scheduled_appt)[0]
                 pattern = '(\d+:\d+:00 - \d+:\d+:00)'
                 scheduled_time = findall(pattern, scheduled_appt)[0]
-                self.c.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Accepted')" % (patient_username, doc_username, day_date, scheduled_time))
+                cursor.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Accepted')" % (patient_username, doc_username, self.apptDate, scheduled_time))
                 self.db.commit()
                 info = mbox.showinfo("Appintment Requests Status", "Your appointment request has been sent to the specified doctors.")                
                 self.apptWin.destroy()
-                        
+            cursor.close()        
         self.requestButton = ttk.Button(self.selectionFrame, text='Request Appointment', command=RequestAppt)
         self.requestButton.grid(row=2, column=0, columnspan=3, pady=5, sticky='EW')
+        
         if self.disableRequest:
             self.requestButton.config(state=DISABLED)
 
