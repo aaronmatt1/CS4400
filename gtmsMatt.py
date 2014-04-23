@@ -717,7 +717,7 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
-        viewAppointButton = Button(bottomFrame, text='View Appointments Calendar', relief=FLAT)
+        viewAppointButton = Button(bottomFrame, text='View Appointments Calendar', relief=FLAT, command=self.searchAppt)
         viewAppointButton.grid(row=0, column=0, padx=20, pady=10, sticky='W')
         viewAppointButton.configure(font='Arial',
                                     foreground='blue',
@@ -784,6 +784,104 @@ class GTMS:
 
 
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
+
+    def searchAppt(self):
+
+        self.searchApptWin = Toplevel(LogWin)
+        self.searchApptWin.title('Search Appointments')
+        self.searchApptWin.config(bg=color)
+        
+        topFrame = Frame(self.searchApptWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.searchApptWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.searchApptWin)
+        bottomFrame.grid(row=2, column=0, pady=15)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = ttk.Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = ttk.Label(topFrame, text="Search Appointments", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        dateLabel = Label(bottomFrame, text="Date: ", background=color)
+        dateLabel.grid(row=0, column=0, padx=5, sticky='W')
+
+        days = list(range(1,31))
+
+        months = list(range(1,13))
+
+        years = list(range(2014,2050,1))
+
+        year = StringVar()
+        year.set('----')
+        month = StringVar()
+        month.set('----')
+        day = StringVar()
+        day.set('----')
+
+        self.apptYearEntry = ttk.Combobox(bottomFrame, textvariable=year, values=years, width=8)
+        self.apptYearEntry.grid(row=0, column=1, padx=2, sticky="W")
+        self.apptYearEntry.config(state='readonly')
+
+        self.apptMonthEntry = ttk.Combobox(bottomFrame, textvariable=month, values=months, width=4)
+        self.apptMonthEntry.grid(row=0, column=2, padx=2, sticky="W")
+        self.apptMonthEntry.config(state='readonly')
+
+        self.apptDayEntry = ttk.Combobox(bottomFrame, textvariable=day, values=days, width=6)
+        self.apptDayEntry.grid(row=0, column=3, padx=2, sticky="W")
+        self.apptDayEntry.config(state='readonly')
+
+        def searchApptClick():
+
+            year = self.apptYearEntry.get()
+            month = self.apptMonthEntry.get()
+            if len(month)<2:
+                month = '0'+ month
+            day = self.apptDayEntry.get()
+            if len(day)<2:
+                day = '0'+ day
+
+            date = year+'-'+month+'-'+day
+            query = '''SELECT P.Name,RA.ScheduledTime FROM REQUEST_APPOINTMENT AS RA
+                    INNER JOIN PATIENT AS P 
+                    ON P.Username = RA.PUsername
+                    WHERE RA.DUsername="{}" AND RA.Status="Accepted" AND RA.Date="{}"'''.format(self.username, date)
+
+            cursor = self.connect()
+            cursor.execute(query)
+            appts = list(cursor.fetchall())
+            apptList = []
+            for appt in appts:
+                apptList.append([appt[0], appt[1]])
+
+            apptFrame = Frame(bottomFrame, background=color)
+            apptFrame.grid(row=1, column=0, padx=25, pady=20, sticky="EW", columnspan=6)
+
+            headers = ['                 Patient                ',
+                   '            Scheduled Time              ']
+
+            for x in range(len(headers)):
+                tableFrame = Frame(apptFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+                label = Label(tableFrame, text=headers[x], background=color)
+                label.pack(fill=BOTH)
+
+            rows = 1
+            for x in apptList:
+                for y in range(len(x)):
+                    tableFrame = Frame(apptFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=rows, column=y, sticky='EW', padx=1, pady=1)
+                    label = Label(tableFrame, text=x[y], background='white')
+                    label.pack(fill=BOTH)
+                rows+=1
+
+
+        searchButton = ttk.Button(bottomFrame, text="View Appointments", command=searchApptClick)
+        searchButton.grid(row=0, column=4, padx=5)
 
     def adminHomePage(self):
 
