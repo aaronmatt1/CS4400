@@ -25,3 +25,7 @@ We need to work on User Functionality functions and whatever they are going to d
 !!!!!!!!!!!!CHANGES!!!!!!!!!!!!
 
 -Changed all date related attributes to DATE data type
+
+-Added Status to Order Medication
+
+-Changed duration and dosage to not null

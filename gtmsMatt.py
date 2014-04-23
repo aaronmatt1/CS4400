@@ -1115,12 +1115,14 @@ class GTMS:
         consulting_doc = cursor.fetchone()
         date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
 
-        query = 'SELECT COUNT(*) FROM PRESCRIPTION WHERE MedName="{}" AND Dosage="{}" AND Duration="{}" AND DUsername="{}" AND DateVisit="{}" AND PUsername="{}"'\
+        query = 'SELECT COUNT(*) FROM PRESCRIPTION WHERE MedName="{}" AND Dosage="{}" AND Duration="{}" AND DUsername="{}" AND DateVisit="{}" AND PUsername="{}" AND Ordered="N"'\
                 .format(meds_name, dosage, duration_days, consulting_doc[0], date_prescription, self.username)
         cursor.execute(query)
         if cursor.fetchone()[0] != 0:
             mbox.showinfo("Medicine Added", "Your prescription has been added to the cart")
-            medCost = 100
+            query = 'UPDATE PRESCRIPTION SET Ordered="Y" WHERE PUsername="{}"'.format(self.username)
+            cursor.execute(query)
+            self.db.commit()
             return
         else:
             mbox.showerror("ERROR", "You have not been prescribed this medication")
