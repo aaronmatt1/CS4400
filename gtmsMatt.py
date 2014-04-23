@@ -809,16 +809,86 @@ class GTMS:
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
+        #Visit History Frame
+        attributes = ['Date of Visit: ', 'Patient Name: ', 'Blood Pressure: ', 'Diagnosis: ']
+        count = 0
+        for attribute in attributes:
+            attribute_label = Label(bottomFrame, text=attribute, bg=color)
+            attribute_label.grid(row=count, column=0, padx=5, pady=10, sticky=W)
+            count += 1
+
+        dateVisitEntry = Entry(bottomFrame,width=25)
+        dateVisitEntry.grid(row=0,column=1, columnspan=5, sticky='W')
+
+        patientName = Entry(bottomFrame, width=25)
+        patientName.grid(row=1,column=1, columnspan=5, sticky='W')
+
+        systolic_lbl = Label(bottomFrame, text='Systolic: ', bg=color)
+        systolic_lbl.grid(row=2, column=1, sticky='W')
+
+        systolic_entry = Entry(bottomFrame, width=5)
+        systolic_entry.grid(row=2, column=2, padx=2)
+
+        diastolic_lbl = Label(bottomFrame, text='Diastolic: ', bg=color)
+        diastolic_lbl.grid(row=2, column=3, padx=2)
+
+        diastolic_entry = Entry(bottomFrame, width=5)
+        diastolic_entry.grid(row=2, column=4, padx=5)
+
+        diagnosis = Text(bottomFrame, width=22, height=4)
+        diagnosis.grid(row=3,column=1,columnspan=5, padx=10, pady=10, sticky='EW')
+
+        ##################This is where it splits to prescription#################
+
         separateFrame = Frame(self.recordWin, bd=1, background='black')
-        separateFrame.grid(row=3, column=0, sticky='EW')
+        separateFrame.grid(row=4, column=0, sticky='EW')
 
         prescriptionFrame = Frame(self.recordWin)
-        prescriptionFrame.grid(row=4, column=0)
+        prescriptionFrame.grid(row=5, column=0)
         prescriptionFrame.configure(background='#cfb53b')
 
-        prescribeName = Label(prescriptionFrame, text="Prescribe", font=("Arial", 25))
-        prescribeName.grid(row=0, column=0, sticky='EW')
+        nameFrame = Frame(prescriptionFrame, background=color)
+        nameFrame.grid(row=0, column=0, columnspan=6)
+
+        prescribeName = Label(nameFrame, text="Prescribe", font=("Arial", 25))
+        prescribeName.pack()
         prescribeName.configure(background='#cfb53b')
+
+        attributes = ['Drug Name: ', 'Usage: ', 'Duration: ', 'Notes: ']
+        count = 1
+        for attribute in attributes:
+            attribute_label = Label(prescriptionFrame, text=attribute, bg=color)
+            attribute_label.grid(row=count, column=0, padx=5, pady=10, sticky=W)
+            count += 1
+
+        drugEntry = Entry(prescriptionFrame,width=25)
+        drugEntry.grid(row=1,column=1, columnspan=5, sticky='W')
+
+        usageEntry = Entry(prescriptionFrame, width=25)
+        usageEntry.grid(row=2,column=1, sticky='W')
+        Label(prescriptionFrame, text='mg/day', background=color).grid(row=2,column=2, columnspan=5, sticky='W')
+
+        durationEntry = Entry(prescriptionFrame, width=5)
+        durationEntry.grid(row=3, column=1, padx=2)
+        Label(prescriptionFrame, text='days', background=color).grid(row=3, column=2, columnspan=5, padx=2)
+
+        notes = Text(prescriptionFrame, width=22, height=4)
+        notes.grid(row=4,column=1,columnspan=5, padx=10, pady=10, sticky='EW')
+
+        def submitVisit():
+            print('Clicked')
+
+        submitFrame = Frame(prescriptionFrame, background=color)
+        submitFrame.grid(row=5, column=0, columnspan=6, pady=10, sticky='EW')
+
+        submitButton = ttk.Button(submitFrame, text='Submit', command=submitVisit)
+        submitButton.pack(fill=BOTH)
+
+        formattingFrame = Frame(self.recordWin, background=color)
+        formattingFrame.grid(row=6, column=0)
+        spaceFormat = Label(formattingFrame, 
+                            text='                                                                                                                                  ',
+                            background=color).pack()
 
     def searchAppt(self):
 
