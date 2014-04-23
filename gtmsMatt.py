@@ -887,6 +887,11 @@ class GTMS:
     def PatientReport(self):
         pass
 
+        # SELECT D.FName,LName, COUNT(V.PUsername) AS "No. of Patients", COUNT(P.MedName),SUM(V.BillingAmt) FROM DOCTOR AS D 
+        # LEFT JOIN PRESCRIPTION AS P ON D.Username = P.DUsername
+        # INNER JOIN VISIT AS V ON D.Username = V.DUsername
+        # GROUP BY D.Username
+
     def Billing(self):
         pass
 
