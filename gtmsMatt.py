@@ -61,18 +61,6 @@ class GTMS:
         self.cursor.execute(query)
         result = self.cursor.fetchall()
 
-        def findDiscount():
-
-            query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(self.username)
-
-            cursor = self.connect()
-            cursor.execute(query)
-            income = cursor.fetchone()[0]
-            if income == '0-15000' or income == '15000-25000':
-                self.discount = TRUE
-            else:
-                self.discount = FALSE
-
         #If user account exists
         if result:
             show = mbox.showinfo("Login Complete", "Login successful.")
@@ -81,7 +69,6 @@ class GTMS:
             #If user is patient
             if result[0][0] == 1:
                 self.userType = 'patient'
-                findDiscount()
                 LogWin.iconify()
                 self.db.close()
                 self.patientScreens()
@@ -106,18 +93,6 @@ class GTMS:
         else:
             error = mbox.showerror("Login Error", "Login information incorrect. Please try again or register as new user.")
             return
-
-        def findDiscount():
-
-            query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(self.username)
-
-            cursor = self.connect()
-            cursor.execute(query)
-            income = cursor.fetchone()[0]
-            if income == '0-15000' or income == '15000-25000':
-                self.discount = TRUE
-            else:
-                self.discount = FALSE
 
 
     def Register(self):
@@ -863,6 +838,18 @@ class GTMS:
 
         def submitVisit():
 
+            def findDiscount():
+
+                query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(patient)
+
+                cursor = self.connect()
+                cursor.execute(query)
+                income = cursor.fetchone()[0]
+                if income == '0-15000' or income == '15000-25000':
+                    return True
+                else:
+                    return False
+
             visitDate = dateVisitEntry.get()
             patientName = patientNameEntry.get()
             SBP = systolic_entry.get()
@@ -886,13 +873,16 @@ class GTMS:
             else:
                 bill = 65
 
-            if self.discount:
+            if findDiscount():
                 bill = bill*0.2
 
             query = 'INSERT INTO VISIT VALUES ("{}", "{}", "{}", {}, {}, {})'.format(visitDate,self.username,patient,bill,SBP,DBP)
             cursor.execute(query)
 
             query = 'INSERT INTO DIAGNOSIS VALUES ("{}","{}","{}","{}")'.format(patient,visitDate,self.username,diagnosis)
+            cursor.execute(query)
+
+            query = 'DELETE FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}"'.format(patient, self.username)
             cursor.execute(query)
 
             mbox.showinfo("Visit Recorded", "Your visit has been recorded!")
@@ -943,18 +933,26 @@ class GTMS:
             visitDate = dateVisitEntry.get()
             if not visitDate:
                 mbox.showerror("Error","Please Enter a Date")
+                return      
+            
+            patientName = patientNameEntry.get()
+            if not patientName:
+                mbox.showerror("Error","Please Enter a patient name")
                 return
 
-            cursor = self.connect()       
+            cursor = self.connect() 
+
+            query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(patientName)
+            cursor.execute(query)
+            patient = cursor.fetchone()[0]
+            if not patient:
+                mbox.showerror("ERROR", "Patient is not in the system")
+                return
+
             query = 'SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}" AND Date="{}"'.format(patient,self.username,visitDate)
             cursor.execute(query)
             if cursor.fetchone()[0] == 0:
                 mbox.showerror("ERROR", "Appointment not scheduled for specified date")
-                return
-
-            patientName = patientNameEntry.get()
-            if not patientName:
-                mbox.showerror("Error","Please Enter a patient name")
                 return
 
             drugName = drugEntry.get()
@@ -973,14 +971,6 @@ class GTMS:
                 return
 
             note = notes.get("1.0", END)
-
-            query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(patientName)
-            
-            cursor.execute(query)
-            patient = cursor.fetchone()[0]
-            if not patient:
-                mbox.showerror("ERROR", "Patient is not in the system")
-                return
 
             query = 'INSERT INTO PRESCRIPTION VALUES ("{}","{}","{}","{}","{}","{}","{}","N")'.format(patient, self.username, drugName, visitDate, note, dosage, duration)
             cursor.execute(query)
@@ -1740,7 +1730,7 @@ class GTMS:
                     dName = cursor.fetchone()
                     doctor = 'Dr. '+dName[0] + ' ' + dName[1]
 
-                    message = 'Appointment Accepted \n\n'+ 'Day: '+ requestList[x][1] +'\n'+ 'Time: ' + requestList[x][2] + '\n' + 'Specialist: ' + doctor
+                    message = 'Appointment Accepted \n\n'+ 'Day: '+ str(requestList[x][1]) +'\n'+ 'Time: ' + requestList[x][2] + '\n' + 'Specialist: ' + doctor
 
                     query = 'INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,Status,DateTime) VALUES ("{}","{}","{}","Unread",CURRENT_TIMESTAMP)'.format(self.username,patient[0],message)
 
