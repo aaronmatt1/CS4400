@@ -1634,9 +1634,8 @@ class GTMS:
         date_expiry_frame = Frame(bottomFrame, background=color)
         date_expiry_frame.grid(row=5, column=1, sticky=W)
 
-        years = list(range(1910, 2014))
+        years = list(range(14, 99))
         months = list(range(1, 13))
-        days = list(range(1, 32))
         
         self.expiry_year = StringVar()
         self.expiry_year.set('Year')
@@ -1652,13 +1651,6 @@ class GTMS:
         expiry_month = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_month, values=months)
         expiry_month.config(width=7, state='readonly')
         expiry_month.grid(row=0, column=1, sticky=W, padx=2)
-
-        self.expiry_day = StringVar()
-        self.expiry_day.set('Day')
-
-        expiry_day = ttk.Combobox(date_expiry_frame, textvariable=self.expiry_day, values=days)
-        expiry_day.config(width=5, state='readonly')
-        expiry_day.grid(row=0, column=2, sticky=W, padx=5)
 
         order = ttk.Button(bottomFrame, text='Order', cursor='hand2', command=self.PayMeds)
         order.grid(row=6, column=2, padx=5, pady=5)
@@ -1961,7 +1953,28 @@ class GTMS:
             return
 
     def PayMeds(self):
-        pass
+
+        name = self.cardholder_name.get()
+        number = self.card_number.get()
+        cardType = self.card_type.get()
+        expiryY = self.expiry_year.get()
+        expiryM = self.expiry_month.get()
+        if len(expiryM)<2:
+            expiryM = '0'+ expiryM
+        expiry = expiryM +'/'+ expiryY
+        CVV = self.cvv.get()
+
+        cursor = self.connect()
+
+        query = 'UPDATE PATIENT SET CreditCardNo="{}" WHERE Username="{}"'.format(number,self.username)
+        cursor.execute(query)
+
+        query = 'INSERT INTO PAYMENT_INFO (CardNo,CardHolderName,CardType,Expiry,CVV) VALUES({},"{}","{}","{}",{})'.format(number,name,cardType,expiry,CVV)
+
+        cursor.execute(query)
+        self.db.commit()
+
+        mbox.showinfo("Order Complete", "Your medication has been ordered")
     
     def EditProfile(self):
         self.Registering = FALSE
