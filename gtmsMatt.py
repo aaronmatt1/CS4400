@@ -820,8 +820,8 @@ class GTMS:
         dateVisitEntry = Entry(bottomFrame,width=25)
         dateVisitEntry.grid(row=0,column=1, columnspan=5, sticky='W')
 
-        patientName = Entry(bottomFrame, width=25)
-        patientName.grid(row=1,column=1, columnspan=5, sticky='W')
+        patientNameEntry = Entry(bottomFrame, width=25)
+        patientNameEntry.grid(row=1,column=1, columnspan=5, sticky='W')
 
         systolic_lbl = Label(bottomFrame, text='Systolic: ', bg=color)
         systolic_lbl.grid(row=2, column=1, sticky='W')
@@ -835,8 +835,36 @@ class GTMS:
         diastolic_entry = Entry(bottomFrame, width=5)
         diastolic_entry.grid(row=2, column=4, padx=5)
 
-        diagnosis = Text(bottomFrame, width=22, height=4)
-        diagnosis.grid(row=3,column=1,columnspan=5, padx=10, pady=10, sticky='EW')
+        diagnosisText = Text(bottomFrame, width=22, height=4)
+        diagnosisText.grid(row=3,column=1,columnspan=5, padx=10, pady=10, sticky='EW')
+
+        def submitVisit():
+
+            bill = 50
+
+            visitDate = dateVisitEntry.get()
+            patientName = patientNameEntry.get()
+            SBP = systolic_entry.get()
+            DBP = diastolic_entry.get()
+            diagnosis = diagnosisText.get("1.0", END)
+
+            query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(patientName)
+            cursor = self.connect()
+            cursor.execute(query)
+            patient = cursor.fetchone()[0]
+
+            query = 'INSERT INTO VISIT VALUES ("{}", "{}", "{}", {}, {}, {})'.format(visitDate,self.username,patient,bill,SBP,DBP)
+            cursor.execute(query)
+
+            query = 'INSERT INTO DIAGNOSIS VALUES ("{}","{}","{}","{}")'.format(patient,visitDate,self.username,diagnosis)
+            cursor.execute(query)
+
+            query = 'INSERT INTO RECORDS VALUES ("{}","{}","{}")'.format(patient,self.username,visitDate)
+            cursor.execute(query)
+
+            self.db.commit()
+            cursor.close()
+            self.db.close()
 
         ##################This is where it splits to prescription#################
 
@@ -875,15 +903,16 @@ class GTMS:
         notes = Text(prescriptionFrame, width=22, height=4)
         notes.grid(row=4,column=1,columnspan=5, padx=10, pady=10, sticky='EW')
 
-        def submitVisit():
-            print('Clicked')
+        def addPrescrip():
+            print('Prescription Added')
 
         submitFrame = Frame(prescriptionFrame, background=color)
         submitFrame.grid(row=5, column=0, columnspan=6, pady=10, sticky='EW')
 
-        submitButton = ttk.Button(submitFrame, text='Submit', command=submitVisit)
-        submitButton.pack(fill=BOTH)
+        ttk.Button(submitFrame, text='Add Prescription', command=addPrescrip).pack(fill=BOTH,pady=5)
 
+        ttk.Button(submitFrame, text='Submit', command=submitVisit).pack(fill=BOTH, pady=5)
+        
         formattingFrame = Frame(self.recordWin, background=color)
         formattingFrame.grid(row=6, column=0)
         spaceFormat = Label(formattingFrame, 
