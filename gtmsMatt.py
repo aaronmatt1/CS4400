@@ -157,7 +157,7 @@ class GTMS:
         #User Type Pulldown Menu
         self.Type = StringVar()
         self.Type.set('Select User Type')
-        types = ['Doctor', 'Patient', 'Administrative Personnel']
+        types = ['Doctor', 'Patient']
         userTypeMenu = ttk.Combobox(bottomFrame, textvariable=self.Type, values=types)
         userTypeMenu.config(state='readonly')
         userTypeMenu.grid(row=4, column=2, columnspan=3, sticky='NEW')
@@ -206,10 +206,6 @@ class GTMS:
                                 self.userType = 'doctor'
                                 self.newRegWin.withdraw()
                                 self.doctorProfile()
-                            else:
-                                self.userType = 'admin'
-                                self.newRegWin.withdraw()
-                                self.adminHomePage()
                         else:
                             error = mbox.showerror("Registration Error", "Username is already in use.")
                             return
@@ -607,7 +603,7 @@ class GTMS:
             workPhone = self.DworkPhoneEntry.get()
             roomNo = int(self.roomEntry.get())
             address = self.DaddressEntry.get()
-            query = 'UPDATE DOCTOR SET LicenseNo="{}", FName="{}", LName="{}", DOB="{}", WorkPhone="{}", Specialty="{}", RoomNo="{}", WorkAddress="{}" WHERE Username="{}"'\
+            query = 'UPDATE DOCTOR SET LicenseNo="{}", FName="{}", LName="{}", DOB="{}", WorkPhone="{}", Specialty="{}", RoomNo="{}", HomeAddress="{}" WHERE Username="{}"'\
                     .format(LicenseNo,First,Last,DOB,workPhone,specialty,roomNo,address,self.username)
             cursor = self.connect()
             cursor.execute(query)
@@ -708,8 +704,6 @@ class GTMS:
                                        foreground='blue',
                                        background='#cfb53b')
 
-        if messages == 0:
-            self.unreadMsgButton.config(state=DISABLED)
 
         self.patHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
@@ -796,10 +790,6 @@ class GTMS:
         apptReqButton.configure(font=('Arial', 8),
                                   foreground='blue',
                                   background='#cfb53b')
-
-        if messages == 0:
-            self.unreadMsgButton.config(state=DISABLED)
-
 
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
@@ -1133,7 +1123,7 @@ class GTMS:
 
         def submitVisit():
 
-            def findDiscountVisit(self):
+            def findDiscountVisit():
 
                 query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(patient)
 
@@ -1601,47 +1591,81 @@ class GTMS:
 
         def searchApptClick():
 
+            day = self.apptDayEntry.get()
             year = self.apptYearEntry.get()
             month = self.apptMonthEntry.get()
-            if len(month)<2:
-                month = '0'+ month
-            day = self.apptDayEntry.get()
-            if len(day)<2:
-                day = '0'+ day
 
-            date = year+'-'+month+'-'+day
-            query = '''SELECT P.Name,RA.ScheduledTime FROM REQUEST_APPOINTMENT AS RA
-                    INNER JOIN PATIENT AS P 
-                    ON P.Username = RA.PUsername
-                    WHERE RA.DUsername="{}" AND RA.Status="Accepted" AND RA.Date="{}"'''.format(self.username, date)
+            if not day:
 
-            cursor = self.connect()
-            cursor.execute(query)
-            appts = list(cursor.fetchall())
-            apptList = []
-            for appt in appts:
-                apptList.append([appt[0], appt[1]])
+                query = '''SELECT DATE, COUNT( PUsername )
+                        FROM REQUEST_APPOINTMENT
+                        WHERE DUsername = "%s" AND MONTH(DATE) = "%s"
+                        GROUP BY DATE'''% (self.username, month)
 
-            apptFrame = Frame(bottomFrame, background=color)
-            apptFrame.grid(row=1, column=0, padx=25, pady=20, sticky="EW", columnspan=6)
+                cursor = self.connect()
+                cursor.execute(query)
+                appts = list(cursor.fetchall())
 
-            headers = ['                 Patient                ',
-                   '            Scheduled Time              ']
+                apptFrame = Frame(bottomFrame, background=color)
+                apptFrame.grid(row=1, column=0, padx=25, pady=20, sticky="EW", columnspan=6)
 
-            for x in range(len(headers)):
-                tableFrame = Frame(apptFrame, borderwidth=1, background='black')
-                tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
-                label = Label(tableFrame, text=headers[x], background=color)
-                label.pack(fill=BOTH)
+                headers = ['                 Date                ',
+                            '      Number of Appointments        ']
 
-            rows = 1
-            for x in apptList:
-                for y in range(len(x)):
+                for x in range(len(headers)):
                     tableFrame = Frame(apptFrame, borderwidth=1, background='black')
-                    tableFrame.grid(row=rows, column=y, sticky='EW', padx=1, pady=1)
-                    label = Label(tableFrame, text=x[y], background='white')
+                    tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=headers[x], background=color)
                     label.pack(fill=BOTH)
-                rows+=1
+
+                rows = 1
+                for x in appts:
+                    for y in range(len(x)):
+                        tableFrame = Frame(apptFrame, borderwidth=1, background='black')
+                        tableFrame.grid(row=rows, column=y, sticky='EW', padx=1, pady=1)
+                        label = Label(tableFrame, text=x[y], background='white')
+                        label.pack(fill=BOTH)
+                    rows+=1
+
+            else:
+                
+                day = self.apptDayEntry.get()
+                if len(day)<2:
+                    day = '0'+ day
+
+                date = year+'-'+month+'-'+day
+                query = '''SELECT P.Name,RA.ScheduledTime FROM REQUEST_APPOINTMENT AS RA
+                        INNER JOIN PATIENT AS P 
+                        ON P.Username = RA.PUsername
+                        WHERE RA.DUsername="{}" AND RA.Status="Accepted" AND RA.Date="{}"'''.format(self.username, date)
+
+                cursor = self.connect()
+                cursor.execute(query)
+                appts = list(cursor.fetchall())
+                apptList = []
+                for appt in appts:
+                    apptList.append([appt[0], appt[1]])
+
+                apptFrame = Frame(bottomFrame, background=color)
+                apptFrame.grid(row=1, column=0, padx=25, pady=20, sticky="EW", columnspan=6)
+
+                headers = ['                 Patient                ',
+                       '            Scheduled Time              ']
+
+                for x in range(len(headers)):
+                    tableFrame = Frame(apptFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=headers[x], background=color)
+                    label.pack(fill=BOTH)
+
+                rows = 1
+                for x in apptList:
+                    for y in range(len(x)):
+                        tableFrame = Frame(apptFrame, borderwidth=1, background='black')
+                        tableFrame.grid(row=rows, column=y, sticky='EW', padx=1, pady=1)
+                        label = Label(tableFrame, text=x[y], background='white')
+                        label.pack(fill=BOTH)
+                    rows+=1
 
 
         searchButton = ttk.Button(bottomFrame, text="View Appointments", command=searchApptClick)
@@ -1745,7 +1769,7 @@ class GTMS:
     def SurgeryReport(self):
 
         self.SReportWin = Toplevel(LogWin)
-        self.SReportWin.title('Patient Report')
+        self.SReportWin.title('Surgery Report')
         self.SReportWin.config(bg=color)
         
         topFrame = Frame(self.SReportWin)
@@ -1760,13 +1784,13 @@ class GTMS:
         logo = ttk.Label(topFrame, image=self.photo)
         logo.grid(row=0, column=1)
         logo.configure(background='#cfb53b')
-        pageName = ttk.Label(topFrame, text="Patient Report", font=("Arial", 25))
+        pageName = ttk.Label(topFrame, text="Surgery Report", font=("Arial", 25))
         pageName.grid(row=0, column=0, sticky='EW')
         pageName.configure(background='#cfb53b')
 
         cursor = self.connect()
         
-        query = '''SELECT S.Type, SUM( NoAssistants ) AS  "No. of Doctors Performing Surgery", Date
+        query = '''SELECT S.Type, COUNT(DUsername) AS  "No. of Doctors Performing Surgery"
                 FROM PERFORMS_SURGERY AS PS
                 INNER JOIN (
 
@@ -1888,30 +1912,31 @@ class GTMS:
                     FROM DOCTOR AS D
                     INNER JOIN (
 
-                    SELECT DUsername, COUNT( DateVisit ) AS Prescriptions
-                    FROM PRESCRIPTION
-                    WHERE MONTH( DateVisit ) = '{}'
-                    AND YEAR( DateVisit ) = '{}'
-                    GROUP BY PRESCRIPTION.DUsername
-                    )t2 ON D.username = t2.DUsername
-                    INNER JOIN (
-
                     SELECT COUNT( DATEVISIT ) AS Visits, DUsername, SUM(BillingAmt) AS Billing
                     FROM VISIT AS V
-                    WHERE MONTH( DateVisit ) = '{}'
-                    AND YEAR( DateVisit ) = '{}'
+                    WHERE MONTH( DateVisit ) = '{0}'
+                    AND YEAR( DateVisit ) = '{1}'
                     GROUP BY DUSername
                     )t3 ON t3.DUsername = D.Username
+                    LEFT JOIN(
+
+                    SELECT DUsername, COUNT( DateVisit ) AS Prescriptions
+                    FROM PRESCRIPTION
+                    WHERE MONTH( DateVisit ) = '{2}'
+                    AND YEAR( DateVisit ) = '{3}'
+                    GROUP BY PRESCRIPTION.DUsername
+                    )t2 ON D.username = t2.DUsername
                     GROUP BY Name'''.format(month, year, month, year)
+            
             cursor.execute(query)
             monthlyPatientReport = list(cursor.fetchall())
 
             self.db.close()
 
             headers = ['     Doctor     ',
-                        '    Phone Number   ',
                         '  Number of Patients Seen  ',
-                        '  Prescriptions Written  ']
+                        '    Prescriptions Written   ',
+                        '  Total Billing($)  ']
 
             resultFrame = Frame(bottomFrame, background=color)
             resultFrame.grid(row=1, column=0, columnspan=3)
@@ -1926,7 +1951,10 @@ class GTMS:
                 for y in range(len(monthlyPatientReport[x])):
                     tableFrame = Frame(resultFrame, borderwidth=1, background='black')
                     tableFrame.grid(row=x+1, column=y, sticky='EW', padx=1)
-                    label = Label(tableFrame, text=monthlyPatientReport[x][y], background='white')
+                    insert = monthlyPatientReport[x][y]
+                    if not insert:
+                        insert = 0
+                    label = Label(tableFrame, text=insert, background='white')
                     label.pack(fill=BOTH)
 
         ttk.Button(dateFrame, text='View Report', command=viewReport).grid(row=0,column=3, sticky='EW')
@@ -2014,16 +2042,16 @@ class GTMS:
             costByVisitData.sort()
 
             ##Breakdown of Surgeries
-            surgeryCostByType = """SELECT t1.Type, t2.BillingAmt, t2.DateVisit AS Cost
+            surgeryCostByType = """SELECT t1.Type, t2.BillingAmt AS Cost, t2.DateVisit 
                                     FROM PERFORMS_SURGERY AS PS
                                     INNER JOIN
                                     (SELECT Type,CPT FROM SURGERY) t1
                                     ON t1.CPT = PS.CPT
                                     INNER JOIN
-                                    (SELECT BillingAmt,PUsername,DateVisit FROM VISIT)t2
+                                    (SELECT BillingAmt,PUsername,DateVisit,DUsername FROM VISIT)t2
                                     ON t2.PUsername = PS.PUsername
-                                    WHERE PS.PUsername = '%s'
-                                    GROUP BY t1.Type""" % username
+                                    WHERE PS.PUsername = '%s' AND PS.DUsername = t2.DUsername
+                                    """ % username
             cursor.execute(surgeryCostByType)
             sCostByTypeData = cursor.fetchall()
             sCostByTypeData = list(sCostByTypeData)
@@ -2236,11 +2264,18 @@ class GTMS:
         result = cursor.fetchall()
         doc_username = result[0][0]
 
+        query = 'SELECT COUNT(*) FROM VISIT WHERE PUsername="{}" AND DUsername="{}"'.format(self.username, doc_username)
+        cursor.execute(query)
+        result = cursor.fetchone()[0]
+
+        if result==0:
+            mbox.showerror("ERROR", "You have not visited this doctor!")
+            return
+
         try:
             cursor.execute("INSERT INTO RATES(PUsername, DUsername, Rating) VALUES('{0}', '{1}', {2})".format(patient_username, doc_username, rating))
         except:
-            mbox.showerror("ERROR", "You have already rated this doctor!")
-            return
+            cursor.execute("UPDATE RATES SET Rating={} WHERE PUsername='{}' AND DUsername='{}'".format(rating, patient_username, doc_username))
 
         self.rateWin.protocol("WM_DELETE_WINDOW", self.rateToHP)
 
@@ -2355,13 +2390,14 @@ class GTMS:
         cursor.execute(query)
         try:
             consulting_doc = cursor.fetchone()[0]
+            print(consulting_doc)
         except:
             mbox.showerror("ERROR", "The Doctor you entered is not in the GTMS system")
             return
         date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
 
         query = 'SELECT COUNT(*) FROM PRESCRIPTION WHERE MedName="{}" AND Dosage="{}" AND Duration="{}" AND DUsername="{}" AND DateVisit="{}" AND PUsername="{}" AND Ordered="N"'\
-                .format(meds_name, dosage, duration_days, consulting_doc[0], date_prescription, self.username)
+                .format(meds_name, dosage, duration_days, consulting_doc, date_prescription, self.username)
         cursor.execute(query)
         if cursor.fetchone()[0] != 0:
             mbox.showinfo("Medicine Added", "Your prescription has been added to the cart")
@@ -2475,12 +2511,13 @@ class GTMS:
         cursor = self.connect()
 
         name = recipient.split()
-        query = 'SELECT COUNT(*) FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[-2], name[-1])
+        query = 'SELECT Username FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[-2], name[-1])
         cursor.execute(query)
         recipUsername = cursor.fetchone()
-        if recipUsername[0]:
+        try:
+            recipUsername = recipUsername[0]
             self.recipientType = 'doctor'
-        else:
+        except:
             self.recipientType = 'patient'
             query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(name[0]+' '+name[1])
             cursor.execute(query)
@@ -2501,7 +2538,7 @@ class GTMS:
             if self.recipientType == 'doctor':
                 query = '''INSERT INTO DOCTOR_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status)
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipUsername[0], message, "Unread")
+                        .format(self.username, recipUsername, message, "Unread")
                 cursor.execute(query)
                 mbox.showinfo(title='Message Sent', message='Message Sent!')
                 self.box.delete("1.0", END)
@@ -2512,7 +2549,7 @@ class GTMS:
             elif self.recipientType == 'patient':
                 query = '''INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,DateTime,Status)
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipUsername[0], message, "Unread")
+                        .format(self.username, recipUsername, message, "Unread")
                 cursor.execute(query)
                 mbox.showinfo(title='Message Sent', message='Message Sent!')
                 self.box.delete("1.0", END)
@@ -2721,7 +2758,7 @@ class GTMS:
             query = 'UPDATE '+tableName+' SET Status = "Read" WHERE Status = "Unread" AND Recipient = "{}"'.format(self.username)
             cursor.execute(query)
             self.db.commit()
-            self.unreadMsgButton.config(text="You have no new messages", state=DISABLED)
+            self.unreadMsgButton.configure(text="You have no new messages")
 
         elif self.userType == 'doctor':
             tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
@@ -2730,7 +2767,8 @@ class GTMS:
             query = '''UPDATE '''+tableName[1]+''' SET Status="Read" WHERE Recipient = "{}"'''.format(self.username)
             cursor.execute(query)
             self.db.commit()
-            self.unreadMsgButton.config(text="You have no new messages", state=DISABLED)
+            self.unreadMsgButton.configure(text="You have no new messages")
+            
 
         self.db.close()
 
@@ -2813,6 +2851,32 @@ class GTMS:
 
         order = ttk.Button(bottomFrame, text='Order', cursor='hand2', command=self.PayMeds)
         order.grid(row=6, column=2, padx=5, pady=5)
+
+        query = 'SELECT Name FROM PATIENT WHERE Username="{}"'.format(self.username)
+        cursor = self.connect()
+        cursor.execute(query)
+        name = cursor.fetchone()[0]
+
+        query = 'SELECT * FROM PAYMENT_INFO WHERE CardHolderName="{}"'.format(name)
+        
+        cursor.execute(query)
+        info = cursor.fetchone()
+        if info:
+            self.cardholder_name.insert(0, info[1])
+            self.card_number.insert(0, info[0])
+            self.card_type.set(info[2])
+            expiryM, expiryY = info[3].split('/')
+            self.expiry_year.set(expiryY)
+            self.expiry_month.set(expiryM)
+            self.cvv.insert(0, info[4])
+
+            self.cardholder_name.config(state='readonly')
+            self.card_number.config(state='readonly')
+            self.cvv.config(state='readonly')
+            expiry_month.config(state=DISABLED)
+            expiry_year.config(state=DISABLED)
+            paymentPulldown.config(state=DISABLED)
+        
 
     def appointmentPage(self):
 
