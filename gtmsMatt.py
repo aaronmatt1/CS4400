@@ -1757,7 +1757,7 @@ class GTMS:
 
         cursor = self.connect()
         
-        query = '''SELECT S.Type, SUM( NoAssistants ) AS  "No. of Doctors Performing Surgery"
+        query = '''SELECT S.Type, SUM( NoAssistants ) AS  "No. of Doctors Performing Surgery", Date
                 FROM PERFORMS_SURGERY AS PS
                 INNER JOIN (
 
@@ -1881,19 +1881,19 @@ class GTMS:
 
                     SELECT DUsername, COUNT( DateVisit ) AS Prescriptions
                     FROM PRESCRIPTION
-                    WHERE MONTH( DateVisit )= '04'
-                    AND YEAR( DateVisit ) = '2014'
+                    WHERE MONTH( DateVisit ) = '{}'
+                    AND YEAR( DateVisit ) = '{}'
                     GROUP BY PRESCRIPTION.DUsername
                     )t2 ON D.username = t2.DUsername
                     INNER JOIN (
 
                     SELECT COUNT( DATEVISIT ) AS Visits, DUsername, SUM(BillingAmt) AS Billing
                     FROM VISIT AS V
-                    WHERE MONTH( DateVisit ) = '04'
-                    AND YEAR( DateVisit ) = '2014'
+                    WHERE MONTH( DateVisit ) = '{}'
+                    AND YEAR( DateVisit ) = '{}'
                     GROUP BY DUSername
                     )t3 ON t3.DUsername = D.Username
-                    GROUP BY Name'''
+                    GROUP BY Name'''.format(month, year, month, year)
             cursor.execute(query)
             monthlyPatientReport = list(cursor.fetchall())
 
@@ -1902,7 +1902,7 @@ class GTMS:
             headers = ['     Doctor     ',
                         '    Phone Number   ',
                         '  Number of Patients Seen  ',
-                        '  Prescritions Written  ']
+                        '  Prescriptions Written  ']
 
             resultFrame = Frame(bottomFrame, background=color)
             resultFrame.grid(row=1, column=0, columnspan=3)
