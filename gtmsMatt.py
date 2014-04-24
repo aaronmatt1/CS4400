@@ -725,7 +725,7 @@ class GTMS:
                                     foreground='blue',
                                     background='#cfb53b')
 
-        patientVisitsButton = Button(bottomFrame, text='Patient Visits', relief=FLAT, command=self.recordVisit)
+        patientVisitsButton = Button(bottomFrame, text='Patient Visits', relief=FLAT, command=self.PatVisitHistory)
         patientVisitsButton.grid(row=1, column=0, padx=20, pady=10, sticky='W')
         patientVisitsButton.configure(font='Arial',
                                     foreground='blue',
@@ -787,6 +787,281 @@ class GTMS:
 
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
+    def PatViewHistory(self):
+        self.viewHistWin = Toplevel(LogWin)
+        visit_frame = Frame(self.viewHistWin, bg=color)
+        visit_frame.grid(row=3, columnspan=4, padx=2, pady=2)
+        
+        date_visits_label = Label(visit_frame, text='Dates of Visit', bg=color)
+        date_visits_label.grid(row=0, column=0, sticky=NW)
+        
+        #Date Visits Listbox
+        username = self.username
+        cursor = self.connect()
+        query = 'SELECT Name,HomePhone FROM PATIENT WHERE Username="{}"'.format(self.username)
+        cursor.execute(query)
+        info = cursor.fetchone()[0]
+        name = info[0]
+        hp = info[1]
+        cursor.execute("SELECT V.DateVisit FROM VISIT AS V LEFT JOIN PATIENT AS P ON PUsername=P.Username WHERE P.Name='{}' OR P.HomePhone='{}'".format(name, hp))
+        result = cursor.fetchall()
+        date_visits=()
+        for date in result:
+            date_visits += (date[0],)
+        
+        self.dateVisits = StringVar(value=date_visits)
+
+        def UpdateViewHistory(e):
+            index = date_visits_lbox.curselection()[0]
+            date_selected = date_visits_lbox.get(index, index)[0]
+            query = "SELECT Username FROM PATIENT WHERE Name='{}' AND HomePhone='{}'".format(self.patient_name, self.patient_home_phone)
+            cursor.execute(query)
+            patient_username=cursor.fetchall()[0][0]
+
+            query = "SELECT SystolicBP, DiastolicBP FROM (VISIT AS V JOIN PATIENT AS P ON PUsername=P.Username) WHERE P.Username='{}' AND V.DateVisit='{}'".format(patient_username, date_selected)
+            cursor.execute(query)
+            result=cursor.fetchall()[0]
+            
+            date_visit.delete(0, END)
+            date_visit.insert(0, date_selected)
+
+            systolic_entry.delete(0, END)
+            systolic_entry.insert(0, result[0])
+
+            diastolic_entry.delete(0, END)
+            diastolic_entry.insert(0, result[1])
+
+            query = "SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = '{}' AND DateVisit = '{}' AND DUsername = '{}'".format(patient_username, date_selected, self.username)
+            cursor.execute(query)
+            diagnosis=cursor.fetchall()[0][0]
+
+            diagnosis_entry.delete(1.0, END)
+            diagnosis_entry.insert(END,  diagnosis)
+
+            query = "SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE DateVisit = '{}' AND DUsername = '{}' AND PUsername = '{}'".format(date_selected, self.username, patient_username)
+            cursor.execute(query)
+            result = list(cursor.fetchall())
+
+            for i in range(len(result)):
+                for j in range(len(result[i])):
+                    label = Label(meds_frame, text=result[i][j], bg='white', bd=4)
+                    label.grid(row=i+1, column=j, padx=1, pady=1, sticky='NSEW')
+
+        date_visits_lbox = Listbox(visit_frame, listvariable=self.dateVisits, width=12, height=5)
+        date_visits_lbox.grid(row=1, column=0, padx=3, sticky=NW)
+        date_visits_lbox.bind("<Double-1>", UpdateViewHistory)
+
+        #Vertical Separator
+        separator = ttk.Separator(visit_frame, orient=VERTICAL)
+        separator.grid(row=0, column=1, sticky='NSW', rowspan=4)
+
+        #Visit History Frame
+        attributes = ['Date of Visit: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
+        count = 0
+        for attribute in attributes:
+            attribute_label = Label(visit_frame, text=attribute, bg=color)
+            attribute_label.grid(row=count, column=1, padx=10, pady=10, sticky=NW)
+            count += 1
+
+        date_visit = Entry(visit_frame, width=15)
+        date_visit.grid(row=0, column=2, sticky=W)
+
+        bloodFrame = Frame(visit_frame)
+        bloodFrame.grid(row=1, column=2, sticky=W)
+
+        systolic_lbl = Label(bloodFrame, text='Systolic: ', bg=color)
+        systolic_lbl.grid(row=0, column=0)
+
+        systolic_entry = Entry(bloodFrame, width=5)
+        systolic_entry.grid(row=0, column=1)
+
+        diastolic_lbl = Label(bloodFrame, text='Diastolic: ', bg=color)
+        diastolic_lbl.grid(row=0, column=2, sticky=N)
+
+        diastolic_entry = Entry(bloodFrame, width=5)
+        diastolic_entry.grid(row=0, column=3)
+
+        diagnosis_entry = Text(visit_frame, width=30, height=4)
+        diagnosis_entry.grid(row=2, column=2, sticky=W)
+
+        meds_frame = Frame(visit_frame, bg='black')
+        meds_frame.grid(row=3, column=2)
+
+        meds_col_names = ['Medicine Name', 'Dosage', 'Duration', 'Notes']
+
+        for col in range(len(meds_col_names)):
+            label = Label(meds_frame, text=meds_col_names[col], bg='white', bd=4)
+            label.grid(row=0, column=col, padx=1, pady=1, sticky='NSEW')
+
+        query = "SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE PUsername='{}' AND DUsername='{}' AND DateVisit='{}'"
+
+        self.viewHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
+
+    def PatVisitHistory(self):
+        self.patientVisitsWin = Toplevel()
+        pvw = self.patientVisitsWin
+        pvw.config(bg=color)
+        pvw.title('Patient Visit History')
+        
+        #Top Banner
+        banner = Label(pvw, bg=color, width=450, height=50, text='Patient Visit History', padx=10,
+                       font=('Berlin Sans FB', 18), image=self.photo,
+                       compound=RIGHT, anchor=N)
+        banner.grid(row=0, columnspan=4)
+
+        #Main Body
+        name = Label(pvw, text='Name: ', bg=color)
+        name.grid(row=1, column=0, sticky=E)
+
+        name = Entry(pvw, width=20)
+        name.grid(row=1, column=1, pady=5, sticky=W)
+
+        phone = Label(pvw, text='Phone: ', bg=color)
+        phone.grid(row=1, column=2, sticky=E)
+
+        home_phone = Entry(pvw, width=15)
+        home_phone.grid(row=1, column=3, sticky=W)
+
+        patient_frame = Frame(pvw, bg='black')
+        patient_frame.grid(row=2, column=0, columnspan=3, sticky=W)
+
+        
+
+        def ViewHistory():
+            visit_frame = Frame(pvw, bg=color)
+            visit_frame.grid(row=3, columnspan=4, padx=2, pady=2)
+            
+            date_visits_label = Label(visit_frame, text='Dates of Visit', bg=color)
+            date_visits_label.grid(row=0, column=0, sticky=NW)
+            
+            #Date Visits Listbox
+            username = self.username
+            cursor = self.connect()
+            cursor.execute("SELECT V.DateVisit FROM VISIT AS V LEFT JOIN PATIENT AS P ON PUsername=P.Username WHERE P.Name='{}' OR P.HomePhone='{}'".format(name.get(), home_phone.get()))
+            result = cursor.fetchall()
+            date_visits=()
+            for date in result:
+                date_visits += (date[0],)
+            
+            self.dateVisits = StringVar(value=date_visits)
+
+            def UpdateViewHistory(e):
+                index = date_visits_lbox.curselection()[0]
+                date_selected = date_visits_lbox.get(index, index)[0]
+                query = "SELECT Username FROM PATIENT WHERE Name='{}' AND HomePhone='{}'".format(self.patient_name, self.patient_home_phone)
+                cursor.execute(query)
+                patient_username=cursor.fetchall()[0][0]
+
+                query = "SELECT SystolicBP, DiastolicBP FROM (VISIT AS V JOIN PATIENT AS P ON PUsername=P.Username) WHERE P.Username='{}' AND V.DateVisit='{}'".format(patient_username, date_selected)
+                cursor.execute(query)
+                result=cursor.fetchall()[0]
+                
+                date_visit.delete(0, END)
+                date_visit.insert(0, date_selected)
+
+                systolic_entry.delete(0, END)
+                systolic_entry.insert(0, result[0])
+
+                diastolic_entry.delete(0, END)
+                diastolic_entry.insert(0, result[1])
+
+                query = "SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = '{}' AND DateVisit = '{}' AND DUsername = '{}'".format(patient_username, date_selected, self.username)
+                cursor.execute(query)
+                diagnosis=cursor.fetchall()[0][0]
+
+                diagnosis_entry.delete(1.0, END)
+                diagnosis_entry.insert(END,  diagnosis)
+
+                query = "SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE DateVisit = '{}' AND DUsername = '{}' AND PUsername = '{}'".format(date_selected, self.username, patient_username)
+                cursor.execute(query)
+                result = list(cursor.fetchall())
+
+                for i in range(len(result)):
+                    for j in range(len(result[i])):
+                        label = Label(meds_frame, text=result[i][j], bg='white', bd=4)
+                        label.grid(row=i+1, column=j, padx=1, pady=1, sticky='NSEW')
+
+            date_visits_lbox = Listbox(visit_frame, listvariable=self.dateVisits, width=12, height=5)
+            date_visits_lbox.grid(row=1, column=0, padx=3, sticky=NW)
+            date_visits_lbox.bind("<Double-1>", UpdateViewHistory)
+
+            #Vertical Separator
+            separator = ttk.Separator(visit_frame, orient=VERTICAL)
+            separator.grid(row=0, column=1, sticky='NSW', rowspan=4)
+
+            #Visit History Frame
+            attributes = ['Date of Visit: ', 'Blood Pressure: ', 'Diagnosis: ', 'Medications Prescribed: ']
+            count = 0
+            for attribute in attributes:
+                attribute_label = Label(visit_frame, text=attribute, bg=color)
+                attribute_label.grid(row=count, column=1, padx=10, pady=10, sticky=NW)
+                count += 1
+
+            date_visit = Entry(visit_frame, width=15)
+            date_visit.grid(row=0, column=2, sticky=W)
+
+            bloodFrame = Frame(visit_frame)
+            bloodFrame.grid(row=1, column=2, sticky=W)
+
+            systolic_lbl = Label(bloodFrame, text='Systolic: ', bg=color)
+            systolic_lbl.grid(row=0, column=0)
+
+            systolic_entry = Entry(bloodFrame, width=5)
+            systolic_entry.grid(row=0, column=1)
+
+            diastolic_lbl = Label(bloodFrame, text='Diastolic: ', bg=color)
+            diastolic_lbl.grid(row=0, column=2, sticky=N)
+
+            diastolic_entry = Entry(bloodFrame, width=5)
+            diastolic_entry.grid(row=0, column=3)
+
+            diagnosis_entry = Text(visit_frame, width=30, height=4)
+            diagnosis_entry.grid(row=2, column=2, sticky=W)
+
+            meds_frame = Frame(visit_frame, bg='black')
+            meds_frame.grid(row=3, column=2)
+
+            meds_col_names = ['Medicine Name', 'Dosage', 'Duration', 'Notes']
+
+            for col in range(len(meds_col_names)):
+                label = Label(meds_frame, text=meds_col_names[col], bg='white', bd=4)
+                label.grid(row=0, column=col, padx=1, pady=1, sticky='NSEW')
+
+            query = "SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE PUsername='{}' AND DUsername='{}' AND DateVisit='{}'"
+
+        def SearchPatient():
+            col_names = ['Patient Name', 'Phone Number']
+
+            for col in range(len(col_names)):
+                label = Label(patient_frame, text=col_names[col], bg='white', bd=4)
+                label.grid(row=0, column=col, padx=1, pady=1, sticky=NSEW)
+
+                space = Label(patient_frame, text=' ', bg='white', bd=4)
+                space.grid(row=0, column=3, columnspan=2, padx=1, pady=1, sticky=NSEW)
+                
+            cursor = self.connect()
+            cursor.execute("SELECT Name, HomePhone FROM PATIENT WHERE Name=%s OR HomePhone=%s", (name.get(), home_phone.get()))
+            result = list(cursor.fetchall())
+            self.patient_name = result[0][0]
+            self.patient_home_phone = result[0][1]
+            
+            for i in range(len(result)):
+                for j in range(len(result[i])):
+                    label = Label(patient_frame, text=result[i][j], bg='white', bd=4)
+                    label.grid(row=i+1, column=j, padx=1, pady=1, sticky=NSEW)
+
+                    button_frame = Frame(patient_frame, bg='white', bd=4)
+                    button_frame.grid(row=i+1, column=3, padx=1, pady=1, sticky=NSEW)
+
+                    view = ttk.Button(button_frame, text='View History', command=ViewHistory)
+                    view.grid(row=0, column=0, padx=5)
+
+                    record = ttk.Button(button_frame, text='Record Visit', command=self.recordVisit)
+                    record.grid(row=0, column=1, padx=5)
+                                
+        search = ttk.Button(pvw, text='Search', command=SearchPatient)
+        search.grid(row=1, column=4, padx=5, pady=5)
+
     def recordVisit(self):
 
         self.recordWin = Toplevel(LogWin)
@@ -840,6 +1115,18 @@ class GTMS:
 
         def submitVisit():
 
+            def findDiscountVisit(self):
+
+                query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(patient)
+
+                cursor = self.connect()
+                cursor.execute(query)
+                income = cursor.fetchone()[0]
+                if income == '0-15000' or income == '15000-25000':
+                    return True
+                else:
+                    return False
+
             visitDate = dateVisitEntry.get()
             patientName = patientNameEntry.get()
             SBP = systolic_entry.get()
@@ -862,7 +1149,7 @@ class GTMS:
             else:
                 bill = 65
 
-            if self.findDiscount():
+            if findDiscountVisit():
                 bill = bill*0.2
 
             query = 'INSERT INTO VISIT VALUES ("{}", "{}", "{}", {}, {}, {})'.format(visitDate,self.username,patient,bill,SBP,DBP)
@@ -1026,9 +1313,9 @@ class GTMS:
         def searchPatient():
 
             self.patientResult = nameEntry.get()
+            cursor = self.connect()
             
             query = 'SELECT Username,Name,HomePhone FROM PATIENT WHERE Name="{}"'.format(self.patientResult)
-            cursor = self.connect()
             cursor.execute(query)
             result = list(cursor.fetchall())
 
@@ -1037,9 +1324,17 @@ class GTMS:
 
             info = []
             for person in result:
+                phone = person[2]
                 patientUser = person[0]
                 formatPhone = person[2][0:3]+'-'+person[2][3:6]+'-'+person[2][6:10]
                 info.append([person[1], formatPhone])
+
+            query = 'SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}" AND Status="Accepted"'\
+                    .format(patientUser,self.username)
+            cursor.execute(query)
+            if cursor.fetchone()[0] == 0:
+                mbox.showerror("ERROR", "You have not scheduled this patient for surgery")
+                return
 
 
             headers = ['          Patient           ',
@@ -1154,6 +1449,18 @@ class GTMS:
 
             def recordClicked():
 
+                def findDiscountSurgery():
+
+                    query = 'SELECT AnnualIncome FROM PATIENT WHERE Name="{}" AND HomePhone = "{}"'.format(patientEntry.get(),phone)
+
+                    cursor = self.connect()
+                    cursor.execute(query)
+                    income = cursor.fetchone()[0]
+                    if income == '0-15000' or income == '15000-25000':
+                        return True
+                    else:
+                        return False
+
                 proceduretype = self.procedure.get()
                 if proceduretype == 'Select a Procedure':
                     mbox.showerror('ERROR', 'Please Enter a Procedure')
@@ -1183,22 +1490,22 @@ class GTMS:
 
                 ##Check if all preop meds are corresponding to applicable CPT
                 for med in medsList:
-                    query = 'SELECT COUNT(*) FROM PREOPERATIVE_MEDICATION WHERE CPT="{}" AND PreOpMed="{}"'.format(CPT,med)
-                    cursor.execute(query)
-                    print(cursor.fetchone()[0])
-                    # if cursor.fetchone()[0] == 0:
-                    #     mbox.showerror("ERROR", "Unauthorized Medcation Input")
-                    #     return
+                    if med:
+                        query = 'SELECT COUNT(*) FROM PREOPERATIVE_MEDICATION WHERE CPT="{}" AND PreOpMed="{}"'.format(CPT,med)
+                        cursor.execute(query)
+                        if cursor.fetchone()[0] == 0:
+                            mbox.showerror("ERROR", "Unauthorized Medcation Input")
+                            return
 
                 query = 'SELECT Cost FROM SURGERY WHERE CPT="{}"'.format(CPT)
                 cursor.execute(query)
                 cost = cursor.fetchone()[0]
-                if self.findDiscount():
-                    cost = cost*0.5
+                if findDiscountSurgery():
+                    cost = float(cost)*0.5
 
                 ##Insert info into PERFORMS_SURGERY
                 query = 'INSERT INTO PERFORMS_SURGERY VALUES ("{}","{}","{}","{}","{}","{}","{}","{}")'\
-                        .format(self.username,CPT,patientUser,surgeryStart,surgeryEnd,NoAssists,comps,Anesthesia)
+                        .format(self.username,CPT,patientUser,surgeryStart,surgeryEnd,comps,NoAssists,anesthesia)
                 cursor.execute(query)
 
                 ##Query for date of appointment
@@ -1207,12 +1514,14 @@ class GTMS:
                 operationDay = str(cursor.fetchone()[0])
 
                 ##INSERT into VISIT table
-                query = 'INSERT INTO VISIT VALUES ({},{},{},{},{},{})'.format(operationDay,self.username,patientUser,cost)
+                query = 'INSERT INTO VISIT (DateVisit,DUsername,PUsername,BillingAmt) VALUES ("{}","{}","{}",{})'.format(operationDay,self.username,patientUser,cost)
                 cursor.execute(query)
 
                 ##DELETE from REQUEST_APPOINTMENT
                 query = 'DELETE FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}"'.format(patientUser,self.username)
                 cursor.execute(query)
+
+                mbox.showinfo("Surgery Recorded","Surgery has been recorded!")
 
             buttonFrame = Frame(bottomFrame, background=color)
             buttonFrame.grid(row=3, column=0, columnspan=2, padx=10, pady=15, sticky='EW')
@@ -1415,10 +1724,6 @@ class GTMS:
 
         self.DocReportWin.protocol("WM_DELETE_WINDOW", self.DocReportToAdminWin)
 
-
-    def SurgeryReport(self):
-        pass
-
     def PatientReport(self):
         pass
 
@@ -1471,8 +1776,6 @@ class GTMS:
         #jborjas31
                                   
     def VisitHistory(self):
-
-        color = '#cfb53b'
 
         self.visitHistWin = Toplevel(LogWin)
         visitHistWin = self.visitHistWin
@@ -1778,7 +2081,11 @@ class GTMS:
         cursor = self.connect()
         query = 'SELECT Username FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(docFname,docLname)
         cursor.execute(query)
-        consulting_doc = cursor.fetchone()
+        try:
+            consulting_doc = cursor.fetchone()[0]
+        except:
+            mbox.showerror("ERROR", "The Doctor you entered is not in the GTMS system")
+            return
         date_prescription = self.prescrip_year.get() + '-' + self.prescrip_month.get() + '-' + self.prescrip_day.get()
 
         query = 'SELECT COUNT(*) FROM PRESCRIPTION WHERE MedName="{}" AND Dosage="{}" AND Duration="{}" AND DUsername="{}" AND DateVisit="{}" AND PUsername="{}" AND Ordered="N"'\
@@ -1896,21 +2203,21 @@ class GTMS:
         cursor = self.connect()
 
         name = recipient.split()
-        query = 'SELECT * FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[-2], name[-1])
+        query = 'SELECT COUNT(*) FROM DOCTOR WHERE FName="{}" AND LName="{}"'.format(name[-2], name[-1])
         cursor.execute(query)
         recipUsername = cursor.fetchone()
         if recipUsername[0]:
             self.recipientType = 'doctor'
         else:
             self.recipientType = 'patient'
-            query = 'SELECT Username FROM PATIENT WHERE FName="{}" AND LName="{}"'.format(name[0], name[1])
+            query = 'SELECT Username FROM PATIENT WHERE Name="{}"'.format(name[0]+' '+name[1])
             cursor.execute(query)
             recipUsername = cursor.fetchone()
             recipUsername = recipUsername[0]
 
 
         if self.userType == 'patient':
-            query = '''INSERT INTO PATIENT_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status) VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''.format(self.username, recipient, message, "Unread")
+            query = '''INSERT INTO PATIENT_TO_DOCTOR (Sender,Recipient,Content,DateTime,Status) VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''.format(self.username, recipUsername[0], message, "Unread")
             cursor.execute(query)
             mbox.showinfo(title='Message Sent', message='Message Sent!')
             self.box.delete("1.0", END)
@@ -1933,12 +2240,12 @@ class GTMS:
             elif self.recipientType == 'patient':
                 query = '''INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,DateTime,Status)
                         VALUES ("{}","{}","{}",CURRENT_TIMESTAMP,"{}")'''\
-                        .format(self.username, recipUsername, message, "Unread")
+                        .format(self.username, recipUsername[0], message, "Unread")
                 cursor.execute(query)
                 mbox.showinfo(title='Message Sent', message='Message Sent!')
                 self.box.delete("1.0", END)
                 self.sendTo.set('----')
-                self.CommToPatHP()
+                self.CommToDocHP()
 
 
         cursor.close()
@@ -1993,32 +2300,30 @@ class GTMS:
         def AcceptAppt( e):
             for x in range(len(acceptDict)):
                 if e.widget == acceptDict[x]:
-
-                    
-                    Pname = requestList[x][0]
+                    patient_name = requestList[x][0]
+                    doc_username = self.username
 
                     cursor = self.connect()
-                    query = 'SELECT Username FROM PATIENT WHERE Name = "{}"'.format(Pname)
+                    query = 'SELECT Username FROM PATIENT WHERE Name = "{}"'.format(patient_name)
                     cursor.execute(query)
-                    patient = cursor.fetchone()
+                    patient_username = cursor.fetchone()
 
-                    query = 'SELECT FName, LName FROM DOCTOR WHERE Username = "{}"'.format(self.username)
+                    query = 'SELECT FName, LName FROM DOCTOR WHERE Username = "{}"'.format(doc_username)
                     cursor.execute(query)
                     dName = cursor.fetchone()
                     doctor = 'Dr. '+dName[0] + ' ' + dName[1]
 
                     message = 'Appointment Accepted \n\n'+ 'Day: '+ str(requestList[x][1]) +'\n'+ 'Time: ' + requestList[x][2] + '\n' + 'Specialist: ' + doctor
 
-                    query = 'INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,Status,DateTime) VALUES ("{}","{}","{}","Unread",CURRENT_TIMESTAMP)'.format(self.username,patient[0],message)
-
+                    query = 'INSERT INTO DOCTOR_TO_PATIENT (Sender,Recipient,Content,Status,DateTime) VALUES ("{}","{}","{}","Unread",CURRENT_TIMESTAMP)'.format(doc_username,patient_username[0],message)
                     cursor.execute(query)
 
-                    query = 'UPDATE REQUEST_APPOINTMENT SET Status="Accepted" WHERE DUsername="{}" AND PUsername="{}"'.format(self.username,patient[0])
+                    query = 'UPDATE REQUEST_APPOINTMENT SET Status="Accepted" WHERE DUsername="{}" AND PUsername="{}" AND Date="{}"'.format(doc_username,patient_username[0], str(requestList[x][1]))
                     cursor.execute(query)
-                    cursor.close()
-                    self.db.commit()
-                    self.db.close()
 
+                    frameDict[x].destroy()
+
+                    self.db.commit()                   
 
         def DeclineAppt( e):
             for x in range(len(declineDict)):
@@ -2035,29 +2340,31 @@ class GTMS:
                     cursor.execute(query)
                     frameDict[x].destroy()
 
-        requestFrame = Frame(bottomFrame, bg=color)
-        requestFrame.grid(row=0, column=0, sticky='NSEW', padx=15, pady=15)
+        appt_frame = Frame(self.requestWin, bg='black')
+        appt_frame.grid(row=1, column=0, padx=10, pady=10)
 
-        for x in range(len(headers)):
-            tableFrame = Frame(requestFrame, borderwidth=1, background='black')
-            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
-            label = Label(tableFrame, text=headers[x], background=color)
-            label.pack(fill=BOTH)
+        col_names = ['Name', 'Date', 'Scheduled Time']
 
-        for x in range(len(requestList)):
-            for y in range(len(requestList[x])):
-                tableFrame = Frame(requestFrame, borderwidth=1, background=color)
-                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1, pady=5)
-                label = Label(tableFrame, text=requestList[x][y], background='white')
-                label.pack(fill=BOTH)
+        for i in range(len(col_names)):
+            col_name = Label(appt_frame, text=col_names[i], bg='white')
+            col_name.grid(row=0, column=i, padx=1, pady=1, sticky=NSEW)
 
-            acceptDict[x] = ttk.Button(requestFrame, width=8, text='Accept')
-            acceptDict[x].bind("<ButtonRelease-1>", AcceptAppt)
-            acceptDict[x].grid(row=x+1, column=3, padx=5)
+        for i in range(len(requestList)):
+            frameDict[i] = Frame(appt_frame, bg='black')
+            frameDict[i].grid(row=i+1, column=0, columnspan=5, sticky='NSEW')
+            for j in range(len(requestList[i])):
+                
+                label = Label(frameDict[i], text=requestList[i][j], bg='white', bd=4)
+                label.grid(row=i+1, column=j, padx=1, pady=1, sticky=NSEW)
+
+            acceptDict[i] = ttk.Button(frameDict[i], width=8, text='Accept')
+            acceptDict[i].bind("<ButtonRelease-1>", AcceptAppt)
+            acceptDict[i].grid(row=i+1, column=3, padx=5)
             
-            declineDict[x] = ttk.Button(requestFrame, width=8, text='Decline')
-            declineDict[x].bind("<ButtonRelease-1>", DeclineAppt)
-            declineDict[x].grid(row=x+1, column=4, padx=5)
+            declineDict[i] = ttk.Button(frameDict[i], width=8, text='Decline')
+            declineDict[i].bind("<ButtonRelease-1>", DeclineAppt)
+            declineDict[i].grid(row=i+1, column=4, padx=5)
+
 
         self.requestWin.protocol("WM_DELETE_WINDOW", self.requestsToDocHP)
 
@@ -2453,7 +2760,7 @@ class GTMS:
 
             patient_username = self.username
             doc_username = username
-            cursor.execute("SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername='%s'" % (patient_username))
+            cursor.execute("SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername='%s' AND DUsername='%s'" % (patient_username, doc_username))
             result=self.c.fetchall()
             #If user is visiting for first time
             if result[0][0] == 0:
@@ -2461,8 +2768,11 @@ class GTMS:
                 pattern = '(\d+:\d+:00 - \d+:\d+:00)'
                 scheduled_time = findall(pattern, scheduled_appt)[0]
                 cursor.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Pending')" % (patient_username, doc_username, self.apptDate, scheduled_time))
+                To,From = scheduled_time.split('-')
+                query = "DELETE FROM AVAILABILITY WHERE Username='{}' AND From_Time='{}' AND To_Time='{}'".format(doc_username, To, From)
+                cursor.execute(query)
+                mbox.showinfo("Appointment Requests", "Appointment requests complete.")
                 self.db.commit()
-                info = mbox.showinfo("Appointment Requests", "Appointment requests complete.")
                 self.apptWin.destroy()
             #Wait for request to be accepted
             else:
@@ -2568,20 +2878,7 @@ class GTMS:
             self.c.execute("SELECT COUNT(*) FROM DOCTOR WHERE Username= %s", (username))
             result = self.c.fetchall()
             if result[0][0]  == 1:
-                self.doctorProfile()
-
-    def findDiscount(self):
-
-        query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(patient)
-
-        cursor = self.connect()
-        cursor.execute(query)
-        income = cursor.fetchone()[0]
-        if income == '0-15000' or income == '15000-25000':
-            return True
-        else:
-            return False
-                
+                self.doctorProfile()  
 
     def patHPToAppts(self):
 
@@ -2591,7 +2888,7 @@ class GTMS:
     def patHPToVisitHist(self):
 
         self.patHPWin.withdraw()
-        self.visitHistWin.deiconify()
+        self.viewHistWin.deiconify()
 
     def patHPToOrderMeds(self):
 
@@ -2625,7 +2922,7 @@ class GTMS:
 
     def visitHistToHP(self):
 
-        self.visitHistWin.withdraw()
+        self.viewHistWin.withdraw()
         self.patHPWin.deiconify()
 
     def orderToHP(self):
@@ -2706,8 +3003,8 @@ class GTMS:
         self.patientProfile()
         self.patientWin.withdraw()
 
-        self.VisitHistory()
-        self.visitHistWin.withdraw()
+        self.PatViewHistory()
+        self.viewHistWin.withdraw()
 
         self.OrderMeds()
         self.orderWin.withdraw()
