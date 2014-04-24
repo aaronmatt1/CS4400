@@ -1351,9 +1351,41 @@ class GTMS:
         # INNER JOIN VISIT AS V ON D.Username = V.DUsername
         # GROUP BY D.Username
 
-    def Billing(self):
-        pass
+    def Billing(self, username):
+        #this should return a real number
+        totalCostVisit = """SELECT SUM(BillingAmt) as "TotalCost"
+	                            FROM VISIT
+	                    WHERE PUsername=%s""" % username
+        cursor = self.connect()
+        totalCostNum = cursor.execute(totalCostVisit)
+        costbyVisit = """SELECT DateVisit, BillingAmount as Cost
+	                    FROM VISIT
+	                    WHERE PUsername = %s
+	                    GROUP BY DateVisit""" % username
 
+        costByVisitData = cursor.execute(costbyVisit)
+
+        surgeryCostByType = """SELECT t1.Type, t1.Cost AS Cost, t1.Type
+		                        FROM PERFORMS_SURGERY AS PS
+		                        INNER JOIN
+                                (SELECT COST, CPT, Type FROM SURGERY) t1
+                                ON t1.CPT = PS.CPT
+		                        WHERE PS.PUsername =%s
+		                        GROUP BY t1.Type""" % username
+        sCostByTypeData = cursor.execute(surgeryCostByType)
+        #this should return a real number
+
+        totalSurgeryCost = """SELECT Sum(t1.Cost)
+		                        FROM PERFORMS_SURGERY AS PS
+		                        INNER JOIN
+                                (SELECT CPT,Cost FROM SURGERY) as t1
+                                ON t1.CPT = PS.CPT
+		                        WHERE PS.PUsername =%s""" % username
+        totalSurgeryCostNum = cursor.execute(totalSurgeryCost)
+        cursor.close()
+        totalCost = totalCostNum + totalSurgeryCostNum
+        return (costByVisitData,totalCostNum,surgeryCostByType,totalCost)
+        #jborjas31
                                   
     def VisitHistory(self):
 
