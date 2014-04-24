@@ -206,6 +206,10 @@ class GTMS:
                                 self.userType = 'doctor'
                                 self.newRegWin.withdraw()
                                 self.doctorProfile()
+                            else:
+                                self.userType = 'admin'
+                                self.newRegWin.withdraw()
+                                self.adminHomePage()
                         else:
                             error = mbox.showerror("Registration Error", "Username is already in use.")
                             return
@@ -302,21 +306,26 @@ class GTMS:
 
         self.dobEntry = ttk.Entry(bottomFrame, width=30)
         self.dobEntry.grid(row=1, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='YYYY-MM-DD',background=color).grid(row=1, column=2, columnspan=2, sticky='W')
 
         self.addressEntry = ttk.Entry(bottomFrame, width=30)
         self.addressEntry.grid(row=3, column=1, padx=10, pady=10, sticky="NSEW")
 
         self.homePhoneEntry = ttk.Entry(bottomFrame, width=30)
         self.homePhoneEntry.grid(row=4, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='XXXXXXXXXX',background=color).grid(row=4, column=2, columnspan=2, sticky='W')
 
         self.workPhoneEntry = ttk.Entry(bottomFrame, width=30)
         self.workPhoneEntry.grid(row=5, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='XXXXXXXXXX',background=color).grid(row=5, column=2, columnspan=2, sticky='W')
 
         self.weightEntry = ttk.Entry(bottomFrame, width=30)
         self.weightEntry.grid(row=6, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='lbs',background=color).grid(row=6, column=2, columnspan=2, sticky='W')
 
         self.heightEntry = ttk.Entry(bottomFrame, width=30)
         self.heightEntry.grid(row=7, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='inches',background=color).grid(row=7, column=2, columnspan=2, sticky='W')
 
         self.allergiesEntry = ttk.Entry(bottomFrame, width=30)
         self.allergiesEntry.grid(row=9, column=1, padx=10, pady=10, sticky="NSEW")
@@ -467,9 +476,11 @@ class GTMS:
 
         self.DdobEntry = ttk.Entry(bottomFrame, width=30)
         self.DdobEntry.grid(row=3, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='YYYY-MM-DD',background=color).grid(row=3, column=2, columnspan=2, sticky='W')
 
         self.DworkPhoneEntry = ttk.Entry(bottomFrame, width=30)
         self.DworkPhoneEntry.grid(row=4, column=1, padx=10, pady=10, sticky="NSEW")
+        Label(bottomFrame, text='XXXXXXXXXX',background=color).grid(row=4, column=2, columnspan=2, sticky='W')
 
         self.roomEntry = ttk.Entry(bottomFrame, width=30)
         self.roomEntry.grid(row=6, column=1, padx=10, pady=10, sticky="NSEW")
@@ -902,8 +913,6 @@ class GTMS:
             label = Label(meds_frame, text=meds_col_names[col], bg='white', bd=4)
             label.grid(row=0, column=col, padx=1, pady=1, sticky='NSEW')
 
-        query = "SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE PUsername='{}' AND DUsername='{}' AND DateVisit='{}'"
-
         self.viewHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
 
     def PatVisitHistory(self):
@@ -1204,7 +1213,7 @@ class GTMS:
 
         dosageEntry = Entry(prescriptionFrame, width=25)
         dosageEntry.grid(row=2,column=1, sticky='W')
-        Label(prescriptionFrame, text='mg/day', background=color).grid(row=2,column=2, columnspan=5, sticky='W')
+        Label(prescriptionFrame, background=color).grid(row=2,column=2, columnspan=5, sticky='W')
 
         durationEntry = Entry(prescriptionFrame, width=5)
         durationEntry.grid(row=3, column=1, padx=2)
@@ -2671,7 +2680,7 @@ class GTMS:
         if self.userType == 'patient':
             tableName = 'DOCTOR_TO_PATIENT'
             query = '''SELECT Sender, Content, Status, DateTime
-                    FROM '''+tableName+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
+                    FROM '''+tableName+''' WHERE Recipient = "{}"'''.format(self.username)
             cursor.execute(query)
             unreadMessages = list(cursor.fetchall())
 
@@ -2682,13 +2691,13 @@ class GTMS:
         elif self.userType == 'doctor':
             tableName = ['DOCTOR_TO_DOCTOR', 'PATIENT_TO_DOCTOR']
             query = '''SELECT Sender, Content, Status, DateTime
-                    FROM '''+tableName[0]+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
+                    FROM '''+tableName[0]+''' WHERE Recipient = "{}"'''.format(self.username)
 
             cursor.execute(query)
             unreadMessages = list(cursor.fetchall())
 
             query = '''SELECT Sender, Content, Status, DateTime
-                    FROM '''+tableName[1]+''' WHERE Status = "Unread" AND Recipient = "{}"'''.format(self.username)
+                    FROM '''+tableName[1]+''' WHERE Recipient = "{}"'''.format(self.username)
 
             cursor.execute(query)
             unreadMessages2 = list(cursor.fetchall())
