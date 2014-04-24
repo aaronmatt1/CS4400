@@ -2045,17 +2045,18 @@ class GTMS:
             label.pack(fill=BOTH)
 
         for x in range(len(requestList)):
+            frameDict[x] = Frame(requestFrame, borderwidth=1, background=color)
+            frameDict[x].grid(row=x+1, column=0, columnspan=5, sticky='NSEW', padx=1, pady=5)
             for y in range(len(requestList[x])):
-                tableFrame = Frame(requestFrame, borderwidth=1, background=color)
-                tableFrame.grid(row=x+1, column=y, sticky='NSEW', padx=1, pady=5)
-                label = Label(tableFrame, text=requestList[x][y], background='white')
-                label.pack(fill=BOTH)
+                
+                label = Label(frameDict[x], text=requestList[x][y], background='white')
+                label.grid(row=x+1, column=y, padx=1, pady=1, sticky=NSEW)
 
-            acceptDict[x] = ttk.Button(requestFrame, width=8, text='Accept')
+            acceptDict[x] = ttk.Button(frameDict[x], width=8, text='Accept')
             acceptDict[x].bind("<ButtonRelease-1>", AcceptAppt)
             acceptDict[x].grid(row=x+1, column=3, padx=5)
             
-            declineDict[x] = ttk.Button(requestFrame, width=8, text='Decline')
+            declineDict[x] = ttk.Button(frameDict[x], width=8, text='Decline')
             declineDict[x].bind("<ButtonRelease-1>", DeclineAppt)
             declineDict[x].grid(row=x+1, column=4, padx=5)
 
