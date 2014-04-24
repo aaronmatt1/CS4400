@@ -1735,6 +1735,26 @@ class GTMS:
 
     def SurgeryReport(self):
 
+        self.SReportWin = Toplevel(LogWin)
+        self.SReportWin.title('Patient Report')
+        self.SReportWin.config(bg=color)
+        
+        topFrame = Frame(self.SReportWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.SReportWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.SReportWin)
+        bottomFrame.grid(row=2, column=0, pady=15)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = ttk.Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = ttk.Label(topFrame, text="Patient Report", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
         cursor = self.connect()
         
         query = '''SELECT S.Type, SUM( NoAssistants ) AS  "No. of Doctors Performing Surgery"
@@ -1746,29 +1766,70 @@ class GTMS:
                 GROUP BY TYPE , CPT
                 )S ON S.CPT = PS.CPT
                 GROUP BY S.Type'''
+        ##Gives Type and Number of assistants
         cursor.execute(query)
         numAssisbySurgery = list(cursor.fetchall())
 
-        query = '''SELECT PS.CPT,COUNT( * ) AS  "No of Procedures"
+        query = '''SELECT t1.Type,PS.CPT,COUNT( * ) AS  "No of Procedures"
                 FROM PERFORMS_SURGERY AS PS
                 INNER JOIN (
                 SELECT CPT,
                 TYPE FROM SURGERY
                 )t1 ON t1.CPT = PS.CPT
                 GROUP BY PS.CPT'''
+        ##Gives Type, CPT and Number of Procedures
         cursor.execute(query)
         numSurgeriesCPT = list(cursor.fetchall())
 
-        query = '''SELECT PS.DUsername,SUM( S.Cost ) AS  "Total Billing"
+        query = '''SELECT S.Type,SUM( S.Cost ) AS  "Total Billing"
                 FROM PERFORMS_SURGERY AS PS
                 INNER JOIN (
 
-                SELECT CPT, Cost
+                SELECT CPT, Cost, Type
                 FROM SURGERY
                 )S ON S.CPT = PS.CPT
                 GROUP BY PS.CPT'''
+        ##Gives Type and total billing for type
         cursor.execute(query)
         totBillingSurgeries = list(cursor.fetchall())
+
+        TypeDict = {}
+        for x in numSurgeriesCPT:
+            TypeDict[x[0]] = [x[1],x[2]]
+
+        for x in numAssisbySurgery:
+            TypeDict[x[0]].append(x[1])
+
+        for x in totBillingSurgeries:
+            TypeDict[x[0]].append(x[1])
+
+        headers = ['     Surgery Type     ',
+                        '    CPT Code   ',
+                        '  Number of Procedures  ',
+                        '  Number of Doctors Performing  ',
+                        '  Total Billing ($)  ']
+
+        resultFrame = Frame(bottomFrame, background=color)
+        resultFrame.grid(row=1, column=0, columnspan=3)
+
+        for x in range(len(headers)):
+            tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+            label = Label(tableFrame, text=headers[x], background=color)
+            label.pack(fill=BOTH)
+        
+        rows=1
+        for x in TypeDict.keys():
+            tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=rows, column=0, sticky='EW', padx=1)
+            label = Label(tableFrame, text=x, background='white')
+            label.pack(fill=BOTH)
+            for y in range(len(TypeDict[x])):
+                tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=rows, column=y+1, sticky='EW', padx=1)
+                label = Label(tableFrame, text=TypeDict[x][y], background='white')
+                label.pack(fill=BOTH)
+            rows += 1
 
 
     def PatientReport(self):
