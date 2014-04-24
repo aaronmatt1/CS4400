@@ -2343,6 +2343,7 @@ class GTMS:
         appt_frame = Frame(self.requestWin, bg='black')
         appt_frame.grid(row=1, column=0, padx=10, pady=10)
 
+<<<<<<< HEAD
         col_names = ['Name', 'Date', 'Scheduled Time']
 
         for i in range(len(col_names)):
@@ -2365,6 +2366,31 @@ class GTMS:
             declineDict[i].bind("<ButtonRelease-1>", DeclineAppt)
             declineDict[i].grid(row=i+1, column=4, padx=5)
 
+=======
+        for x in range(len(headers)):
+            tableFrame = Frame(requestFrame, borderwidth=1, background='black')
+            tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+            label = Label(tableFrame, text=headers[x], background=color)
+            label.pack(fill=BOTH)
+		
+###########################################
+        for x in range(len(requestList)):
+            frameDict[x] = Frame(requestFrame, borderwidth=1, background=color)
+            frameDict[x].grid(row=x+1, column=0, columnspan=5, sticky='NSEW', padx=1, pady=5)
+            for y in range(len(requestList[x])):
+                
+                label = Label(frameDict[x], text=requestList[x][y], background='white')
+                label.grid(row=x+1, column=y, padx=1, pady=1, sticky=NSEW)
+
+            acceptDict[x] = ttk.Button(frameDict[x], width=8, text='Accept')
+            acceptDict[x].bind("<ButtonRelease-1>", AcceptAppt)
+            acceptDict[x].grid(row=x+1, column=3, padx=5)
+            
+            declineDict[x] = ttk.Button(frameDict[x], width=8, text='Decline')
+            declineDict[x].bind("<ButtonRelease-1>", DeclineAppt)
+            declineDict[x].grid(row=x+1, column=4, padx=5)
+###########################################
+>>>>>>> 7ac2de965cdf83088c2ed81251c475df836593a1
 
         self.requestWin.protocol("WM_DELETE_WINDOW", self.requestsToDocHP)
 
