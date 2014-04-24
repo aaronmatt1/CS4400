@@ -1733,6 +1733,9 @@ class GTMS:
 
         self.DocReportWin.protocol("WM_DELETE_WINDOW", self.DocReportToAdminWin)
 
+    def SurgeryReport(self):
+        pass
+
     def PatientReport(self):
         pass
 
@@ -1741,48 +1744,139 @@ class GTMS:
         # INNER JOIN VISIT AS V ON D.Username = V.DUsername
         # GROUP BY D.Username
 
-    def Billing(self, username):
-        #this should return a real number
-        totalCostVisit = """SELECT SUM(BillingAmt) as "TotalCost"
-	                       FROM VISIT
-	                       WHERE PUsername=%s""" % username
-        cursor = self.connect()
-        cursor.execute(totalCostVisit)
-        totalCostVisitNum = sum(list(cursor.fetchall()))
-        costbyVisit = """SELECT DateVisit, BillingAmount as Cost
-	                    FROM VISIT
-	                    WHERE PUsername = %s
-	                    GROUP BY DateVisit""" % username
+    def Billing(self):
 
-        cursor.execute(costbyVisit)
-        costByVisitData = cursor.fetchall()
-        costByVisitData = list(costByVisitData)
+        self.BillingWin = Toplevel(LogWin)
+        self.BillingWin.title('Billing')
+        self.BillingWin.config(bg=color)
+        
+        topFrame = Frame(self.BillingWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.BillingWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.BillingWin)
+        bottomFrame.grid(row=2, column=0, pady=15)
+        bottomFrame.configure(background='#cfb53b')
 
+        logo = ttk.Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = ttk.Label(topFrame, text="Billing", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
 
-        surgeryCostByType = """SELECT t1.Type, t1.Cost AS Cost, t1.Type
-		                        FROM PERFORMS_SURGERY AS PS
-		                        INNER JOIN
-                                (SELECT COST, CPT, Type FROM SURGERY) t1
-                                ON t1.CPT = PS.CPT
-		                        WHERE PS.PUsername =%s
-		                        GROUP BY t1.Type""" % username
-        cursor.execute(surgeryCostByType)
-        sCostByTypeData = cursor.fetchall()
-        sCostByTypeData = list(sCostByTypeData)
-        #this should return a real number
+        billFrame = Frame(bottomFrame, background=color)
+        billFrame.grid(row=0, column=0, columnspan=2, padx=10, pady=15, sticky='EW')
 
-        totalSurgeryCost = """SELECT Sum(t1.Cost)
-		                        FROM PERFORMS_SURGERY AS PS
-		                        INNER JOIN
-                                (SELECT CPT,Cost FROM SURGERY) as t1
-                                ON t1.CPT = PS.CPT
-		                        WHERE PS.PUsername =%s""" % username
-        cursor.execute(totalSurgeryCost)
-        totalSurgeryCostNum = sum(list(cursor.fetchall()))
-        cursor.close()
-        totalCost = totalCostVisitNum + totalSurgeryCostNum
-        return (costByVisitData,sCostByTypeData,totalCost)
-        #jborjas31
+        Label(billFrame,text=' Patient Name: ',background=color).grid(row=0, column=0, padx=15, sticky='EW')
+
+        nameEntry = Entry(billFrame, width=25)
+        nameEntry.grid(row=0, column=1, padx=5, sticky='EW')
+
+        def CreateClicked():
+
+            query = 'SELECT Username,Name,HomePhone FROM PATIENT WHERE Name="{}"'.format(nameEntry.get())
+            cursor = self.connect()
+            cursor.execute(query)
+            result = list(cursor.fetchall())
+
+            resultFrame = Frame(bottomFrame, background=color)
+            resultFrame.grid(row=1, column=0, columnspan=2)
+
+            info = []
+            for person in result:
+                phone = person[2]
+                username = person[0]
+                formatPhone = person[2][0:3]+'-'+person[2][3:6]+'-'+person[2][6:10]
+                info.append([person[1], formatPhone])
+
+            headers = ['          Patient           ',
+                        '         Phone Number        ']
+
+            for x in range(len(headers)):
+                tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+                label = Label(tableFrame, text=headers[x], background=color)
+                label.pack(fill=BOTH)
+
+            for x in range(len(info)):
+                for y in range(len(info[x])):
+                    tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=x+1, column=y, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=info[x][y], background='white')
+                    label.pack(fill=BOTH)
+
+            totalCostVisit = """SELECT SUM(BillingAmt) as "TotalCost"
+                           FROM VISIT
+                           WHERE PUsername='%s'""" % username
+
+            cursor = self.connect()
+            cursor.execute(totalCostVisit)
+            totalCostVisitNum = cursor.fetchone()[0]
+            ##BreakDown of Visits
+            costbyVisit = """SELECT DateVisit, BillingAmt as Cost
+                            FROM VISIT
+                            WHERE PUsername = '%s'
+                            GROUP BY DateVisit""" % username
+
+            cursor.execute(costbyVisit)
+            costByVisitData = cursor.fetchall()
+            costByVisitData = list(costByVisitData)
+            costByVisitData.sort()
+
+            ##Breakdown of Surgeries
+            surgeryCostByType = """SELECT t1.Type, t2.BillingAmt, t2.DateVisit AS Cost
+                                    FROM PERFORMS_SURGERY AS PS
+                                    INNER JOIN
+                                    (SELECT Type,CPT FROM SURGERY) t1
+                                    ON t1.CPT = PS.CPT
+                                    INNER JOIN
+                                    (SELECT BillingAmt,PUsername,DateVisit FROM VISIT)t2
+                                    ON t2.PUsername = PS.PUsername
+                                    WHERE PS.PUsername = '%s'
+                                    GROUP BY t1.Type""" % username
+            cursor.execute(surgeryCostByType)
+            sCostByTypeData = cursor.fetchall()
+            sCostByTypeData = list(sCostByTypeData)
+            sCostByTypeData.sort()            
+            #this should return a real number
+
+            visitsFrame = Frame(bottomFrame, background=color)
+            visitsFrame.grid(row=2,column=0,columnspan=3,sticky='EW',pady=10,padx=10)
+
+            surgeriesFrame = Frame(bottomFrame, background=color)
+            surgeriesFrame.grid(row=3,column=0,columnspan=3,sticky='EW',pady=10,padx=10)
+
+            totalFrame = Frame(bottomFrame, background=color)
+            totalFrame.grid(row=4,column=0,columnspan=3,sticky='EW',pady=10,padx=10)
+
+            Label(visitsFrame, text='Visits: ', background=color).grid(row=0, column=0)
+            rows=0
+            for x in costByVisitData:
+                for y in range(len(x)):
+                    tableFrame = Frame(visitsFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=rows, column=y+1, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=x[y], background='white')
+                    label.pack(fill=BOTH)
+                rows+=1
+            Label(surgeriesFrame, text='Surgeries: ', background=color).grid(row=0, column=0,padx=10)
+            rows=0
+            for x in sCostByTypeData:
+                for y in range(len(x)):
+                    tableFrame = Frame(surgeriesFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=rows, column=y+1, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=x[y], background='white')
+                    label.pack(fill=BOTH)
+                rows+=1
+
+            Label(totalFrame, text='Total Cost: ', background=color).grid(row=0, column=0)
+            totalEntry = Entry(totalFrame, width=15)
+            totalEntry.grid(row=0, column=1)
+            totalEntry.insert(0,totalCostVisitNum)
+            totalEntry.config(state='readonly')
+
+        ttk.Button(billFrame, text='Create Bill', command=CreateClicked).grid(row=0, column=2, sticky='EW')
                                   
     def VisitHistory(self):
 
