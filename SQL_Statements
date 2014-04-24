@@ -1,0 +1,537 @@
+PATIENT
+$username
+$password
+
+EXAMPLE:
+Username = 'jborjas31'
+Password = 'j1'
+
+------------    LOGIN    ------------
+>>>> SELECT Username, Password FROM USER WHERE Username = $username AND Password = $password;
+
+//If we get back NULL, then error message. User does not exist. 
+//Else go to next page based on type of user
+
+//Check type of user
+
+	>>>> SELECT COUNT(*) FROM DOCTOR WHERE Username = $username ;
+	//if == 1
+		//we have doctor
+
+	//else
+		>>>> SELECT COUNT(*) FROM PATIENT WHERE Username = $username ;
+		//if == 1
+			//we have PATIENT
+
+		//else
+			//We have ADMIN
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+------------    NEW USER REGISTRATION    ------------
+$username
+$password
+$confirmpassword
+$typeofUser
+
+EXAMPLE:
+Username: rmartin99
+Password: vidaloca01
+
+//check if confirm password == password in code
+//make sure password meets following criteria: alphanumeric, between 6 - 15 chars
+
+//check if username has already been taken
+>>>> SELECT COUNT(*) FROM USER WHERE Username = $username;
+
+//if the above returns 0, then 
+>>>> INSERT INTO USER(Username, Password) VALUES ($username, $password);
+
+	//if($typeofuser == DOCTOR
+		//Go to Doctor Profile Page
+
+	//if ($typeofuser == PATIENT)
+		//Go to PATIENT Profile Page
+
+	//else
+		//Go to ADMINISTRATIVE PERSONNEL Page
+
+//else display error message.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    PATIENT PROFILE    ------------
+$username
+$typeofUser (gotten at login or new user registration)
+$name
+$DOB
+$Gender
+$Address
+$HP
+$WP
+$EC_Name
+$EC_Phone
+$H
+$W
+$Income
+$CreditCardNo
+$ContactName
+$ContactPhone
+$Allergies
+$id
+
+Example:
+Name: 'Ricky Martin'
+Username: 'rmartin99'
+DOB: '1980-01-01'
+Gender: Male ('M')
+Address: '505 Buena Vista Lane, Miami, Florida'
+HomePhone: 4075550123
+WorkPhone: 4072024466
+Height: 74
+Weight: 200
+Annual Income: '$100000+'
+CreditCardNo: 5566243288791245
+Contact Name: 'Julio Iglesias'
+ContactPhone: 4074022030
+
+
+//Check to see if patient is creating patient profile for first time or updating profile
+>>>> SELECT COUNT(*) FROM PATIENT WHERE Username = $username
+
+//If the above returns 0, then read current data to populate fields and create patient profile
+>>>> INSERT INTO PATIENT (Name, HomePhone, Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome, CreditCardNo, ContactName, ContactPhone) VALUES ($name,$HP, username,$DOB, $Gender, $Address, $WP, $H,$W, $AnnualIncome, $CreditCardNo, $ContactName, $ContactPhone);	
+
+//else patient is editing profile
+>>>> UPDATE PATIENT SET Name = $name, HomePhone= $HP, Username = $username, DOB = $DOB, Gender= $gender, Address= $Address, WorkPhone = $WP, Height = $H, Weight = $W, AnnualIncome = $Income) WHERE Username = $Username;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    ALLERGIES    ------------
+//Check whether allergy is already in database
+>>>> SELECT COUNT(*) FROM ALLERGIES WHERE Username = $username AND Allergy = $Allergies
+
+	//if count == 0
+	>>>> INSERT INTO ALLERGIES (Username, Allergy) VALUES ($username, $Allergies)
+
+	//else show error message
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    DOCTOR PROFILE    ------------
+$LicenseNumber	(check to make sure user inputs #)
+$FirstName 
+$LastName
+$DOB
+$WP
+$Specialty
+$RoomNo
+$home_address
+$avail_Day
+$avail_start_time
+$avail_end_time
+$username
+$new_avail_start_time
+$new_avail_end_time
+
+EXAMPLE:
+LicenseNo: 902811918
+FName: Juan
+LName: Borjas
+DOB: 1990-01-01
+WorkPhone: 407-555-0126
+Specialty: Heart Specialist
+ROomNo: 12
+HomeAddress: 1250 Riverwalk 
+
+//Check whether doctor is creating profile for first time or editing existing profile
+>>>> SELECT COUNT(*) FROM DOCTOR WHERE LicenseNo = $LicenseNumber AND Username = $username;
+
+//if the above sql statement returns 0, then doctor is creating profile
+>>>> INSERT INTO DOCTOR (LicenseNo, Username, FName, LName, DOB, WorkPhone, Specialty, RoomNo, HomeAddress) VALUES ($LicenseNumber,$username, $FirstName, $LastName, $DOB,$WP, $specialty, $r_number,$home_addr);
+
+//else doctor is editing profile
+>>>> UPDATE DOCTOR SET LicenseNo = $LicenseNumber, FName = $FirstName, LName = $LastName, DOB=$DOB, WorkPhone=$WP, Specialty = $specialty, RoomNo=$r_number WHERE Username = $username;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    AVAILABILITY    ------------
+$avail_Day
+$avail_start_time
+$avail_end_time
+
+EXAMPLE:
+Day
+
+//Whenever the doctor adds available times, check to see if time is already in DB:
+>>>> SELECT COUNT(*) FROM AVAILABILITY WHERE Username = $username AND Day_Date = $avail_Day AND To_Time =$avail_end_time  AND From_Time = $avail_start_time;
+
+//if(the above == 0), then 
+>>>> INSERT INTO AVAILABILITY (Username, Day_Date, To_Time, From_Time) VALUES ($username, $avail_Day,$avail_end_time,$avail_start_time);
+
+//else update
+>>>> UPDATE AVAILABILITY SET To_Time =$new_avail_end_time, From_Time =$new_avail_start_time, Day_Date = $avail_Day WHERE Username = $username AND To_Time =$avail_end_time AND From_Time =$avail_start_time AND Day_Date =$avail_Day;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    UNREAD MESSAGES / VIEW MESSAGES  ------------
+$Username
+$userType
+
+//if $userType == 'patient':
+	//Show # of unread messages
+	>>>> SELECT COUNT(*) FROM DOCTOR_TO_PATIENT WHERE Status='Unread' AND Recipient= $Username
+
+	//if (count > 0):
+		//Go to View Messages window
+		>>>> SELECT Sender, Content, DateTime FROM DOCTOR_TO_PATIENT WHERE Status = 'Unread' AND Recipient = $Username
+
+//if $userType == 'doctor':
+	//Show # of unread messages
+	>>>> SELECT COUNT(*) FROM (DOCTOR_TO_PATIENT AS DP JOIN DOCTOR_TO_DOCTOR AS DD ON DP.Recipient=DD.Recipient) WHERE DP.Status='Unread' AND DP.Recipient= $Username AND DD.Status='Unread' AND DD.Recipient= $Username
+
+	//if (count > 0):
+		//Go to View Messages window
+		>>>> SELECT Sender, Content, DateTime FROM PATIENT_TO_DOCTOR WHERE Status = 'Unread' AND Recipient = $Username
+		>>>> SELECT Sender, Content, DateTime FROM DOCTOR_TO_DOCTOR WHERE Status = 'Unread' AND Recipient = $Username
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    APPOINTMENTS    ------------
+$Specialty
+$PatientUsername
+$DocUsername
+$Date
+$Time
+
+//Query doctor and availability information
+>>>> SELECT D.Username, Fname, Lname, WorkPhone, RoomNo, Day_Date, From_Time, To_Time, R.Rating FROM (DOCTOR AS D JOIN AVAILABILITY AS A ON D.Username=A.Username) JOIN (SELECT AVG(Rating) AS Rating FROM RATES ) AS R WHERE Specialty=$Specialty
+
+//Check to see if patient already has appointment pending with doctor
+>>>> SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername=$PatientUsername AND DUsername=$DocUsername
+
+//If patient does not already have appointment with doctor
+>>>> INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES($PatientUsername, $DocUsername, $Date, $Time, 'Pending')"
+
+//ELSE Show Error
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------     ORDER MEDICATION     ------------
+$fname
+$lname
+$medName
+$dosage
+$duration
+$prescription_date
+$LicenseNo
+$username
+
+//determine if med has been prescribed to user
+//for each row, determine if doctor has prescribed medication
+>>>> SELECT COUNT(*) FROM PRESCRIPTION AS P WHERE P.DUsername IN
+			(SELECT Username FROM DOCTOR as D WHERE D.FName = $fname AND D.LName = $lname)
+			AND P.MedName = $medName AND P.Dosage = $dosage AND P.Duration =$duration and P.DateVisit = $prescription_date AND P.PUsername = $username;
+
+//if count !=1 display error message
+//else order medication
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------   Payment Information    ------------
+
+//Check if payment profile exists
+>>>> SELECT COUNT(*) FROM PAYMENT_INFO WHERE CardNo = $cNumber AND CardType = $type AND CVV = $CVV;
+
+//if count == 0 go to payment profile and insert payment info
+$name
+$cNumber
+$type
+$CVV
+$exp_date
+
+>>>> INSERT INTO PAYMENT_INFO (CardNo, CardHolderName, CardType, Expiry, CVV) VALUES($cNumber,$name,$type, $exp_date,$CVV);
+	
+		
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    VIEW VISIT HISTORY    ------------
+$username
+$date
+$d_username
+
+//SELECT all datevisits of patient
+>>>> SELECT DateVisit FROM VISIT WHERE PUsername = $username;
+
+//user selects a date which is stored in $date
+
+>>>> SELECT  t1.Username, t1.FName, t1.LName, DiastolicBP, SystolicBP 
+	FROM VISIT INNER JOIN
+	(SELECT FName, LName, Username FROM DOCTOR) AS t1 ON VISIT.DUsername =  t1.Username 
+	WHERE VISIT.DateVisit = $date AND PUsername = $username;
+
+//t1.Username is written to $d_username
+
+>>>> SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = $username AND DateVisit = $date AND DUsername = $d_username;
+
+>>>> SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE DateVisit = $date AND DUsername = $d_username AND PUsername = $username;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    RATE A DOCTOR    ------------
+$username
+$d_username
+$num_stars
+	
+//list only doctors the PATIENT has seen.
+>>>> SELECT FName, Lname, Username as d_username FROM DOCTOR WHERE EXISTS (SELECT * FROM VISIT WHERE PUsername = $username AND VISIT.DUsername = DOCTOR.Username);
+
+//Check whether patient has rated doctor
+>>>> SELECT COUNT(*) FROM RATES WHERE PUsername = $username AND DUsername = $d_username;
+//if 0, then
+	INSERT INTO RATES (PUsername, DUsername, Rating) VALUES($username, $d_username, $num_stars);
+//else
+	UPDATE RATES set Rating=num_stars WHERE PUsername = $username AND DUsername = $d_username;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    VIEW APPOINTMENTS    ------------
+
+$day
+$month
+$year
+$username
+
+//if $day is not empty
+>>>> SELECT P.Name, V.ScheduledTime FROM (REQUEST_APPOINTMENT AS RA LEFT OUTER JOIN PATIENT AS P ON RA.PUsername = P.Username) WHERE RA.Date = $date ORDER BY V.ScheduledTime;
+
+//else
+>>>> SELECT COUNT(PUsername) FROM REQUEST_APPOINTMENT WHERE DUsername = $username GROUP BY Date;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    VIEW PATIENTS AND PRESCRIPTIONS    ------------
+$p_username
+$p_name
+$username
+$phoneNo
+$d_username
+
+//view all PATIENTs with $p_name and $phoneNo that had visits to the doctor = $username
+>>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE Name = $p_name OR WorkPhone = $phoneNo AND V.DUsername = $username;
+
+	//just username
+	>>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE Name = $p_name AND AND V.DUsername = $username;
+	//just phoneNo
+	>>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE HomePhone = $phoneNo AND V.DUsername = $username;
+
+//display dates PATIENT has visited doctor
+>>>> SELECT DateVisit FROM VISIT WHERE PUsername = $p_username AND DUsername = $username;
+
+//user selects a date which is stored in $date
+>>>> SELECT DiastolicBP, SystolicBP FROM VISIT WHERE VISIT.DateVisit = $date AND VISIT.PUsername = $p_username AND VISIT.DUsername = $username;
+
+//Diagnosis
+>>>> SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = $username AND DateVisit = $date AND DUsername = $d_username;
+
+//Meds Prescribed
+>>>> SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE DateVisit = $date AND DUsername = $d_username AND PUsername = $username;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    RECORD A VISIT    ------------
+$date
+$p_username
+$username
+$SBP
+$DBP
+$diagnosis
+	
+>>>> SELECT COUNT(*) FROM VISIT WHERE DUsername = $username AND PUsername = $p_username AND DateVisit = $date;
+	//if(!0) display error message
+	//else 
+		>>>> SELECT AnnualIncome FROM PATIENT WHERE Username=$p_username; //this is used to determine if you get a discount
+		>>>> SELECT COUNT(*) FROM VISIT WHERE DUsername = $username AND PUsername = $p_username;
+		//if == 0 (means first time visiting doctor)
+			$amountOwed=initialfee+cost*discount (actual numbers to be determined)
+		//else $amountOwed = cost*discount;
+		
+		>>>> INSERT INTO VISIT (DateVisit, DUsername, PUsername, BillingAmt, DiastolicBP, SystolicBP) VALUES ($date,$username, $p_username, $amountOwed, DiastolicBP = $DBP, SystolicBP = $SBP);
+		>>>> SELECT COUNT(*) FROM DIAGNOSIS WHERE DUsername = $username AND PUsername = $p_username AND DateVisit = date AND Diagnosis = $Diagnosis;
+		//if == 0
+		>>>> INSERT INTO DIAGNOSIS (PUsername, DateVisit, DUsername, Diagnosis) VALUES PUsername = $p_username AND DateVisit = $date AND DUsername = $username AND Diagnosis=$diagnosis; 
+		//else
+		>>>> UPDATE DIAGNOSIS set Diagnosis=$diagnosis WHERE PUsername = $username AND DUsername = $username AND DateVisit = $date;
+		
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    PRESCRIPTION    ------------
+
+//If there is drug to prescribe, then get the following info from doctor
+$med_name
+$notes
+$duration
+$dosage
+
+>>>> SELECT COUNT(*) FROM PRESCRIPTION WHERE Pusername = $p_username AND DUsername = $username AND MedName=$medName AND DateVisit=$date;
+
+//if above == 0, then insert into prescription table 
+>>>> INSERT INTO PRESCRIPTION (PUsername, DUsername, DateVisit, MedName,Notes, Dosage, Duration) Values (Pusername = $p_username, DUsername = $username, MedName = $med_name, Notes = $notes, Dosage = $dosage, Duration = $duration);
+			//(note: use this call multiple times to keep prescribing multiple meds. use error checking to make 
+			//sure same meds are not prescribed more than once for same PATIENT on same date by same doctor)
+	//display error because visit is already recorded.
+//else display error message
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+------------    SURGERY RECORD    ------------
+$p_name
+$p_username
+$username
+$cpt
+$s_start
+$s_end
+$complications
+$num_Assistants
+$ant_start
+$amount
+$type
+$preOpMed
+	//get names and usernames of potential PATIENTs to view
+	>>>> SELECT PUsername as p_username, Name as PatientName, WorkPhone as PhoneNumber FROM PATIENT WHERE Name = $p_name;
+
+	//CREATE SURGERY RECORD
+	>>>> SELECT COUNT(*) FROM PERFORMS_SURGERY WHERE DUsername = $username AND CPT=$cpt and PUsername = $p_username;
+
+		//if ==0
+		>>>> INSERT INTO PERFORMS_SURGERY (DUsername, CPT, PUsername, SurgeryStart,SurgeryEnd, Complications, NoAssistants, AnethesiaStart) VALUES($username, $cpt, $p_username, $s_start, $s_end, $complications, $num_Assistants, $ant_start);
+	
+		//Get annualIncome to determine if you get discount
+		>>>> INSERT INTO SURGERY(CPT, Cost, Type) VALUES($cpt, $amount, $Type); 
+
+		//Populate preoperative meds list
+		>>>> SELECT PreOpMed FROM PREOPERATIVE_MEDICATION WHERE CPT=$cpt;
+		>>>> SELECT COUNT(*) FROM PREOPERATIVE_MEDICATION WHERE CPT=$cpt AND PreOpMed=$preOpMed;
+
+		//if==0
+		>>>> INSERT INTO PREOPERATIVE_MEDICATION (CPT, PreOpMed) VALUES ($cpt,$preOpMed);
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    COMMUNICATION    ------------
+
+//POPULATE LIST OF DOCTORS TO SELECT
+>>>> SELECT FName, LName, Username as username FROM DOCTOR;
+
+//POPULATE LIST OF PATIENTS TO SELECT
+>>>> SELECT NAME, Username as PUsername FROM PATIENT;
+
+$username
+$recipient
+$msg
+$timestamp
+
+//Patient sends message to doctor
+>>>> INSERT INTO PATIENT_TO_DOCTOR (Sender, Recipient, Content, Status, DateTime) VALUES ($username, $recipient, $msg, 'unread', $timestamp);
+
+//Doctor sends message to patient
+>>>> INSERT INTO DOCTOR_TO_PATIENT (Sender, Recipient, Content, Status, DateTime) VALUES ($username, $recipient, $msg, 'unread', $timestamp);
+
+//Doctor sends message to doctor
+>>>> INSERT INTO DOCTOR_TO_DOCTOR (Sender, Recipient, Content, Status, DateTime) VALUES ($username, $recipient, $msg, 'unread', $timestamp);
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    BILLING    ------------
+
+$p_name
+$p_num
+$username
+$a_income
+$amount_owed
+//Display name,phone#
+
+>>>> SELECT Name, HomePhone as $p_num, Username as p_name, AnnualIncome FROM PATIENT WHERE Name="p_name";
+//Annual Income determines $discount
+
+>>>> SELECT DateVisit, BillingAmount*$discount as Cost FROM VISIT WHERE PUsername = $username GROUP BY DateVisit;
+>>>> SELECT SUM(BillingAmount*$discount) as “Total Cost” FROM VISIT WHERE PUsername = $username; 
+$tc = SUM(BillingAmount*$discount)
+
+>>>> SELECT t1.Type, t1.Cost*$discount AS Cost, t1.Type FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
+		WHERE PS.PUsername = $username
+		GROUP BY t1.Type;
+
+>>>> SELECT t1.Type, SUM(t1.Cost*$discount) as “Total Cost”, t1.Type FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
+		WHERE PS.PUsername = $username;
+
+$tc +=	SUM(t1.Cost*$discount) 
+//tc is the total cost to be displayed.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    DOCTOR PERFORMANCE REPORT   ------------
+>>>> SELECT D.specialty,AVG(t1.Rates) as Average Rating, Count(t0.CPT) as "Num Surgeries Performed" FROM DOCTOR as D 
+	INNER JOIN(
+		SELECT CPT, specialty
+		FROM PERFORM_SURGERY AS P
+		)t0 
+	ON t0.DUsername=D.Username
+	INNER JOIN(
+		SELECT Rates
+		FROM RATES) t1 
+	ON D.Username=t1.DUsername
+	GROUP BY D.specialty;
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    SURGERIES PERFORMED   ------------
+$annualIncome = SELECT AnnualIncome FROM PATIENT WHERE Username = $p_username;
+//based on annualIncome determine $billing
+$num
+>>>> SELECT t1.Type as “Surgery Type”, CPT, COUNT(CPT) PERFORMS_SURGERY AS PS
+		INNER JOIN (SELECT * FROM SURGERY) t1 ON t1.CPT = PS.CPT
+
+//poor PATIENTs
+>>>> SELECT PS.PUsername,t1.Type, t1.CPT t2.TotalBilling FROM PERFORMS SURGERY AS PS INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome <= $num)
+		INNER JOIN (
+			SELECT SUM(t1.Cost*.5) as “TotalBilling”, PUsername FROM PERFORMS_SURGERY AS PS
+		INNER JOIN(
+			SELECT Cost, Type From SURGERY) t1 ON t1.CPT = PS.CPT
+			GROUP BY t1.Type) t2
+		ON PS.PUsername = t2.PUsername;
+
+>>>> SELECT PS.PUsername,t1.Type, t1.CPT t2.TotalBilling2 FROM PERFORMS SURGERY AS PS
+	INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome > $num) INNER JOIN (SELECT SUM(t1.Cost) as “TotalBilling2”, PUsername FROM PERFORMS_SURGERY AS PS
+		INNER JOIN (SELECT Cost From SURGERY) t1 ON t1.CPT = PS.CPT GROUP BY t1.Type) t2 ON PS.PUsername = t2.PUsername;
+
+//Totall Billing = t2.TotalBilling2 + t2.totalBilling
+//This counts number of distinct doctors doing a procedure
+>>>> SELECT COUNT(DUsernames) IN PERFORMS_SURGERY AS PS INNER JOIN (SURGERY GROUP BY Type) ON SURGERY.CPT = PS.CPT GROUP BY PS.DUsernames;
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+------------    Patient Visit Report   ------------
+>>>> SELECT FName, LName, t3.Visits, t2.Prescriptions FROM DOCTOR as D
+			INNER JOIN(
+				SELECT DUsername, COUNT(DateVisit) AS Prescriptions
+				FROM PRESCRIPTION
+				WHERE MONTH(DateVisit) = $month
+				AND YEAR(DateVisit)=$year
+				GROUP BY PRESCRIPTION.DUsername)t2 ON D.username = t2.DUsername
+			INNER JOIN(
+				SELECT COUNT(DATEVISIT), DUsername
+				FROM VISIT as V
+				WHERE MONTH(DateVisit) = $month
+				AND YEAR(DateVisit)=$year
+				GROUP BY DUSername) t2 
+			ON t2.DUsername=D.Username;
+			
+	//discount is taken care when the doctor records a visit.
+	SELECT SUM(BillingAmt) FROM VISIT
+		GROUP BY DUsername;
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
