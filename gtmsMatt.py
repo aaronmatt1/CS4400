@@ -1023,7 +1023,7 @@ class GTMS:
 
         Label(searchPatientFrame,text=' Patient Name: ',background=color).grid(row=0, column=0, padx=15, sticky='EW')
 
-        nameEntry = Entry(searchPatientFrame, width=25)
+        nameEntry = Entry(searchPatientFrame, width=42)
         nameEntry.grid(row=0, column=1, padx=5, sticky='EW')
 
         query = 'SELECT Type FROM SURGERY'
@@ -1134,6 +1134,34 @@ class GTMS:
                 label = Label(surgeryFrame2, text=labels2[x], background=color)
                 label.grid(row=x, column=0, sticky='W', padx=5, pady=15)
 
+            AstartEntry = Entry(surgeryFrame2, width=20)
+            AstartEntry.grid(row=0, column=1, sticky='EW' )
+
+            SstartEntry = Entry(surgeryFrame2, width=20)
+            SstartEntry.grid(row=1, column=1, sticky='EW' )
+
+            SendEntry = Entry(surgeryFrame2, width=20)
+            SendEntry.grid(row=2, column=1, sticky='EW' )
+
+            complicationFrame = Frame(surgeryFrame2, background=color)
+            complicationFrame.grid(row=3, column=1, columnspan=2, sticky='EW')
+
+            text = """""".strip()
+
+            scrollB = Scrollbar(complicationFrame)
+            scrollB.grid(row=0, column=1, sticky='NS')
+
+            compText = Text(complicationFrame, width=15, height=3, wrap='word', font='Arial 10', relief=GROOVE)
+            compText.grid(row=0,column=0, sticky='EW')
+
+            compText.config(height=3, width=15)
+            compText.config()
+            compText.insert(1.0, text)
+            compText.grid(row=0, column=0, sticky='EW')
+
+            scrollB.config(command=compText.yview)
+            compText.config(yscrollcommand=scrollB.set)
+
             def recordClicked():
 
                 print('Clicked record')
@@ -1143,7 +1171,7 @@ class GTMS:
 
             ttk.Button(buttonFrame,text='Record',command=recordClicked).pack(fill='x')
 
-        ttk.Button(searchPatientFrame, text='Search', width=8, command=searchPatient).grid(row=0,column=3, padx=5)
+        ttk.Button(searchPatientFrame, text='Search', width=10, command=searchPatient).grid(row=0,column=2, padx=5, sticky='EW')
 
         
     def searchAppt(self):
@@ -1354,8 +1382,8 @@ class GTMS:
     def Billing(self, username):
         #this should return a real number
         totalCostVisit = """SELECT SUM(BillingAmt) as "TotalCost"
-	                            FROM VISIT
-	                    WHERE PUsername=%s""" % username
+	                       FROM VISIT
+	                       WHERE PUsername=%s""" % username
         cursor = self.connect()
         totalCostNum = cursor.execute(totalCostVisit)
         costbyVisit = """SELECT DateVisit, BillingAmount as Cost
