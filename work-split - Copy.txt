@@ -1,4 +1,0 @@
-Aaron
--New User Registation
--Patient Profile
--Doctor Profile
