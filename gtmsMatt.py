@@ -2043,7 +2043,8 @@ class GTMS:
             tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
             label = Label(tableFrame, text=headers[x], background=color)
             label.pack(fill=BOTH)
-
+		
+###########################################
         for x in range(len(requestList)):
             frameDict[x] = Frame(requestFrame, borderwidth=1, background=color)
             frameDict[x].grid(row=x+1, column=0, columnspan=5, sticky='NSEW', padx=1, pady=5)
@@ -2059,6 +2060,7 @@ class GTMS:
             declineDict[x] = ttk.Button(frameDict[x], width=8, text='Decline')
             declineDict[x].bind("<ButtonRelease-1>", DeclineAppt)
             declineDict[x].grid(row=x+1, column=4, padx=5)
+###########################################
 
         self.requestWin.protocol("WM_DELETE_WINDOW", self.requestsToDocHP)
 
