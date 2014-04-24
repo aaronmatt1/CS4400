@@ -76,7 +76,7 @@
 ------------    RECORD A VISIT    ------------
 1. SELECT COUNT(*) FROM VISIT WHERE DUsername = 'jiglesias02' AND PUsername = 'rmartin99' AND DateVisit = '2014-04-25';
 2. SELECT COUNT(*) FROM VISIT WHERE DUsername = 'jiglesias02' AND PUsername = 'rmartin99';
-3. INSERT INTO VISIT (DateVisit, DUsername, PUsername, BillingAmt, DiastolicBP, SystolicBP) VALUES ('2014-04-25', 'jiglesias02', 'rmartin99', 700.00, DiastolicBP = 130, SystolicBP = 85);
+3. INSERT INTO VISIT (DateVisit, DUsername, PUsername, BillingAmt, DiastolicBP, SystolicBP) VALUES ('2014-04-25', 'jiglesias02', 'rmartin99', 700.00, 130, 85);
 4. UPDATE DIAGNOSIS set Diagnosis='Deviated Septum' WHERE PUsername = 'rmartin99' AND DUsername = 'jiglesias02' AND DateVisit = '2014-04-25';
 
 ------------    PRESCRIPTION    ------------
