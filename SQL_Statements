@@ -211,7 +211,7 @@ $Time
 //Check to see if patient already has appointment pending with doctor
 >>>> SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername=$PatientUsername AND DUsername=$DocUsername
 
-//If patient does not already have appointment with doctor
+//If count== 0: (patient does not already have appointment with doctor)
 >>>> INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES($PatientUsername, $DocUsername, $Date, $Time, 'Pending')"
 
 //ELSE Show Error
@@ -261,7 +261,7 @@ $username
 $date
 $d_username
 
-//SELECT all datevisits of patient
+//Select all datevisits of patient
 >>>> SELECT DateVisit FROM VISIT WHERE PUsername = $username;
 
 //user selects a date which is stored in $date
@@ -290,9 +290,9 @@ $num_stars
 //Check whether patient has rated doctor
 >>>> SELECT COUNT(*) FROM RATES WHERE PUsername = $username AND DUsername = $d_username;
 //if 0, then
-	INSERT INTO RATES (PUsername, DUsername, Rating) VALUES($username, $d_username, $num_stars);
+	>>>> INSERT INTO RATES (PUsername, DUsername, Rating) VALUES($username, $d_username, $num_stars);
 //else
-	UPDATE RATES set Rating=num_stars WHERE PUsername = $username AND DUsername = $d_username;
+	>>>> UPDATE RATES set Rating=num_stars WHERE PUsername = $username AND DUsername = $d_username;
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -303,8 +303,8 @@ $month
 $year
 $username
 
-//if $day is not empty
->>>> SELECT P.Name, V.ScheduledTime FROM (REQUEST_APPOINTMENT AS RA LEFT OUTER JOIN PATIENT AS P ON RA.PUsername = P.Username) WHERE RA.Date = $date ORDER BY V.ScheduledTime;
+//if $day is not empty, view appts for doctor on specific day
+>>>> SELECT P.Name, RA.ScheduledTime FROM (REQUEST_APPOINTMENT AS RA LEFT OUTER JOIN PATIENT AS P ON RA.PUsername = P.Username) WHERE RA.Date = $date ORDER BY RA.ScheduledTime;
 
 //else
 >>>> SELECT COUNT(PUsername) FROM REQUEST_APPOINTMENT WHERE DUsername = $username GROUP BY Date;
@@ -319,12 +319,8 @@ $phoneNo
 $d_username
 
 //view all PATIENTs with $p_name and $phoneNo that had visits to the doctor = $username
->>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE Name = $p_name OR WorkPhone = $phoneNo AND V.DUsername = $username;
+>>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE Name = $p_username OR HomePhone = $phoneNo AND V.DUsername = $username;
 
-	//just username
-	>>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE Name = $p_name AND AND V.DUsername = $username;
-	//just phoneNo
-	>>>> SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE HomePhone = $phoneNo AND V.DUsername = $username;
 
 //display dates PATIENT has visited doctor
 >>>> SELECT DateVisit FROM VISIT WHERE PUsername = $p_username AND DUsername = $username;
@@ -378,7 +374,7 @@ $dosage
 >>>> SELECT COUNT(*) FROM PRESCRIPTION WHERE Pusername = $p_username AND DUsername = $username AND MedName=$medName AND DateVisit=$date;
 
 //if above == 0, then insert into prescription table 
->>>> INSERT INTO PRESCRIPTION (PUsername, DUsername, DateVisit, MedName,Notes, Dosage, Duration) Values (Pusername = $p_username, DUsername = $username, MedName = $med_name, Notes = $notes, Dosage = $dosage, Duration = $duration);
+>>>> INSERT INTO PRESCRIPTION (PUsername, DUsername, DateVisit, MedName,Notes, Dosage, Duration) Values (Pusername = $p_username, DUsername = $username, DateVisit=$date, MedName = $med_name, Notes = $notes, Dosage = $dosage, Duration = $duration);
 			//(note: use this call multiple times to keep prescribing multiple meds. use error checking to make 
 			//sure same meds are not prescribed more than once for same PATIENT on same date by same doctor)
 	//display error because visit is already recorded.
@@ -407,7 +403,7 @@ $preOpMed
 	>>>> SELECT COUNT(*) FROM PERFORMS_SURGERY WHERE DUsername = $username AND CPT=$cpt and PUsername = $p_username;
 
 		//if ==0
-		>>>> INSERT INTO PERFORMS_SURGERY (DUsername, CPT, PUsername, SurgeryStart,SurgeryEnd, Complications, NoAssistants, AnethesiaStart) VALUES($username, $cpt, $p_username, $s_start, $s_end, $complications, $num_Assistants, $ant_start);
+		>>>> INSERT INTO PERFORMS_SURGERY (DUsername, CPT, PUsername, SurgeryStart,SurgeryEnd, Complications, NoAssistants, AnesthesiaStart) VALUES($username, $cpt, $p_username, $s_start, $s_end, $complications, $num_Assistants, $ant_start);
 	
 		//Get annualIncome to determine if you get discount
 		>>>> INSERT INTO SURGERY(CPT, Cost, Type) VALUES($cpt, $amount, $Type); 
@@ -462,11 +458,11 @@ $amount_owed
 >>>> SELECT SUM(BillingAmount*$discount) as “Total Cost” FROM VISIT WHERE PUsername = $username; 
 $tc = SUM(BillingAmount*$discount)
 
->>>> SELECT t1.Type, t1.Cost*$discount AS Cost, t1.Type FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
+>>>> SELECT t1.Type, t1.Cost*$discount AS Cost FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
 		WHERE PS.PUsername = $username
 		GROUP BY t1.Type;
 
->>>> SELECT t1.Type, SUM(t1.Cost*$discount) as “Total Cost”, t1.Type FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
+>>>> SELECT t1.Type, SUM(t1.Cost*$discount) as TotalCost FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
 		WHERE PS.PUsername = $username;
 
 $tc +=	SUM(t1.Cost*$discount) 
@@ -475,34 +471,34 @@ $tc +=	SUM(t1.Cost*$discount)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ------------    DOCTOR PERFORMANCE REPORT   ------------
->>>> SELECT D.specialty,AVG(t1.Rates) as Average Rating, Count(t0.CPT) as "Num Surgeries Performed" FROM DOCTOR as D 
+>>>> SELECT D.Specialty,AVG(t1.Rating) as AverageRating, Count(t0.CPT) as NumSurgeriesPerformed FROM DOCTOR as D 
 	INNER JOIN(
-		SELECT CPT, specialty
-		FROM PERFORM_SURGERY AS P
-		)t0 
+		SELECT CPT, DUsername
+		FROM PERFORMS_SURGERY AS P
+		) AS t0 
 	ON t0.DUsername=D.Username
 	INNER JOIN(
-		SELECT Rates
-		FROM RATES) t1 
-	ON D.Username=t1.DUsername
-	GROUP BY D.specialty;
+		SELECT Rating
+		FROM RATES) AS t1 
+	ON t0.DUsername=D.Username
+	GROUP BY D.Specialty
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ------------    SURGERIES PERFORMED   ------------
 $annualIncome = SELECT AnnualIncome FROM PATIENT WHERE Username = $p_username;
 //based on annualIncome determine $billing
 $num
->>>> SELECT t1.Type as “Surgery Type”, CPT, COUNT(CPT) PERFORMS_SURGERY AS PS
+>>>> SELECT t1.Type as “Surgery Type”, CPT, COUNT(CPT) AS "No. of Doctors performing procedure" FROM PERFORMS_SURGERY AS PS
 		INNER JOIN (SELECT * FROM SURGERY) t1 ON t1.CPT = PS.CPT
 
 //poor PATIENTs
->>>> SELECT PS.PUsername,t1.Type, t1.CPT t2.TotalBilling FROM PERFORMS SURGERY AS PS INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome <= $num)
+>>>> SELECT PS.PUsername,t1.Type, t1.CPT, t2.TotalBilling FROM PERFORMS SURGERY AS PS INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome='0-15000' OR AnnualIncome='15000-25000')
 		INNER JOIN (
-			SELECT SUM(t1.Cost*.5) as “TotalBilling”, PUsername FROM PERFORMS_SURGERY AS PS
+			SELECT SUM(t1.Cost*0.5) as TotalBilling, PUsername FROM PERFORMS_SURGERY AS PS)
 		INNER JOIN(
-			SELECT Cost, Type From SURGERY) t1 ON t1.CPT = PS.CPT
+			SELECT Cost, SURGERY.Type From SURGERY) t1 ON t1.CPT = PS.CPT
 			GROUP BY t1.Type) t2
-		ON PS.PUsername = t2.PUsername;
+		ON PS.PUsername = t2.PUsername
 
 >>>> SELECT PS.PUsername,t1.Type, t1.CPT t2.TotalBilling2 FROM PERFORMS SURGERY AS PS
 	INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome > $num) INNER JOIN (SELECT SUM(t1.Cost) as “TotalBilling2”, PUsername FROM PERFORMS_SURGERY AS PS
@@ -519,19 +515,16 @@ $num
 			INNER JOIN(
 				SELECT DUsername, COUNT(DateVisit) AS Prescriptions
 				FROM PRESCRIPTION
-				WHERE MONTH(DateVisit) = $month
-				AND YEAR(DateVisit)=$year
+				WHERE DateVisit=$date
 				GROUP BY PRESCRIPTION.DUsername)t2 ON D.username = t2.DUsername
 			INNER JOIN(
-				SELECT COUNT(DATEVISIT), DUsername
+				SELECT COUNT(DATEVISIT) AS Visits, DUsername
 				FROM VISIT as V
-				WHERE MONTH(DateVisit) = $month
-				AND YEAR(DateVisit)=$year
-				GROUP BY DUSername) t2 
-			ON t2.DUsername=D.Username;
+				WHERE DateVisit=$date
+				GROUP BY DUSername) t3 
+			ON t3.DUsername=D.Username
 			
-	//discount is taken care when the doctor records a visit.
-	SELECT SUM(BillingAmt) FROM VISIT
-		GROUP BY DUsername;
+//discount is taken care when the doctor records a visit.
+>>>> SELECT SUM(BillingAmt) FROM VISIT GROUP BY DUsername;
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++

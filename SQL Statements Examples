@@ -1,0 +1,172 @@
+------------    LOGIN    ------------
+1. SELECT Username, Password FROM USER WHERE Username = 'jborjas31' AND Password = 'j1'
+2. SELECT COUNT(*) FROM DOCTOR WHERE Username = 'jborjas31'
+3. SELECT COUNT(*) FROM PATIENT WHERE Username = 'jborjas31'
+
+------------    NEW USER REGISTRATION    ------------
+1. SELECT COUNT(*) FROM USER WHERE Username = 'rmartin99'
+2. INSERT INTO USER(Username, Password) VALUES ('rmartin99', 'vidaloca01')
+
+------------    PATIENT PROFILE    ------------
+1. SELECT COUNT(*) FROM PATIENT WHERE Username = 'rmartin99'
+2. INSERT INTO PATIENT (Name, HomePhone, Username, DOB, Gender, Address, WorkPhone, Height, Weight, AnnualIncome, CreditCardNo, ContactName, ContactPhone) VALUES ('Ricky Martin',4075550123, username,'1980-01-01', 'M', '505 Buena Vista Lane, Miami, Florida', 4072024466, 74,200, '$100000+', 5566243288791245, 'Julio Iglesias', 4074022030);	
+// In order to show UPDATE statement works, Ricky Martin will change address and lose weight
+3. UPDATE PATIENT SET Name = 'Ricky Martin', HomePhone= 4075550123, Username = 'rmartin99', DOB = '1980-01-01', Gender= 'M', Address= '404 River Vista Lane, Miami, Florida', WorkPhone = 4072024466, Height = 74, Weight = 180, AnnualIncome = '$100000+', CreditCardNo = 5566243288791245, ContactName = 'Julio Iglesias', ContactPhone = 4074022030) WHERE Username = 'rmartin99';
+
+------------    ALLERGIES    ------------
+1. SELECT COUNT(*) FROM ALLERGIES WHERE Username = 'rmartin99' AND Allergy = 'Pollen'
+2. INSERT INTO ALLERGIES (Username, Allergy) VALUES ('rmartin99', 'Pollen')
+
+------------    DOCTOR PROFILE    ------------
+1. SELECT COUNT(*) FROM DOCTOR WHERE LicenseNo = 902811920 AND Username = 'jiglesias02';
+2. INSERT INTO DOCTOR (LicenseNo, Username, FName, LName, DOB, WorkPhone, Specialty, RoomNo, HomeAddress) VALUES (902811920,'jiglesias02', 'Julio', 'Iglesias', '1962-02-01', 4075556232, 'Eye Specialist', 15,'12556 Gettysburg Circle');
+3. UPDATE DOCTOR SET LicenseNo = 902811920, FName = 'Julio', LName = 'Iglesias', DOB=1962-02-01, WorkPhone=4075556232, Specialty = 'Eye Specialist', RoomNo=13 WHERE Username = 'jiglesias02';
+
+------------    AVAILABILITY    ------------
+1. SELECT COUNT(*) FROM AVAILABILITY WHERE Username = 'jiglesias02' AND Day_Date = '2014-05-02' AND To_Time ='05:00'  AND From_Time = '03:00';
+2. INSERT INTO AVAILABILITY (Username, Day_Date, To_Time, From_Time) VALUES ('jiglesias02', '2014-05-02', '05:00','03:00');
+3. UPDATE AVAILABILITY SET To_Time ='04:00', From_Time ='02:00', Day_Date = '2014-05-02' WHERE Username = 'jiglesias02' AND To_Time ='05:00' AND From_Time ='03:00' AND Day_Date ='2014-05-02';
+
+------------    UNREAD MESSAGES / VIEW MESSAGES  ------------
+//if $userType == 'patient':
+1. SELECT COUNT(*) FROM DOCTOR_TO_PATIENT WHERE Status='Unread' AND Recipient= 'rmartin99'
+//if $userType == 'doctor':
+2. SELECT COUNT(*) FROM (DOCTOR_TO_PATIENT AS DP JOIN DOCTOR_TO_DOCTOR AS DD ON DP.Recipient=DD.Recipient) WHERE DP.Status='Unread' AND DP.Recipient= 'jiglesias02' AND DD.Status='Unread' AND DD.Recipient= 'jiglesias02'
+
+------------    APPOINTMENTS    ------------
+1. SELECT D.Username, Fname, Lname, WorkPhone, RoomNo, Day_Date, From_Time, To_Time, R.Rating FROM (DOCTOR AS D JOIN AVAILABILITY AS A ON D.Username=A.Username) JOIN (SELECT AVG(Rating) AS Rating FROM RATES ) AS R WHERE Specialty='Heart Specialist'
+2. SELECT COUNT(*) FROM REQUEST_APPOINTMENT WHERE PUsername='rmartin' AND DUsername='jiglesias02'
+3. INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('rmartin99', 'jiglesias02', '2014-04-25', '11:00 - 01:00', 'Pending')
+
+------------     ORDER MEDICATION     ------------
+1. SELECT COUNT(*) FROM PRESCRIPTION AS P WHERE P.DUsername IN
+			(SELECT Username FROM DOCTOR as D WHERE D.FName = 'Julio' AND D.LName = 'Iglesias')
+			AND P.MedName = 'Nasonex' AND P.Dosage = '2 sprays a day' AND P.Duration ='3 weeks' and P.DateVisit = '2014-04-25' AND P.PUsername = 'rmartin99';
+
+------------   Payment Information    ------------
+1. SELECT COUNT(*) FROM PAYMENT_INFO WHERE CardNo = 5566243288791245 AND CardType = 'Visa' AND CVV = 201;
+2. INSERT INTO PAYMENT_INFO (CardNo, CardHolderName, CardType, Expiry, CVV) VALUES(5566243288791245 ,'Julio Iglesias','Visa', '2017-05-06',201);
+
+------------    VIEW VISIT HISTORY    ------------
+1. SELECT DateVisit FROM VISIT WHERE PUsername = 'rmartin99';
+2. SELECT  t1.Username, t1.FName, t1.LName, DiastolicBP, SystolicBP 
+	FROM VISIT INNER JOIN
+	(SELECT FName, LName, Username FROM DOCTOR) AS t1 ON VISIT.DUsername =  t1.Username 
+	WHERE VISIT.DateVisit = '2014-04-25' AND PUsername = 'rmartin99';
+3. SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = 'rmartin99' AND DateVisit = '2014-04-25' AND DUsername = 'jiglesias02';
+4. SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE DateVisit = '2014-04-25' AND DUsername = 'jiglesias02' AND PUsername = 'rmartin99';
+
+------------    RATE A DOCTOR    ------------
+1. SELECT FName, Lname, Username as d_username FROM DOCTOR WHERE EXISTS (SELECT * FROM VISIT WHERE PUsername = 'rmartin99' AND VISIT.DUsername = DOCTOR.Username);
+2. SELECT COUNT(*) FROM RATES WHERE PUsername = 'rmartin99' AND DUsername = 'jiglesias02';
+3. INSERT INTO RATES (PUsername, DUsername, Rating) VALUES('rmartin99', 'jiglesias02', 5);
+4. UPDATE RATES set Rating=4 WHERE PUsername = 'rmartin99' AND DUsername = 'jiglesias02';
+
+------------    VIEW APPOINTMENTS    ------------
+1. SELECT P.Name, RA.ScheduledTime FROM (REQUEST_APPOINTMENT AS RA LEFT OUTER JOIN PATIENT AS P ON RA.PUsername = P.Username) WHERE RA.Date = '2014-04-25' ORDER BY RA.ScheduledTime;
+2. SELECT COUNT(PUsername) FROM REQUEST_APPOINTMENT WHERE DUsername = 'jiglesias02' GROUP BY Date;
+
+------------    VIEW PATIENTS AND PRESCRIPTIONS    ------------
+1. SELECT Username as p_username, Name, HomePhone FROM PATIENT AS P INNER JOIN VISIT AS V ON P.Username = V.PUsername WHERE Name = 'Ricky Martin' OR HomePhone = 4075550123 AND V.DUsername = 'jiglesias02';
+2. SELECT DateVisit FROM VISIT WHERE PUsername = 'rmartin99' AND DUsername = 'jiglesias02';
+3. SELECT DiastolicBP, SystolicBP FROM VISIT WHERE VISIT.DateVisit = '2014-04-25' AND VISIT.PUsername = 'rmartin99' AND VISIT.DUsername = 'jiglesias02';
+4. SELECT Diagnosis FROM DIAGNOSIS WHERE PUsername = 'rmartin99' AND DateVisit = '2014-04-25' AND DUsername = 'jiglesias02';
+5. SELECT MedName, Dosage, Duration, Notes FROM PRESCRIPTION WHERE DateVisit = '2014-04-25' AND DUsername = 'jiglesias02' AND PUsername = 'rmartin99';
+
+------------    RECORD A VISIT    ------------
+1. SELECT COUNT(*) FROM VISIT WHERE DUsername = 'jiglesias02' AND PUsername = 'rmartin99' AND DateVisit = '2014-04-25';
+2. SELECT COUNT(*) FROM VISIT WHERE DUsername = 'jiglesias02' AND PUsername = 'rmartin99';
+3. INSERT INTO VISIT (DateVisit, DUsername, PUsername, BillingAmt, DiastolicBP, SystolicBP) VALUES ('2014-04-25', 'jiglesias02', 'rmartin99', 700.00, DiastolicBP = 130, SystolicBP = 85);
+4. UPDATE DIAGNOSIS set Diagnosis='Deviated Septum' WHERE PUsername = 'rmartin99' AND DUsername = 'jiglesias02' AND DateVisit = '2014-04-25';
+
+------------    PRESCRIPTION    ------------
+1. SELECT COUNT(*) FROM PRESCRIPTION WHERE Pusername = 'rmartin99' AND DUsername = 'jiglesias02' AND MedName='Nasonex' AND DateVisit='2014-04-25';
+2. INSERT INTO PRESCRIPTION (PUsername, DUsername, DateVisit, MedName,Notes, Dosage, Duration) Values ('rmartin99', 'jiglesias02','2014-04-25', 'Nasonex', 'One spray in morning, one spray at night.', '2 sprays a day', '3 weeks');
+
+------------    SURGERY RECORD    ------------
+1. SELECT PUsername as p_username, Name as PatientName, WorkPhone as PhoneNumber FROM PATIENT WHERE Name = 'Ricky Martin';
+2. SELECT COUNT(*) FROM PERFORMS_SURGERY WHERE DUsername = 'jiglesias02' AND CPT=1002 and PUsername = 'rmartin99';
+3. INSERT INTO PERFORMS_SURGERY (DUsername, CPT, PUsername, SurgeryStart,SurgeryEnd, Complications, NoAssistants, AnesthesiaStart) VALUES('jiglesias02', 1002, 'rmartin99', '02:00', '03:00', 'None', 3, '02:05');
+4. INSERT INTO SURGERY(CPT, Cost, Type) VALUES(1002, 3000.00, 'Heart Transplant');
+5. SELECT PreOpMed FROM PREOPERATIVE_MEDICATION WHERE CPT=1002;
+6. SELECT COUNT(*) FROM PREOPERATIVE_MEDICATION WHERE CPT=1002 AND PreOpMed='Fluoride';
+7. INSERT INTO PREOPERATIVE_MEDICATION (CPT, PreOpMed) VALUES (1002,'Fluoride');
+
+------------    COMMUNICATION    ------------
+//POPULATE LIST OF DOCTORS TO SELECT
+1. SELECT FName, LName, Username FROM DOCTOR;
+//POPULATE LIST OF PATIENTS TO SELECT
+2. SELECT NAME, Username as PUsername FROM PATIENT;
+//Patient sends message to doctor
+3. INSERT INTO PATIENT_TO_DOCTOR (Sender, Recipient, Content, Status, DateTime) VALUES ('rmartin99', 'jiglesias02', 'Hello.', 'Unread', CURRENT_TIMESTAMP);
+//Doctor sends message to patient
+4. INSERT INTO DOCTOR_TO_PATIENT (Sender, Recipient, Content, Status, DateTime) VALUES ('jiglesias02', 'rmartin99', 'Hello.', 'Unread', CURRENT_TIMESTAMP);
+//Doctor sends message to doctor
+5. INSERT INTO DOCTOR_TO_DOCTOR (Sender, Recipient, Content, Status, DateTime) VALUES ('jiglesias02', 'jborjas94', 'Hello.', 'Unread', CURRENT_TIMESTAMP);
+
+------------    BILLING    ------------
+1. SELECT Name, HomePhone, Username, AnnualIncome FROM PATIENT WHERE Name='Juan Borjas'
+//'Poor' Patients get 20% on visits
+2. SELECT DateVisit, BillingAmt*0.8 as Cost FROM VISIT WHERE PUsername = 'jborjas31' GROUP BY DateVisit;
+3. SELECT SUM(BillingAmt)*0.8 as TotalCost FROM VISIT WHERE PUsername = 'jborjas31'; 
+$tc = SUM(BillingAmt*0.8)
+4. SELECT t1.Type, t1.Cost*0.5 AS Cost FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) AS t1 ON t1.CPT = PS.CPT
+		WHERE PS.PUsername = 'jborjas31'
+		GROUP BY t1.Type;
+5. SELECT t1.Type, SUM(t1.Cost*0.5) as TotalCost, FROM PERFORMS_SURGERY AS PS INNER JOIN (SELECT COST, CPT, Type FROM SURGERY) t1 ON t1.CPT = PS.CPT
+		WHERE PS.PUsername = 'jborjas31';
+$tc +=	SUM(t1.Cost*$discount) 
+//tc is the total cost to be displayed.
+
+------------    DOCTOR PERFORMANCE REPORT   ------------
+1. SELECT D.Specialty,AVG(t1.Rating) as AverageRating, Count(t0.CPT) as NumSurgeriesPerformed FROM DOCTOR as D 
+	INNER JOIN(
+		SELECT CPT, DUsername
+		FROM PERFORMS_SURGERY AS P
+		) AS t0 
+	ON t0.DUsername=D.Username
+	INNER JOIN(
+		SELECT Rating
+		FROM RATES) AS t1 
+	ON t0.DUsername=D.Username
+	GROUP BY D.Specialty
+
+------------    SURGERIES PERFORMED   ------------
+1. $annualIncome = SELECT AnnualIncome FROM PATIENT WHERE Username = 'jborjas31';
+//based on annualIncome determine $billing
+$num
+2. SELECT t1.Type as SurgeryType, CPT, COUNT(CPT) PERFORMS_SURGERY AS PS
+		INNER JOIN (SELECT * FROM SURGERY) t1 ON t1.CPT = PS.CPT
+//poor PATIENTs
+3. SELECT PS.PUsername,t1.Type, t1.CPT, t2.TotalBilling FROM PERFORMS SURGERY AS PS INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome='0-15000' OR AnnualIncome='15000-25000')
+		INNER JOIN (
+			SELECT SUM(t1.Cost*0.5) as TotalBilling, PUsername FROM PERFORMS_SURGERY AS PS)
+		INNER JOIN(
+			SELECT Cost, SURGERY.Type From SURGERY) t1 ON t1.CPT = PS.CPT
+			GROUP BY t1.Type) t2
+		ON PS.PUsername = t2.PUsername
+4. SELECT PS.PUsername,t1.Type, t1.CPT t2.TotalBilling2 FROM PERFORMS SURGERY AS PS
+	INNER JOIN (SELECT AnnualIncome FROM PATIENT WHERE AnnualIncome > $num) INNER JOIN (SELECT SUM(t1.Cost) as “TotalBilling2”, PUsername FROM PERFORMS_SURGERY AS PS
+		INNER JOIN (SELECT Cost From SURGERY) t1 ON t1.CPT = PS.CPT GROUP BY t1.Type) t2 ON PS.PUsername = t2.PUsername;
+
+//Totall Billing = t2.TotalBilling2 + t2.totalBilling
+//This counts number of distinct doctors doing a procedure
+5. SELECT COUNT(DUsernames) IN PERFORMS_SURGERY AS PS INNER JOIN (SURGERY GROUP BY Type) ON SURGERY.CPT = PS.CPT GROUP BY PS.DUsernames;
+
+
+------------    Patient Visit Report   ------------
+1. SELECT FName, LName, t3.Visits, t2.Prescriptions FROM DOCTOR as D
+			INNER JOIN(
+				SELECT DUsername, COUNT(DateVisit) AS Prescriptions
+				FROM PRESCRIPTION
+				WHERE DateVisit='2014-04-22'
+				GROUP BY PRESCRIPTION.DUsername)t2 ON D.username = t2.DUsername
+			INNER JOIN(
+				SELECT COUNT(DATEVISIT) AS Visits, DUsername
+				FROM VISIT as V
+				WHERE DateVisit='2014-04-22'
+				GROUP BY DUSername) t3 
+			ON t3.DUsername=D.Username
+			
+//discount is taken care when the doctor records a visit.
+2. SELECT SUM(BillingAmt) FROM VISIT GROUP BY DUsername;
