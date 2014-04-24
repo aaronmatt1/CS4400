@@ -2651,14 +2651,14 @@ class GTMS:
         cursor.execute(userNameQuery)
         username = cursor.fetchone()[0]
 
-        avgRatingQ = 'SELECT AVG(Rating) FROM RATES WHERE DUsername="{}"'.format(username)
+        avgRatingQ = 'SELECT AVG(Rating) FROM RATES WHERE DUsername="{}" GROUP BY DUsername'.format(username)
         cursor.execute(avgRatingQ)
 
-        try:
-            avgRating = float(self.cursor.fetchone()[0])
-            self.rateLabel.config(text='Avg Rating: %0.2f'%(avgRating))
-        except:
-            self.rateLabel.config(text='No Ratings')
+    
+        avgRating = float(cursor.fetchone()[0])
+        self.rateLabel.config(text='Avg Rating: %0.2f'%(avgRating))
+        
+        #self.rateLabel.config(text='No Ratings')
 
         timeQuery = '''SELECT Day_Date
                         FROM AVAILABILITY
@@ -2775,7 +2775,11 @@ class GTMS:
                 scheduled_appt = self.timeSelected.get()
                 pattern = '(\d+:\d+:00 - \d+:\d+:00)'
                 scheduled_time = findall(pattern, scheduled_appt)[0]
-                cursor.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Pending')" % (patient_username, doc_username, self.apptDate, scheduled_time))
+                try:
+                    cursor.execute("INSERT INTO REQUEST_APPOINTMENT(PUsername, DUsername, Date, ScheduledTime, Status) VALUES('%s', '%s', '%s', '%s', 'Pending')" % (patient_username, doc_username, self.apptDate, scheduled_time))
+                except:
+                    mbox.showerror("ERROR", "You have already scheduled an appointment for that day")
+                    return
                 To,From = scheduled_time.split('-')
                 query = "DELETE FROM AVAILABILITY WHERE Username='{}' AND From_Time='{}' AND To_Time='{}'".format(doc_username, To, From)
                 cursor.execute(query)
