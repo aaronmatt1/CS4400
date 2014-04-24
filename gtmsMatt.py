@@ -840,18 +840,6 @@ class GTMS:
 
         def submitVisit():
 
-            def findDiscount():
-
-                query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(patient)
-
-                cursor = self.connect()
-                cursor.execute(query)
-                income = cursor.fetchone()[0]
-                if income == '0-15000' or income == '15000-25000':
-                    return True
-                else:
-                    return False
-
             visitDate = dateVisitEntry.get()
             patientName = patientNameEntry.get()
             SBP = systolic_entry.get()
@@ -874,7 +862,7 @@ class GTMS:
             else:
                 bill = 65
 
-            if findDiscount():
+            if self.findDiscount():
                 bill = bill*0.2
 
             query = 'INSERT INTO VISIT VALUES ("{}", "{}", "{}", {}, {}, {})'.format(visitDate,self.username,patient,bill,SBP,DBP)
@@ -1039,7 +1027,7 @@ class GTMS:
 
             self.patientResult = nameEntry.get()
             
-            query = 'SELECT Name,HomePhone FROM PATIENT WHERE Name="{}"'.format(self.patientResult)
+            query = 'SELECT Username,Name,HomePhone FROM PATIENT WHERE Name="{}"'.format(self.patientResult)
             cursor = self.connect()
             cursor.execute(query)
             result = list(cursor.fetchall())
@@ -1049,8 +1037,10 @@ class GTMS:
 
             info = []
             for person in result:
-                formatPhone = person[1][0:3]+'-'+person[1][3:6]+'-'+person[1][6:10]
-                info.append([person[0], formatPhone])
+                patientUser = person[0]
+                formatPhone = person[2][0:3]+'-'+person[2][3:6]+'-'+person[2][6:10]
+                info.append([person[1], formatPhone])
+
 
             headers = ['          Patient           ',
                         '         Phone Number        ']
@@ -1095,9 +1085,11 @@ class GTMS:
                 cursor.execute(query)
                 code = cursor.fetchone()[0]
 
+
+                CPTEntry.delete(0, END)
                 CPTEntry.insert(0, code)
 
-            procedurePulldown = ttk.Combobox(surgeryFrame1, width=15, textvariable=self.procedure, values=self.proceduresList, state='readonly')
+            procedurePulldown = ttk.Combobox(surgeryFrame1, width=20, textvariable=self.procedure, values=self.proceduresList, state='readonly')
             procedurePulldown.grid(row=2, column=1, sticky='W')
             procedurePulldown.bind("<<ComboboxSelected>>", procedureSelected)
 
@@ -1114,11 +1106,10 @@ class GTMS:
 
             scroll = Scrollbar(txtFrame)
             scroll.grid(row=0, column=1, sticky='NS')
-
-            preopMedText = Text(txtFrame, width=15, height=3, wrap='word', font='Arial 10', relief=GROOVE)
+            preopMedText = Text(txtFrame, width=25, height=3, wrap='word', font='Arial 10', relief=GROOVE)
             preopMedText.grid(row=0,column=0, sticky='EW')
 
-            preopMedText.config(height=3, width=15)
+            preopMedText.config(height=3, width=25)
             preopMedText.config()
             preopMedText.insert(1.0, text)
             preopMedText.grid(row=0, column=0, sticky='EW')
@@ -1150,10 +1141,10 @@ class GTMS:
             scrollB = Scrollbar(complicationFrame)
             scrollB.grid(row=0, column=1, sticky='NS')
 
-            compText = Text(complicationFrame, width=15, height=3, wrap='word', font='Arial 10', relief=GROOVE)
+            compText = Text(complicationFrame, width=25, height=3, wrap='word', font='Arial 10', relief=GROOVE)
             compText.grid(row=0,column=0, sticky='EW')
 
-            compText.config(height=3, width=15)
+            compText.config(height=3, width=25)
             compText.config()
             compText.insert(1.0, text)
             compText.grid(row=0, column=0, sticky='EW')
@@ -1163,7 +1154,65 @@ class GTMS:
 
             def recordClicked():
 
-                print('Clicked record')
+                proceduretype = self.procedure.get()
+                if proceduretype == 'Select a Procedure':
+                    mbox.showerror('ERROR', 'Please Enter a Procedure')
+                    return
+                CPT =  CPTEntry.get()
+                if not CPT:
+                    mbox.showerror('ERROR', 'You must insert a CPT')
+                    return
+                NoAssists = numberAssisEntry.get()
+                if not NoAssists:
+                    mbox.showerror('ERROR', 'You must specify the number of assistants')
+                    return
+                medsList = preopMedText.get("1.0", END).split('\n')
+                anesthesia = AstartEntry.get()
+                if not anesthesia:
+                    mbox.showerror('ERROR', 'Please enter an anesthesia start time')
+                    return
+                surgeryStart = SstartEntry.get()
+                if not anesthesia:
+                    mbox.showerror('ERROR', 'Please enter a surgery start time')
+                    return
+                surgeryEnd = SendEntry.get()
+                if not anesthesia:
+                    mbox.showerror('ERROR', 'Please enter a surgery end time')
+                    return
+                comps = compText.get("1.0", END)
+
+                ##Check if all preop meds are corresponding to applicable CPT
+                for med in medsList:
+                    query = 'SELECT COUNT(*) FROM PREOPERATIVE_MEDICATION WHERE CPT="{}" AND PreOpMed="{}"'.format(CPT,med)
+                    cursor.execute(query)
+                    print(cursor.fetchone()[0])
+                    # if cursor.fetchone()[0] == 0:
+                    #     mbox.showerror("ERROR", "Unauthorized Medcation Input")
+                    #     return
+
+                query = 'SELECT Cost FROM SURGERY WHERE CPT="{}"'.format(CPT)
+                cursor.execute(query)
+                cost = cursor.fetchone()[0]
+                if self.findDiscount():
+                    cost = cost*0.5
+
+                ##Insert info into PERFORMS_SURGERY
+                query = 'INSERT INTO PERFORMS_SURGERY VALUES ("{}","{}","{}","{}","{}","{}","{}","{}")'\
+                        .format(self.username,CPT,patientUser,surgeryStart,surgeryEnd,NoAssists,comps,Anesthesia)
+                cursor.execute(query)
+
+                ##Query for date of appointment
+                query = 'SELECT Date FROM REQUEST_APPOINTMENT WHERE DUsername="{}" AND PUsername="{}"'.format(self.username,patientUser)
+                cursor.execute(query)
+                operationDay = str(cursor.fetchone()[0])
+
+                ##INSERT into VISIT table
+                query = 'INSERT INTO VISIT VALUES ({},{},{},{},{},{})'.format(operationDay,self.username,patientUser,cost)
+                cursor.execute(query)
+
+                ##DELETE from REQUEST_APPOINTMENT
+                query = 'DELETE FROM REQUEST_APPOINTMENT WHERE PUsername="{}" AND DUsername="{}"'.format(patientUser,self.username)
+                cursor.execute(query)
 
             buttonFrame = Frame(bottomFrame, background=color)
             buttonFrame.grid(row=3, column=0, columnspan=2, padx=10, pady=15, sticky='EW')
@@ -2520,6 +2569,18 @@ class GTMS:
             result = self.c.fetchall()
             if result[0][0]  == 1:
                 self.doctorProfile()
+
+    def findDiscount(self):
+
+        query = 'SELECT AnnualIncome FROM PATIENT WHERE Username = "{}"'.format(patient)
+
+        cursor = self.connect()
+        cursor.execute(query)
+        income = cursor.fetchone()[0]
+        if income == '0-15000' or income == '15000-25000':
+            return True
+        else:
+            return False
                 
 
     def patHPToAppts(self):
