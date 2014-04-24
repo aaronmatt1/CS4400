@@ -353,7 +353,7 @@ $diagnosis
 			$amountOwed=initialfee+cost*discount (actual numbers to be determined)
 		//else $amountOwed = cost*discount;
 		
-		>>>> INSERT INTO VISIT (DateVisit, DUsername, PUsername, BillingAmt, DiastolicBP, SystolicBP) VALUES ($date,$username, $p_username, $amountOwed, DiastolicBP = $DBP, SystolicBP = $SBP);
+		>>>> INSERT INTO VISIT (DateVisit, DUsername, PUsername, BillingAmt, DiastolicBP, SystolicBP) VALUES ($date,$username, $p_username, $amountOwed, $DBP, $SBP);
 		>>>> SELECT COUNT(*) FROM DIAGNOSIS WHERE DUsername = $username AND PUsername = $p_username AND DateVisit = date AND Diagnosis = $Diagnosis;
 		//if == 0
 		>>>> INSERT INTO DIAGNOSIS (PUsername, DateVisit, DUsername, Diagnosis) VALUES PUsername = $p_username AND DateVisit = $date AND DUsername = $username AND Diagnosis=$diagnosis; 
