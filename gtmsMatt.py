@@ -1734,15 +1734,123 @@ class GTMS:
         self.DocReportWin.protocol("WM_DELETE_WINDOW", self.DocReportToAdminWin)
 
     def SurgeryReport(self):
-        pass
+
+        cursor = self.connect()
+        
+        query = '''SELECT S.Type, SUM( NoAssistants ) AS  "No. of Doctors Performing Surgery"
+                FROM PERFORMS_SURGERY AS PS
+                INNER JOIN (
+
+                SELECT TYPE , CPT
+                FROM SURGERY
+                GROUP BY TYPE , CPT
+                )S ON S.CPT = PS.CPT
+                GROUP BY S.Type'''
+        cursor.execute(query)
+        numAssisbySurgery = list(cursor.fetchall())
+
+        query = '''SELECT PS.CPT,COUNT( * ) AS  "No of Procedures"
+                FROM PERFORMS_SURGERY AS PS
+                INNER JOIN (
+                SELECT CPT,
+                TYPE FROM SURGERY
+                )t1 ON t1.CPT = PS.CPT
+                GROUP BY PS.CPT'''
+        cursor.execute(query)
+        numSurgeriesCPT = list(cursor.fetchall())
+
+        query = '''SELECT PS.DUsername,SUM( S.Cost ) AS  "Total Billing"
+                FROM PERFORMS_SURGERY AS PS
+                INNER JOIN (
+
+                SELECT CPT, Cost
+                FROM SURGERY
+                )S ON S.CPT = PS.CPT
+                GROUP BY PS.CPT'''
+        cursor.execute(query)
+        totBillingSurgeries = list(cursor.fetchall())
+
 
     def PatientReport(self):
-        pass
 
-        # SELECT D.FName,LName, COUNT(V.PUsername) AS "No. of Patients", COUNT(P.MedName),SUM(V.BillingAmt) FROM DOCTOR AS D 
-        # LEFT JOIN PRESCRIPTION AS P ON D.Username = P.DUsername
-        # INNER JOIN VISIT AS V ON D.Username = V.DUsername
-        # GROUP BY D.Username
+        self.patReportWin = Toplevel(LogWin)
+        self.patReportWin.title('Patient Report')
+        self.patReportWin.config(bg=color)
+        
+        topFrame = Frame(self.patReportWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.patReportWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.patReportWin)
+        bottomFrame.grid(row=2, column=0, pady=15)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = ttk.Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = ttk.Label(topFrame, text="Patient Report", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        dateFrame = Frame(bottomFrame, background=color)
+        dateFrame.grid(row=0, column=0, padx=10, pady=15, sticky='EW')
+
+        Label(dateFrame,text='Month : ',background=color).grid(row=0, column=0, padx=15, sticky='EW')
+
+        monthEntry = Entry(dateFrame, width=4)
+        monthEntry.grid(row=0, column=1, padx=5, sticky='W')
+
+        yearEntry = Entry(dateFrame, width=8)
+        yearEntry.grid(row=0, column=2, padx=5, sticky='W')
+
+        def viewReport():
+
+            month = monthEntry.get()
+            if len(month)<2:
+                month = '0'+str(month)
+
+            year = yearEntry.get()
+
+            cursor = self.connect()
+            query = '''SELECT CONCAT( CONCAT( FName, ' ' ) , LName ) AS "Doctor Name", SUM(
+                    BillingAmt ) AS "Total Billing"
+                    FROM DOCTOR D
+                    INNER JOIN (
+                    SELECT BillingAmt, DUsername
+                    FROM VISIT
+                    )V ON V.DUsername = D.Username
+                    GROUP BY D.Username'''
+            cursor.execute(query)
+            billingByDocData = list(cursor.fetchall())
+
+            query = '''SELECT CONCAT( CONCAT( FName, ' ' ) , LName ) AS Name, t3.Visits,
+                    t2.Prescriptions
+                    FROM DOCTOR AS D
+                    INNER JOIN (
+
+                    SELECT DUsername, COUNT( DateVisit ) AS Prescriptions
+                    FROM PRESCRIPTION
+                    WHERE MONTH( DateVisit ) = '%s'
+                    AND YEAR( DateVisit ) = '%s'
+                    GROUP BY PRESCRIPTION.DUsername
+                    )t2 ON D.username = t2.DUsername
+                    INNER JOIN (
+
+                    SELECT COUNT( DATEVISIT ) AS Visits, DUsername
+                    FROM VISIT AS V
+                    WHERE MONTH( DateVisit ) = '%s'
+                    AND YEAR( DateVisit ) = '%s'
+                    GROUP BY DUSername
+                    )t3 ON t3.DUsername = D.Username
+                    GROUP BY Name'''%(month, year, month, year)
+            cursor.execute(query)
+            visitPrescripData = list(cursor.fetchall())
+
+            self.db.close()
+
+        ttk.Button(dateFrame, text='View Report', command=viewReport).grid(row=0,column=3, sticky='EW')
+
 
     def Billing(self):
 
@@ -1875,6 +1983,8 @@ class GTMS:
             totalEntry.grid(row=0, column=1)
             totalEntry.insert(0,totalCostVisitNum)
             totalEntry.config(state='readonly')
+
+            self.db.close()
 
         ttk.Button(billFrame, text='Create Bill', command=CreateClicked).grid(row=0, column=2, sticky='EW')
                                   
