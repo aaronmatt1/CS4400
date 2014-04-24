@@ -1154,9 +1154,9 @@ class GTMS:
             query = 'SELECT COUNT(*) FROM VISIT WHERE PUsername="{}" AND DUsername="{}"'.format(patient,self.username)
             cursor.execute(query)
             if cursor.fetchone()[0] == 0:
-                bill = 100
+                bill = 200
             else:
-                bill = 65
+                bill = 150
 
             if findDiscountVisit():
                 bill = bill*0.2
@@ -1813,41 +1813,51 @@ class GTMS:
             year = yearEntry.get()
 
             cursor = self.connect()
-            query = '''SELECT CONCAT( CONCAT( FName, ' ' ) , LName ) AS "Doctor Name", SUM(
-                    BillingAmt ) AS "Total Billing"
-                    FROM DOCTOR D
-                    INNER JOIN (
-                    SELECT BillingAmt, DUsername
-                    FROM VISIT
-                    )V ON V.DUsername = D.Username
-                    GROUP BY D.Username'''
-            cursor.execute(query)
-            billingByDocData = list(cursor.fetchall())
-
             query = '''SELECT CONCAT( CONCAT( FName, ' ' ) , LName ) AS Name, t3.Visits,
-                    t2.Prescriptions
+                    t2.Prescriptions, t3.Billing
                     FROM DOCTOR AS D
                     INNER JOIN (
 
                     SELECT DUsername, COUNT( DateVisit ) AS Prescriptions
                     FROM PRESCRIPTION
-                    WHERE MONTH( DateVisit ) = '%s'
-                    AND YEAR( DateVisit ) = '%s'
+                    WHERE MONTH( DateVisit )= '04'
+                    AND YEAR( DateVisit ) = '2014'
                     GROUP BY PRESCRIPTION.DUsername
                     )t2 ON D.username = t2.DUsername
                     INNER JOIN (
 
-                    SELECT COUNT( DATEVISIT ) AS Visits, DUsername
+                    SELECT COUNT( DATEVISIT ) AS Visits, DUsername, SUM(BillingAmt) AS Billing
                     FROM VISIT AS V
-                    WHERE MONTH( DateVisit ) = '%s'
-                    AND YEAR( DateVisit ) = '%s'
+                    WHERE MONTH( DateVisit ) = '04'
+                    AND YEAR( DateVisit ) = '2014'
                     GROUP BY DUSername
                     )t3 ON t3.DUsername = D.Username
-                    GROUP BY Name'''%(month, year, month, year)
+                    GROUP BY Name'''
             cursor.execute(query)
-            visitPrescripData = list(cursor.fetchall())
+            monthlyPatientReport = list(cursor.fetchall())
 
             self.db.close()
+
+            headers = ['     Doctor     ',
+                        '    Phone Number   ',
+                        '  Number of Patients Seen  ',
+                        '  Prescritions Written  ']
+
+            resultFrame = Frame(bottomFrame, background=color)
+            resultFrame.grid(row=1, column=0, columnspan=3)
+
+            for x in range(len(headers)):
+                tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+                label = Label(tableFrame, text=headers[x], background=color)
+                label.pack(fill=BOTH)
+
+            for x in range(len(monthlyPatientReport)):
+                for y in range(len(monthlyPatientReport[x])):
+                    tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=x+1, column=y, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=monthlyPatientReport[x][y], background='white')
+                    label.pack(fill=BOTH)
 
         ttk.Button(dateFrame, text='View Report', command=viewReport).grid(row=0,column=3, sticky='EW')
 
@@ -2077,27 +2087,6 @@ class GTMS:
 
         self.visitHistWin.protocol("WM_DELETE_WINDOW", self.visitHistToHP)
 
-    def visitReport(self):
-        
-        self.docHPWin = Toplevel(LogWin)
-        self.docHPWin.title('Visit Report')
-        self.docHPWin.configure(background='#cfb53b')
-
-        topFrame = Frame(self.docHPWin)
-        topFrame.grid(row=0, column=0)
-        topFrame.configure(background='#cfb53b')
-        midFrame = Frame(self.docHPWin, bd=1, background='black')
-        midFrame.grid(row=1, column=0, sticky='EW')
-        bottomFrame = Frame(self.docHPWin)
-        bottomFrame.grid(row=2, column=0)
-        bottomFrame.configure(background='#cfb53b')
-
-        logo = Label(topFrame, image=self.photo)
-        logo.grid(row=0, column=1)
-        logo.configure(background='#cfb53b')
-        pageName = Label(topFrame, text="Patient Visit Report", font=("Arial", 25))
-        pageName.grid(row=0, column=0, sticky='EW')
-        pageName.configure(background='#cfb53b')
 
     def RateDoctor(self):
 
