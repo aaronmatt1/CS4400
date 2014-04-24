@@ -79,6 +79,10 @@ class GTMS:
                 #If user is doctor
                 if result[0][0] == 1:
                     self.userType = 'doctor'
+                    nameQuery = 'SELECT FName,LName FROM DOCTOR WHERE Username="{}"'.format(self.username)
+                    self.c.execute(nameQuery)
+                    name = self.c.fetchone()
+                    self.name = 'Dr. '+name[0]+' '+name[1]
                     LogWin.iconify()
                     self.db.close()
                     self.doctorScreens()
@@ -784,8 +788,6 @@ class GTMS:
         self.docHPWin.protocol("WM_DELETE_WINDOW", self.endProgram)
 
     def recordVisit(self):
-        
-        color = '#cfb53b'
 
         self.recordWin = Toplevel(LogWin)
         self.recordWin.title('Record/Prescribe')
@@ -995,8 +997,155 @@ class GTMS:
                             background=color).pack()
 
     def surgeryRecord(self):
-        pass
+        
+        self.surgeryWin = Toplevel(LogWin)
+        self.surgeryWin.title('Record Surgery')
+        self.surgeryWin.configure(background='#cfb53b')
 
+        topFrame = Frame(self.surgeryWin)
+        topFrame.grid(row=0, column=0)
+        topFrame.configure(background='#cfb53b')
+        midFrame = Frame(self.surgeryWin, bd=1, background='black')
+        midFrame.grid(row=1, column=0, sticky='EW')
+        bottomFrame = Frame(self.surgeryWin)
+        bottomFrame.grid(row=2, column=0)
+        bottomFrame.configure(background='#cfb53b')
+
+        logo = Label(topFrame, image=self.photo)
+        logo.grid(row=0, column=1)
+        logo.configure(background='#cfb53b')
+        pageName = Label(topFrame, text="Record a Surgery", font=("Arial", 25))
+        pageName.grid(row=0, column=0, sticky='EW')
+        pageName.configure(background='#cfb53b')
+
+        searchPatientFrame = Frame(bottomFrame, background=color)
+        searchPatientFrame.grid(row=0, column=0, columnspan=2, padx=10, pady=15, sticky='EW')
+
+        Label(searchPatientFrame,text=' Patient Name: ',background=color).grid(row=0, column=0, padx=15, sticky='EW')
+
+        nameEntry = Entry(searchPatientFrame, width=25)
+        nameEntry.grid(row=0, column=1, padx=5, sticky='EW')
+
+        query = 'SELECT Type FROM SURGERY'
+        cursor = self.connect()
+        cursor.execute(query)
+        self.proceduresList = []
+        surgeries = list(cursor.fetchall())
+        for surgery in surgeries:
+            self.proceduresList.append(surgery[0])
+        cursor.close()
+        self.db.close()
+
+        def searchPatient():
+
+            self.patientResult = nameEntry.get()
+            
+            query = 'SELECT Name,HomePhone FROM PATIENT WHERE Name="{}"'.format(self.patientResult)
+            cursor = self.connect()
+            cursor.execute(query)
+            result = list(cursor.fetchall())
+
+            resultFrame = Frame(bottomFrame, background=color)
+            resultFrame.grid(row=1, column=0, columnspan=2)
+
+            info = []
+            for person in result:
+                formatPhone = person[1][0:3]+'-'+person[1][3:6]+'-'+person[1][6:10]
+                info.append([person[0], formatPhone])
+
+            headers = ['          Patient           ',
+                        '         Phone Number        ']
+
+            for x in range(len(headers)):
+                tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                tableFrame.grid(row=0, column=x, sticky='EW', padx=1)
+                label = Label(tableFrame, text=headers[x], background=color)
+                label.pack(fill=BOTH)
+
+            for x in range(len(info)):
+                for y in range(len(info[x])):
+                    tableFrame = Frame(resultFrame, borderwidth=1, background='black')
+                    tableFrame.grid(row=x+1, column=y, sticky='EW', padx=1)
+                    label = Label(tableFrame, text=info[x][y], background='white')
+                    label.pack(fill=BOTH)
+
+            surgeryFrame1 = Frame(bottomFrame, background=color, bd=1)
+            surgeryFrame1.grid(row=2, column=0, padx=10, pady=15, sticky='EW')
+
+            labels1 = ['Patient Name:','Surgeon Name:','Procedure Name: ','CPT Code: ','Number of Assis: ','Pre-op Meds: \n (One drug on\n each line)']
+            labels2 = ['Anesthesia Start: ', 'Surgery Start: ', 'Surgery Completion: ', 'Complications: ']
+
+            for x in range(len(labels1)):
+                label = Label(surgeryFrame1, text=labels1[x], background=color)
+                label.grid(row=x, column=0, sticky='W', pady=5)
+
+            patientEntry = Entry(surgeryFrame1, width=20)
+            patientEntry.grid(row=0, column=1, sticky='W')
+            patientEntry.insert(0, self.patientResult)
+
+            surgeonEntry = Entry(surgeryFrame1, width=20)
+            surgeonEntry.grid(row=1, column=1, sticky='W')
+            surgeonEntry.insert(0, self.name)
+
+            self.procedure = StringVar()
+            self.procedure.set('Select a Procedure')
+
+            def procedureSelected(event=NONE):
+
+                query = 'SELECT CPT FROM SURGERY WHERE Type="{}"'.format(self.procedure.get())
+                cursor.execute(query)
+                code = cursor.fetchone()[0]
+
+                CPTEntry.insert(0, code)
+
+            procedurePulldown = ttk.Combobox(surgeryFrame1, width=15, textvariable=self.procedure, values=self.proceduresList, state='readonly')
+            procedurePulldown.grid(row=2, column=1, sticky='W')
+            procedurePulldown.bind("<<ComboboxSelected>>", procedureSelected)
+
+            CPTEntry = Entry(surgeryFrame1, width=20)
+            CPTEntry.grid(row=3, column=1, sticky='W')
+
+            numberAssisEntry = Entry(surgeryFrame1, width=20)
+            numberAssisEntry.grid(row=4, column=1, sticky='W')
+
+            txtFrame = Frame(surgeryFrame1, background=color)
+            txtFrame.grid(row=5, column=1, columnspan=2, sticky='EW')
+
+            text = """""".strip()
+
+            scroll = Scrollbar(txtFrame)
+            scroll.grid(row=0, column=1, sticky='NS')
+
+            preopMedText = Text(txtFrame, width=15, height=3, wrap='word', font='Arial 10', relief=GROOVE)
+            preopMedText.grid(row=0,column=0, sticky='EW')
+
+            preopMedText.config(height=3, width=15)
+            preopMedText.config()
+            preopMedText.insert(1.0, text)
+            preopMedText.grid(row=0, column=0, sticky='EW')
+
+            scroll.config(command=preopMedText.yview)
+            preopMedText.config(yscrollcommand=scroll.set)
+
+            surgeryFrame2 = Frame(bottomFrame, background=color, bd=1)
+            surgeryFrame2.grid(row=2, column=1, padx=10, pady=15, sticky='EW')
+
+            for x in range(len(labels2)):
+                label = Label(surgeryFrame2, text=labels2[x], background=color)
+                label.grid(row=x, column=0, sticky='W', padx=5, pady=15)
+
+            def recordClicked():
+
+                print('Clicked record')
+
+            buttonFrame = Frame(bottomFrame, background=color)
+            buttonFrame.grid(row=3, column=0, columnspan=2, padx=10, pady=15, sticky='EW')
+
+            ttk.Button(buttonFrame,text='Record',command=recordClicked).pack(fill='x')
+
+        ttk.Button(searchPatientFrame, text='Search', width=8, command=searchPatient).grid(row=0,column=3, padx=5)
+
+        
     def searchAppt(self):
 
         self.searchApptWin = Toplevel(LogWin)
